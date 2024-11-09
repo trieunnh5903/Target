@@ -1,0 +1,105 @@
+[
+  {
+    "postId": "postId1",
+    "postedBy": {
+      "userId": "userId1",
+      "username": "John Doe",
+      "avatarUrl": "https://picsum.photos/100"
+    },
+    "content": "This is a post by John Doe",
+    "images": [
+      "https://picsum.photos/id/2/400",
+      "https://picsum.photos/id/33/450"
+    ],
+    "createdAt": 1731054904,
+    "likes": [
+      {
+        "userId": "userId1",
+        "username": "John Doe",
+        "avatarUrl": "https://picsum.photos/100"
+      },
+      {
+        "userId": "userId2",
+        "username": "John Doe",
+        "avatarUrl": "https://picsum.photos/100"
+      }
+    ],
+    "shares": ["userId3"],
+    "commentsCount": 10
+  },
+  {
+    "postId": "postId2",
+    "postedBy": {
+      "userId": "userId1",
+      "username": "John Doe",
+      "avatarUrl": "https://picsum.photos/100"
+    },
+    "content": "This is a post by John Doe",
+    "images": ["https://picsum.photos/id/22/400", "https://picsum.photos/id/21/450"],
+    "createdAt": 1731054904,
+    "likes": [
+      {
+        "userId": "userId1",
+        "username": "John Doe",
+        "avatarUrl": "https://picsum.photos/100"
+      },
+      {
+        "userId": "userId2",
+        "username": "John Doe",
+        "avatarUrl": "https://picsum.photos/100"
+      }
+    ],
+    "shares": ["userId3"],
+    "commentsCount": 10
+  },
+  {
+    "postId": "postId3",
+    "postedBy": {
+      "userId": "userId1",
+      "username": "John Doe",
+      "avatarUrl": "https://picsum.photos/100"
+    },
+    "content": "This is a post by John Doe",
+    "images": ["https://picsum.photos/id/24/400", "https://picsum.photos/id/26/450"],
+    "createdAt": 1731054904,
+    "likes": [
+      {
+        "userId": "userId1",
+        "username": "John Doe",
+        "avatarUrl": "https://picsum.photos/100"
+      },
+      {
+        "userId": "userId2",
+        "username": "John Doe",
+        "avatarUrl": "https://picsum.photos/100"
+      }
+    ],
+    "shares": ["userId3"],
+    "commentsCount": 10
+  },
+  {
+    "postId": "postId4",
+    "postedBy": {
+      "userId": "userId1",
+      "username": "John Doe",
+      "avatarUrl": "https://picsum.photos/100"
+    },
+    "content": "This is a post by John Doe",
+    "images": ["https://picsum.photos/id/33/400", "https://picsum.photos/id/31/450"],
+    "createdAt": 1731054904,
+    "likes": [
+      {
+        "userId": "userId1",
+        "username": "John Doe",
+        "avatarUrl": "https://picsum.photos/100"
+      },
+      {
+        "userId": "userId2",
+        "username": "John Doe",
+        "avatarUrl": "https://picsum.photos/100"
+      }
+    ],
+    "shares": ["userId3"],
+    "commentsCount": 10
+  }
+]
