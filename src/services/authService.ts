@@ -1,6 +1,7 @@
-import { usersCollection } from "@/config/firebaseConfig";
+import { User } from "@/types";
 import auth from "@react-native-firebase/auth";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { usersCollection } from "./collections";
 
 const generateKeywords = (displayName: string) => {
   const keywords: string[] = [];
@@ -22,16 +23,17 @@ const createUserProfile = async (
   try {
     const { uid, email, metadata, photoURL, phoneNumber } = userData;
     const keywords = displayName ? generateKeywords(displayName) : null;
-    await usersCollection.doc(uid).set({
-      email,
-      metadata,
+    const user: User = {
+      email: email as string,
+      creationTime: metadata.creationTime as string,
+      lastSignInTime: metadata.lastSignInTime as string,
       displayName,
       phoneNumber,
       photoURL,
       uid,
       keywords,
-      isOnline: true,
-    });
+    };
+    await usersCollection.doc(uid).set(user);
 
     return { error: null };
   } catch (error) {
@@ -133,5 +135,15 @@ export const resetPassword = async (email: string) => {
       errorMessage = "Không tìm thấy email này";
     }
     return { error: errorMessage };
+  }
+};
+
+export const updatePushToken = async (token: string, userId: string) => {
+  try {
+    await usersCollection.doc(userId).update({
+      pushToken: token,
+    });
+  } catch (error) {
+    console.log("updatePushToken", error);
   }
 };

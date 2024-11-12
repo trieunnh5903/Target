@@ -5,7 +5,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import React, { Fragment, memo, useCallback } from "react";
+import React, { Fragment, memo } from "react";
 import ThemedView from "../ThemedView";
 import { Post, User } from "@/types";
 import { Image } from "expo-image";
@@ -14,6 +14,7 @@ import Animated from "react-native-reanimated";
 import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SPACING } from "@/constants";
+import { dayJs } from "@/utils/dayJs";
 
 interface PostItemProps {
   data: Post;
@@ -28,25 +29,29 @@ const PostItem: React.FC<PostItemProps> = ({ data }) => {
   );
 };
 
-const PostHeader = ({
-  avatarUrl,
-  username,
-}: Pick<User, "avatarUrl" | "username" | "userId">) => {
+const PostHeader = ({ displayName, photoURL }: User) => {
   return (
     <ThemedView style={styles.postHeader}>
       <ThemedView style={styles.avatar}>
-        <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+        {photoURL ? (
+          <Image source={{ uri: photoURL }} style={styles.avatar} />
+        ) : (
+          <MaterialCommunityIcons
+            name="account-circle-outline"
+            size={33}
+            color="black"
+          />
+        )}
       </ThemedView>
-      <ThemedText>{username}</ThemedText>
+      <ThemedText>{displayName}</ThemedText>
     </ThemedView>
   );
 };
 
 const PostMedia = ({ data }: PostItemProps) => {
-  const [liked, setLiked] = React.useState(false);
-  const [currentIndex, setCurrentIndex] = React.useState(0);
   const dimension = useWindowDimensions();
   const theme = useTheme();
+
   return (
     <Fragment>
       <Animated.ScrollView
@@ -56,34 +61,19 @@ const PostMedia = ({ data }: PostItemProps) => {
         showsHorizontalScrollIndicator={false}
         horizontal
       >
-        {data.images.map((item) => {
-          return (
-            <Image
-              key={item}
-              source={item}
-              style={{ width: dimension.width, aspectRatio: 1 }}
-            />
-          );
-        })}
+        <Image
+          source={data.images}
+          style={{ width: dimension.width, aspectRatio: 1 }}
+        />
       </Animated.ScrollView>
       <View style={styles.actionsWrapper}>
-        <View style={[styles.indicatorContainer]}>
-          {data.images?.map((item, index) => {
-            return (
-              <View
-                key={"dots" + item}
-                style={[
-                  styles.indicator,
-                  { backgroundColor: theme.colors.outline },
-                  currentIndex === index
-                    ? { backgroundColor: theme.colors.primary }
-                    : null,
-                ]}
-              />
-            );
-          })}
-        </View>
-        <ThemedView style={{flexDirection: 'row', gap: SPACING.small}}>
+        <ThemedView
+          style={{
+            flexDirection: "row",
+            gap: SPACING.small / 2,
+            alignItems: "center",
+          }}
+        >
           <Pressable>
             <MaterialCommunityIcons
               name="heart-outline"
@@ -91,15 +81,31 @@ const PostMedia = ({ data }: PostItemProps) => {
               color={theme.colors.onBackground}
             />
           </Pressable>
-          <ThemedText>{data.likes.length}</ThemedText>
+          <ThemedText style={styles.textBold}>
+            {data.likes?.length || 0}
+          </ThemedText>
         </ThemedView>
+      </View>
+      <View style={styles.description}>
+        <Text>
+          <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
+          {"  "}
+          {data.content}
+        </Text>
+        <Text>{dayJs.getTimeFromNow(data.createdAt.seconds)}</Text>
       </View>
     </Fragment>
   );
 };
 
-export default PostItem;
+export default memo(PostItem);
 const styles = StyleSheet.create({
+  description: {
+    paddingHorizontal: SPACING.medium,
+  },
+  textBold: {
+    fontWeight: "bold",
+  },
   shadow: {
     textShadowRadius: 20,
     textShadowOffset: { width: 1, height: 1 },
@@ -126,6 +132,7 @@ const styles = StyleSheet.create({
   actionsWrapper: {
     gap: SPACING.small,
     padding: SPACING.medium,
+    paddingBottom: SPACING.small,
   },
   avatar: {
     width: 33,

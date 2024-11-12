@@ -1,9 +1,11 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleProp, StyleSheet, Text, TextStyle, View } from "react-native";
 import React, { PropsWithChildren } from "react";
 
-interface ThemedTextProps extends PropsWithChildren {}
-const ThemedText: React.FC<ThemedTextProps> = ({ children }) => {
-  return <Text>{children}</Text>;
+interface ThemedTextProps extends PropsWithChildren {
+  style?: StyleProp<TextStyle>;
+}
+const ThemedText: React.FC<ThemedTextProps> = ({ children, style }) => {
+  return <Text style={style}>{children}</Text>;
 };
 
 export default ThemedText;

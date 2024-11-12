@@ -1,5 +1,5 @@
-import { usersCollection } from "@/config/firebaseConfig";
 import { User } from "@/types";
+import { usersCollection } from "./collections";
 
 export const searchUsersByDisplayName = async (
   searchTerm: string,

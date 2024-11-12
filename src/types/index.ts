@@ -1,22 +1,19 @@
 export type Post = {
-  postId: string;
-  postedBy: Pick<User, "avatarUrl" | "username" | "userId">;
+  id: string;
+  postedBy: User;
   content: string;
-  images: string[];
-  createdAt: number;
-  likes: Pick<User, "avatarUrl" | "username" | "userId">[];
-  shares: string[];
-  commentsCount: number;
+  images: string;
+  createdAt: { nanoseconds: number; seconds: number };
+  likes?: string[];
 };
 
 export type User = {
-  userId: string;
-  username: string;
-  password: string;
+  uid: string;
+  displayName: string;
   email: string;
-  avatarUrl: string;
-  bio: string;
-  following: string[];
-  followers: string[];
-  createdAt: number;
+  photoURL: string | null;
+  creationTime: string;
+  lastSignInTime: string;
+  phoneNumber: string | null;
+  keywords: string[] | null;
 };

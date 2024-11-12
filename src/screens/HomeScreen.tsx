@@ -1,14 +1,33 @@
-import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import React, { useMemo } from "react";
+import { ActivityIndicator, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
 import Animated from "react-native-reanimated";
-import postsData from "../../assets/data/post.json";
 import { PostItem, ThemedView } from "@/components";
+import { Post } from "@/types";
+import { getPosts } from "@/services/postService";
+
 const HomeScreen = () => {
-  const posts = useMemo(() => postsData, []);
+  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const data = await getPosts();
+      if (data) {
+        setPosts(data);
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) {
+    return <ActivityIndicator />;
+  }
+
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ThemedView style={styles.container}>
       <Animated.FlatList
         overScrollMode="never"
+        refre
         scrollEventThrottle={16}
         data={posts}
         renderItem={({ item }) => {
@@ -23,4 +42,6 @@ const HomeScreen = () => {
 
 export default HomeScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "white" },
+});

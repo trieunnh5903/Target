@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable } from "react-native";
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { RootTabParamList } from "@/types/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { CreatePostScreen, HomeScreen, ProfileScreen } from "@/screens";
+import { SPACING } from "@/constants";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const CustomBottomTab = () => {
@@ -25,12 +26,28 @@ const CustomBottomTab = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Create" component={CreatePostScreen} />
+      <Tab.Screen
+        name="Create"
+        component={CreatePostScreen}
+        options={({ route, navigation }) => ({
+          headerShown: false,
+          tabBarStyle: { display: "none" },
+          headerLeft() {
+            return (
+              <Pressable
+                hitSlop={4}
+                onPress={() => navigation.goBack()}
+                style={{ paddingLeft: 16 }}
+              >
+                <MaterialIcons name="arrow-back" size={24} color="black" />
+              </Pressable>
+            );
+          },
+        })}
+      />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
 
 export default CustomBottomTab;
-
-const styles = StyleSheet.create({});
