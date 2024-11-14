@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
-import { updatePushToken } from "@/services/authService";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { userAPI } from "@/api";
 
 export function useNotificationObserver() {
   const notificationListener = useRef<Notifications.Subscription>();
@@ -22,7 +22,7 @@ export function useNotificationObserver() {
       }
       console.log("token", token);
       if (token) {
-        await updatePushToken(token, user.uid);
+        await userAPI.updatePushToken(token, user.uid);
       }
     } catch (error) {
       console.log("registerForPushNotificationsAsync", error);

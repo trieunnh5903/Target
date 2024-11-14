@@ -1,11 +1,10 @@
 import {
-  Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from "react-native";
-import React, { Fragment, memo } from "react";
+import React, { Fragment, memo, useState } from "react";
 import ThemedView from "../ThemedView";
 import { Post, User } from "@/types";
 import { Image } from "expo-image";
@@ -15,16 +14,66 @@ import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
+import { postsCollection } from "@/api/collections";
+import firestore from "@react-native-firebase/firestore";
+import { useAppSelector } from "@/hooks";
+import { notificationAPI } from "@/api";
 
 interface PostItemProps {
   data: Post;
 }
 
+interface PostMediaProps extends PostItemProps {
+  isLike: boolean;
+  toggleLike: () => void;
+  likesCount: number;
+}
+
 const PostItem: React.FC<PostItemProps> = ({ data }) => {
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const [liked, setLiked] = useState(
+    data.likes && data.likes[currentUser?.uid as string] === true ? true : false
+  );
+  const [likesCount, setLikesCount] = useState(data.likesCount ?? 0);
+
+  const toggleLike = async () => {
+    setLiked(!liked);
+    setLikesCount(likesCount + (liked ? -1 : 1));
+    try {
+      const postRef = postsCollection.doc(data.id);
+      await firestore().runTransaction(async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists) {
+          throw new Error("Post does not exist!");
+        }
+        const currentLikesCount = postDoc.data()?.likesCount ?? 0;
+        const plusWith = liked ? -1 : 1;
+        const newLikesCount = currentLikesCount + plusWith;
+        transaction.update(postRef, {
+          likesCount: newLikesCount,
+          [`likes.${currentUser?.uid}`]: !liked,
+        });
+      });
+      await notificationAPI.notificationLiked(
+        data.postedBy.uid,
+        data.postedBy.displayName ?? "Someone",
+        data.id
+      );
+    } catch (error) {
+      console.log("toggleLike", error);
+      setLiked(liked);
+    }
+  };
+
   return (
     <ThemedView>
       <PostHeader {...data.postedBy} />
-      <PostMedia data={data} />
+      <PostMedia
+        data={data}
+        isLike={liked}
+        likesCount={likesCount}
+        toggleLike={toggleLike}
+      />
     </ThemedView>
   );
 };
@@ -48,10 +97,14 @@ const PostHeader = ({ displayName, photoURL }: User) => {
   );
 };
 
-const PostMedia = ({ data }: PostItemProps) => {
+const PostMedia = ({
+  data,
+  isLike,
+  toggleLike,
+  likesCount,
+}: PostMediaProps) => {
   const dimension = useWindowDimensions();
   const theme = useTheme();
-
   return (
     <Fragment>
       <Animated.ScrollView
@@ -74,16 +127,13 @@ const PostMedia = ({ data }: PostItemProps) => {
             alignItems: "center",
           }}
         >
-          <Pressable>
-            <MaterialCommunityIcons
-              name="heart-outline"
-              size={24}
-              color={theme.colors.onBackground}
-            />
-          </Pressable>
-          <ThemedText style={styles.textBold}>
-            {data.likes?.length || 0}
-          </ThemedText>
+          <MaterialCommunityIcons
+            name={isLike ? "heart" : "heart-outline"}
+            onPress={toggleLike}
+            size={24}
+            color={isLike ? theme.colors.error : theme.colors.onBackground}
+          />
+          <ThemedText style={styles.textBold}>{likesCount}</ThemedText>
         </ThemedView>
       </View>
       <View style={styles.description}>

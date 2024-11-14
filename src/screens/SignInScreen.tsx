@@ -1,7 +1,9 @@
 import { Button, StyleSheet, Text, View } from "react-native";
 import React, { useState } from "react";
 import { TextInput } from "react-native-paper";
-import { resetPassword, signIn, signUp } from "@/services/authService";
+import { authAPI, userAPI } from "@/api";
+import { useAppDispatch } from "@/hooks";
+import { fetchUserById } from "@/redux/slices/authSlice";
 
 const SignInScreen = () => {
   const [email, setEmail] = useState("");
@@ -9,26 +11,39 @@ const SignInScreen = () => {
   const [error, setError] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [userName, setUserName] = useState("");
+  const dispatch = useAppDispatch();
 
-  const handleAuth = async () => {
-    if (!email || !password) {
-      setError("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    if (!isLogin && !userName) {
-      setError("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    const { error: authError } = await (isLogin
-      ? signIn(email, password)
-      : signUp(email, password, userName));
-
-    if (authError) {
-      setError(authError);
+  const handleError = (error: string | null) => {
+    if (error) {
+      setError(error);
     } else {
       setError("");
+    }
+    console.log(error);
+  };
+
+  const handleAuth = async () => {
+    try {
+      if (!email || !password || (!isLogin && !userName)) {
+        throw new Error("Vui lòng nhập đầy đủ thông tin");
+      }
+
+      const { error, userCredential } = await (isLogin
+        ? authAPI.signIn(email, password)
+        : authAPI.signUp(email, password));
+
+      if (error || !userCredential) throw new Error(error);
+
+      if (!isLogin) {
+        const { error: createUserError } = await userAPI.createUserProfile(
+          userCredential.user,
+          userName
+        );
+        if (createUserError) throw new Error(createUserError);
+      }
+      dispatch(fetchUserById(userCredential.user.uid));
+    } catch (error) {
+      handleError((error as Error).message);
     }
   };
 
@@ -38,7 +53,7 @@ const SignInScreen = () => {
       return;
     }
 
-    const { error: resetError } = await resetPassword(email);
+    const { error: resetError } = await authAPI.resetPassword(email);
     if (resetError) {
       setError(resetError);
     } else {

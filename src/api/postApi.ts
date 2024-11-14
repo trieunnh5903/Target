@@ -2,12 +2,15 @@ import { Post } from "@/types";
 import firestore from "@react-native-firebase/firestore";
 import axios from "axios";
 import { ImagePickerAsset } from "expo-image-picker";
-import { getUserById } from "./userService";
+import { userAPI } from "./userApi";
+import { likesCollection } from "./collections";
 
 const postsCollection = firestore().collection("posts");
 
-export const getPosts = async () => {
+const getPosts = async () => {
   try {
+    console.log("getPosts");
+
     const postsSnapshot = await postsCollection
       .orderBy("createdAt", "desc")
       .get();
@@ -33,7 +36,9 @@ export const getPosts = async () => {
   }
 };
 
-export const uploadImage = async (assets: ImagePickerAsset) => {
+const uploadImage = async (assets: ImagePickerAsset) => {
+  console.log("uploadImage");
+
   const formData = new FormData();
   formData.append(
     "upload_preset",
@@ -64,7 +69,7 @@ export const uploadImage = async (assets: ImagePickerAsset) => {
   }
 };
 
-export const createPost = async ({
+const createPost = async ({
   content,
   images,
   userId,
@@ -74,6 +79,8 @@ export const createPost = async ({
   images: string;
 }) => {
   try {
+    console.log("createPost");
+
     const { id } = await postsCollection.add({
       userId,
       content,
@@ -82,7 +89,7 @@ export const createPost = async ({
     });
     const data = (await postsCollection.doc(id).get()).data();
     if (data) {
-      const user = await getUserById(userId);
+      const user = await userAPI.fetchUserById(userId);
       const post = { ...data, id, postedBy: user };
       return post as Post;
     }
@@ -90,3 +97,5 @@ export const createPost = async ({
     console.error("uploadFirestore", error);
   }
 };
+
+export const postAPI = { createPost, getPosts, uploadImage };

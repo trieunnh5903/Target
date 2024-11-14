@@ -5,9 +5,12 @@ import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import * as StatusBar from "expo-status-bar";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types/navigation";
-import { SignInScreen } from "@/screens";
-import { useNotificationObserver } from "@/hooks";
+import { EditProfile, SignInScreen } from "@/screens";
+import { useAppDispatch, useNotificationObserver } from "@/hooks";
 import CustomBottomTab from "@/navigation/CustomBottomTab";
+import { fetchUserById } from "@/redux/slices/authSlice";
+import { Provider } from "react-redux";
+import { store } from "@/redux/store";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
@@ -20,6 +23,9 @@ export default function App() {
     const subscriber = auth().onAuthStateChanged((user) => {
       setUser(user);
       init(user);
+      if (user) {
+        store.dispatch(fetchUserById(user.uid));
+      }
       if (initializing) setInitializing(false);
     });
     return subscriber;
@@ -30,20 +36,34 @@ export default function App() {
   }
 
   return (
-    <PaperProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {user ? (
-            <Stack.Group>
-              <Stack.Screen name="Tabs" component={CustomBottomTab} />
-            </Stack.Group>
-          ) : (
-            <Stack.Group>
-              <Stack.Screen name="Auth" component={SignInScreen} />
-            </Stack.Group>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </PaperProvider>
+    <Provider store={store}>
+      <PaperProvider>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {user ? (
+              <Stack.Group>
+                <Stack.Screen name="Tabs" component={CustomBottomTab} />
+                <Stack.Group
+                  screenOptions={{
+                    headerShown: true,
+                    headerShadowVisible: false,
+                  }}
+                >
+                  <Stack.Screen
+                    name="EditProfile"
+                    options={{ headerTitle: "Edit your profile" }}
+                    component={EditProfile}
+                  />
+                </Stack.Group>
+              </Stack.Group>
+            ) : (
+              <Stack.Group>
+                <Stack.Screen name="Auth" component={SignInScreen} />
+              </Stack.Group>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </PaperProvider>
+    </Provider>
   );
 }

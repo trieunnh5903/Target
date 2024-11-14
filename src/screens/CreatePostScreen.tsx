@@ -14,12 +14,10 @@ import React, {
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import auth from "@react-native-firebase/auth";
-import { notificationNewPost } from "@/services/notificationService";
-import { createPost, uploadImage } from "@/services/postService";
 import { RootTabScreenProps } from "@/types/navigation";
 import { useFocusEffect } from "@react-navigation/native";
 import { IconButton } from "react-native-paper";
-import { SPACING } from "@/constants";
+import { notificationAPI, postAPI } from "@/api";
 
 const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   navigation,
@@ -65,20 +63,24 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   }, [navigation]);
 
   const onSubmit = async () => {
-    if (loading === true) console.log("true");
+    if (loading === true) {
+      return;
+    }
     setLoading(true);
     Keyboard.dismiss();
     if (!assets || !currentUser?.uid) return;
-    const image = await uploadImage(assets);
+
+    const image = await postAPI.uploadImage(assets);
     if (!image) return;
-    const newPost = await createPost({
+
+    const newPost = await postAPI.createPost({
       content: description,
       images: image,
       userId: currentUser.uid,
     });
 
     if (newPost) {
-      await notificationNewPost(newPost);
+      await notificationAPI.notificationNewPost(newPost);
     }
 
     setDescription("");
@@ -87,7 +89,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     navigation.goBack();
   };
 
-  if (!assets) return null;
+  if (!assets) return <View style={styles.container} />;
 
   return (
     <View style={styles.container}>

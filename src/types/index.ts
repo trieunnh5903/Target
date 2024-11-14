@@ -4,12 +4,13 @@ export type Post = {
   content: string;
   images: string;
   createdAt: { nanoseconds: number; seconds: number };
-  likes?: string[];
+  likes?: { [userId: string]: boolean };
+  likesCount?: number;
 };
 
 export type User = {
   uid: string;
-  displayName: string;
+  displayName: string | null;
   email: string;
   photoURL: string | null;
   creationTime: string;

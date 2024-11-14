@@ -1,17 +1,25 @@
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, RefreshControl, StyleSheet } from "react-native";
 import React, { useEffect, useState } from "react";
 import Animated from "react-native-reanimated";
 import { PostItem, ThemedView } from "@/components";
 import { Post } from "@/types";
-import { getPosts } from "@/services/postService";
+import { postAPI } from "@/api/postApi";
 
 const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const onRefresh = React.useCallback(async () => {
+    const data = await postAPI.getPosts();
+    if (data) {
+      setPosts(data);
+    }
+    setRefreshing(false);
+  }, []);
 
   useEffect(() => {
     (async () => {
-      const data = await getPosts();
+      const data = await postAPI.getPosts();
       if (data) {
         setPosts(data);
         setLoading(false);
@@ -27,13 +35,15 @@ const HomeScreen = () => {
     <ThemedView style={styles.container}>
       <Animated.FlatList
         overScrollMode="never"
-        refre
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         scrollEventThrottle={16}
         data={posts}
         renderItem={({ item }) => {
           return <PostItem data={item} />;
         }}
-        keyExtractor={(_, index) => index.toString()}
+        keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
       />
     </ThemedView>

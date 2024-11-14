@@ -4,10 +4,19 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { RootTabParamList } from "@/types/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { CreatePostScreen, HomeScreen, ProfileScreen } from "@/screens";
-import { SPACING } from "@/constants";
+import { IconButton } from "react-native-paper";
+import { authAPI } from "@/api";
+import { useAppDispatch } from "@/hooks";
+import { logout } from "@/redux/slices/authSlice";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const CustomBottomTab = () => {
+  const dispatch = useAppDispatch();
+  const handleLogout = async () => {
+    await authAPI.signOut().then(() => {
+      dispatch(logout());
+    });
+  };
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -45,7 +54,15 @@ const CustomBottomTab = () => {
           },
         })}
       />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          headerRight() {
+            return <IconButton onPress={handleLogout} icon={"logout"} />;
+          },
+        }}
+      />
     </Tab.Navigator>
   );
 };
