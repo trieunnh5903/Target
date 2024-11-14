@@ -1,14 +1,8 @@
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Container } from "@/components";
+import { Container, CustomAvatar } from "@/components";
 import { useAppDispatch, useAppSelector, useValidation } from "@/hooks";
-import {
-  Avatar,
-  Button,
-  IconButton,
-  Text,
-  TextInput,
-} from "react-native-paper";
+import { Button, IconButton, Text, TextInput } from "react-native-paper";
 import { userAPI } from "@/api";
 import { generateKeywords } from "@/utils/userUtils";
 import { User } from "@/types";
@@ -98,26 +92,6 @@ const EditProfile = () => {
     }
   };
 
-  const renderAvatar = () => {
-    if (currentUser?.photoURL) {
-      return (
-        <Avatar.Image
-          size={90}
-          source={{ uri: currentUser.photoURL }}
-          style={styles.avatar}
-        />
-      );
-    }
-
-    if (currentUser?.displayName) {
-      return (
-        <Avatar.Text size={90} label={currentUser.displayName.slice(0, 1)} />
-      );
-    }
-
-    return <Avatar.Icon size={90} icon="account-circle-outline" />;
-  };
-
   const handleChangePhoto = async () => {
     try {
       console.log("handleChangePhoto");
@@ -146,7 +120,7 @@ const EditProfile = () => {
   return (
     <Container>
       <View style={styles.avatarContainer}>
-        {renderAvatar()}
+        {currentUser && <CustomAvatar size={"large"} user={currentUser} />}
         <Button
           textColor="black"
           style={{ alignSelf: "center" }}

@@ -2,7 +2,8 @@ import { StyleSheet, View } from "react-native";
 import React, { useLayoutEffect } from "react";
 import { RootTabScreenProps } from "@/types/navigation";
 import { useAppSelector } from "@/hooks";
-import { Avatar, Button } from "react-native-paper";
+import { Button } from "react-native-paper";
+import { CustomAvatar } from "@/components";
 
 const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
   navigation,
@@ -23,17 +24,7 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
   return (
     <View style={[styles.container]}>
       <View style={{ paddingHorizontal: 20 }}>
-        {currentUser?.photoURL ? (
-          <Avatar.Image
-            size={90}
-            source={{ uri: currentUser?.photoURL }}
-            style={{ backgroundColor: "white" }}
-          />
-        ) : currentUser?.displayName ? (
-          <Avatar.Text size={90} label={currentUser.displayName.slice(0, 1)} />
-        ) : (
-          <Avatar.Icon size={90} icon={"account-circle-outline"} />
-        )}
+        {currentUser && <CustomAvatar size={"large"} user={currentUser} />}
         <Button
           mode="contained-tonal"
           buttonColor="#E4E7EC"
