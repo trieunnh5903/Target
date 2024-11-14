@@ -1,24 +1,51 @@
 import { Modal, Pressable, StyleSheet, View } from "react-native";
-import React, { useMemo, useState } from "react";
-import { Container, CustomTextInput } from "@/components";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { Avatar, Button, IconButton, Text } from "react-native-paper";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Container } from "@/components";
+import { useAppDispatch, useAppSelector, useValidation } from "@/hooks";
+import {
+  Avatar,
+  Button,
+  IconButton,
+  Text,
+  TextInput,
+} from "react-native-paper";
 import { userAPI } from "@/api";
 import { generateKeywords } from "@/utils/userUtils";
 import { User } from "@/types";
 import { updateCurrentUser, updatePhotoURL } from "@/redux/slices/authSlice";
 import * as ImagePicker from "expo-image-picker";
+import CustomTextInput, { ValidationError } from "@/components/CustomTextInput";
 
 interface ProfileField {
   fieldName: string;
   label: string;
   value: string;
+  validation: (value: string) => string | null;
 }
 
 const EditProfile = () => {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [selectedField, setSelectedField] = useState<ProfileField | null>(null);
   const dispatch = useAppDispatch();
+  const [error, setError] = useState<ValidationError | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<any>(null);
+  const { validateDisplayName } = useValidation();
+
+  useEffect(() => {
+    if (selectedField) {
+      const timeout = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [selectedField]);
+
+  const handleCloseModal = () => {
+    setSelectedField(null);
+    setError(null);
+  };
 
   const profileFields: ProfileField[] = useMemo(
     () => [
@@ -26,14 +53,30 @@ const EditProfile = () => {
         fieldName: "displayName",
         label: "Display name",
         value: currentUser?.displayName ?? "",
+        validation: validateDisplayName,
       },
     ],
     [currentUser?.displayName]
   );
 
+  const showError = (
+    message: string,
+    type: ValidationError["type"] = "error"
+  ) => {
+    setError({ message, type });
+  };
+
   const handleUpdateField = async () => {
     if (!currentUser || !selectedField) return;
+    const validationError = selectedField.validation?.(selectedField.value);
+    if (validationError) {
+      showError(validationError);
+      return;
+    }
+    setError(null);
+
     try {
+      setIsLoading(true);
       const updateData: Partial<User> =
         selectedField.fieldName === "displayName"
           ? {
@@ -46,9 +89,12 @@ const EditProfile = () => {
 
       await userAPI.updateUser(currentUser.uid, updateData);
       dispatch(updateCurrentUser({ data: { ...currentUser, ...updateData } }));
-      setSelectedField(null);
+      handleCloseModal();
     } catch (error) {
       console.error("Failed to update field:", error);
+      showError("Failed to update profile. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,7 +105,6 @@ const EditProfile = () => {
           size={90}
           source={{ uri: currentUser.photoURL }}
           style={styles.avatar}
-          //bg  color primary
         />
       );
     }
@@ -84,12 +129,14 @@ const EditProfile = () => {
       if (result.canceled) {
         return;
       }
-
       const asset = result.assets[0];
+
       const avtarURL = await userAPI.uploadAvatar(asset);
+
       await userAPI.updateUser(currentUser?.uid, {
         photoURL: avtarURL,
       });
+
       dispatch(updatePhotoURL({ photoURL: avtarURL }));
     } catch (error) {
       console.log("handleChangePhoto", error);
@@ -121,7 +168,11 @@ const EditProfile = () => {
         ))}
       </View>
 
-      <Modal animationType="slide" visible={!!selectedField}>
+      <Modal
+        animationType="slide"
+        visible={!!selectedField}
+        onRequestClose={handleCloseModal}
+      >
         <View style={styles.modalHeader}>
           <IconButton icon={"close"} onPress={() => setSelectedField(null)} />
           <Text variant="titleLarge" style={styles.modalTitle}>
@@ -137,11 +188,19 @@ const EditProfile = () => {
         <View style={styles.modalContent}>
           {selectedField && (
             <CustomTextInput
+              ref={inputRef}
+              error={error}
               onChangeText={(text) => {
                 setSelectedField({ ...selectedField, value: text.trim() });
+                if (error) setError(null);
               }}
               label={selectedField.label}
               value={selectedField.value}
+              maxLength={50}
+              right={
+                <TextInput.Affix text={`${selectedField.value.length}/50`} />
+              }
+              editable={!isLoading}
             />
           )}
         </View>
