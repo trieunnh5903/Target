@@ -1,28 +1,34 @@
 import { Post } from "@/types";
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import axios from "axios";
 import { ImagePickerAsset } from "expo-image-picker";
 import { userAPI } from "./userApi";
-import { likesCollection } from "./collections";
+import { postsCollection, usersCollection } from "./collections";
 
-const postsCollection = firestore().collection("posts");
-
-const getPosts = async () => {
+const getPosts = async ({
+  lastPost,
+  limit,
+}: {
+  lastPost?: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>;
+  limit: number;
+}) => {
   try {
     console.log("getPosts");
 
-    const postsSnapshot = await postsCollection
-      .orderBy("createdAt", "desc")
-      .get();
+    const postsSnapshot = await (lastPost
+      ? postsCollection
+          .orderBy("createdAt", "desc")
+          .startAfter(lastPost)
+          .limit(limit)
+          .get()
+      : postsCollection.orderBy("createdAt", "desc").limit(limit).get());
 
     const posts = await Promise.all(
       postsSnapshot.docs.map(async (doc) => {
         const postData = doc.data();
-        const userDoc = await firestore()
-          .collection("users")
-          .doc(postData.userId)
-          .get();
-
+        const userDoc = await usersCollection.doc(postData.userId).get();
         return {
           id: doc.id,
           ...postData,
@@ -30,9 +36,14 @@ const getPosts = async () => {
         };
       })
     );
-    return posts as unknown as Post[];
+
+    return {
+      posts: posts as unknown as Post[],
+      lastPost: postsSnapshot.docs[postsSnapshot.docs.length - 1],
+    };
   } catch (error) {
     console.log("getPosts", error);
+    throw error;
   }
 };
 

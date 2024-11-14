@@ -1,16 +1,12 @@
 import {
+  Alert,
   Keyboard,
   StyleSheet,
   TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import auth from "@react-native-firebase/auth";
@@ -27,29 +23,32 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   const [assets, setAssets] = useState<ImagePicker.ImagePickerAsset | null>(
     null
   );
-  const dimesion = useWindowDimensions();
+  const dimension = useWindowDimensions();
   const [loading, setLoading] = useState(false);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: assets ? true : false,
-    });
-  }, [navigation, assets]);
 
   useFocusEffect(
     useCallback(() => {
       (async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 1,
-        });
+        try {
+          let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 1,
+            allowsEditing: true,
+            aspect: [1, 1],
+          });
 
-        if (!result.canceled) {
-          setAssets(result.assets[0]);
-        } else {
-          if (navigation.canGoBack()) {
-            navigation.goBack();
+          if (!result.canceled) {
+            setAssets(result.assets[0]);
+          } else {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            }
           }
+        } catch (error) {
+          console.log(error);
+          Alert.alert("Error", "Failed to pick image. Please try again.", [
+            { text: "OK", onPress: () => navigation.goBack() },
+          ]);
         }
       })();
     }, [navigation])
@@ -58,72 +57,77 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   useEffect(() => {
     const unsubscribe = navigation.addListener("blur", () => {
       setAssets(null);
+      setDescription("");
     });
     return unsubscribe;
   }, [navigation]);
 
   const onSubmit = async () => {
-    if (loading === true) {
+    if (loading || !assets || !currentUser?.uid) {
       return;
     }
-    setLoading(true);
-    Keyboard.dismiss();
-    if (!assets || !currentUser?.uid) return;
 
-    const image = await postAPI.uploadImage(assets);
-    if (!image) return;
+    try {
+      setLoading(true);
+      Keyboard.dismiss();
 
-    const newPost = await postAPI.createPost({
-      content: description,
-      images: image,
-      userId: currentUser.uid,
-    });
+      const image = await postAPI.uploadImage(assets);
+      if (!image) {
+        throw new Error("Failed to upload image");
+      }
 
-    if (newPost) {
-      await notificationAPI.notificationNewPost(newPost);
+      const newPost = await postAPI.createPost({
+        content: description.trim(),
+        images: image,
+        userId: currentUser.uid,
+      });
+
+      if (newPost) {
+        await notificationAPI.notificationNewPost(newPost);
+        setDescription("");
+        setAssets(null);
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.log("onSubmit", error);
+      Alert.alert("Error", "Failed to create post. Please try again.", [
+        { text: "OK" },
+      ]);
+    } finally {
+      setLoading(false);
     }
-
-    setDescription("");
-    setAssets(null);
-    setLoading(false);
-    navigation.goBack();
   };
 
   if (!assets) return <View style={styles.container} />;
 
   return (
     <View style={styles.container}>
-      <View style={styles.imageContainer}>
+      <View style={styles.flex1}>
         {assets?.uri && (
           <Image source={{ uri: assets.uri }} style={styles.image} />
         )}
       </View>
-      <View style={styles.flex_1}>
-        <View
-          style={{
-            backgroundColor: "#eaeaea",
-            borderRadius: 20,
-            width: dimesion.width - 40,
-            margin: 20,
-            padding: 6,
-            flex: 1,
-          }}
-        >
+      <View style={styles.flex1}>
+        <View style={[styles.inputWrapper, { width: dimension.width - 40 }]}>
           <TextInput
+            autoFocus
             value={description}
             onChangeText={setDescription}
             style={[styles.input]}
             placeholder="What do you think?"
             multiline
+            maxLength={500}
+            editable={!loading}
           />
-          <View style={{ flexDirection: "row" }}>
-            <View style={styles.flex_1} />
+          <View style={styles.buttonContainer}>
+            <View style={styles.flex1} />
             <IconButton
               icon={"send"}
               onPress={onSubmit}
               loading={loading}
+              containerColor={loading ? "#cccccc" : "black"}
+              disabled={loading}
               mode="contained"
-              containerColor="black"
               iconColor="white"
             />
           </View>
@@ -136,21 +140,6 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 export default CreatePostScreen;
 
 const styles = StyleSheet.create({
-  input: {
-    padding: 8,
-    flex: 1,
-    textAlignVertical: "top",
-    fontSize: 16,
-    width: "100%",
-  },
-  flex_1: {
-    flex: 1,
-  },
-  image: {
-    height: "100%",
-    aspectRatio: 1,
-    borderRadius: 20,
-  },
   container: {
     flex: 1,
     backgroundColor: "white",
@@ -158,8 +147,37 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     flex: 1,
-  },
-  footerContainer: {
+    width: "100%",
     alignItems: "center",
+    justifyContent: "center",
+  },
+  image: {
+    height: "100%",
+    aspectRatio: 1,
+    borderRadius: 20,
+  },
+  inputContainer: {
+    flex: 1,
+  },
+  inputWrapper: {
+    backgroundColor: "#eaeaea",
+    borderRadius: 20,
+    margin: 20,
+    padding: 6,
+    flex: 1,
+  },
+  input: {
+    padding: 8,
+    flex: 1,
+    textAlignVertical: "top",
+    fontSize: 16,
+    width: "100%",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  flex1: {
+    flex: 1,
   },
 });

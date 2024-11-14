@@ -39,7 +39,8 @@ const CustomBottomTab = () => {
         name="Create"
         component={CreatePostScreen}
         options={({ route, navigation }) => ({
-          headerShown: false,
+          title: "Create a post",
+          headerShown: true,
           tabBarStyle: { display: "none" },
           headerLeft() {
             return (
