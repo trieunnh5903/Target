@@ -24,7 +24,7 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
   return (
     <View style={[styles.container]}>
       <View style={{ paddingHorizontal: 20 }}>
-        {currentUser && <CustomAvatar size={"large"} user={currentUser} />}
+        <CustomAvatar size={"large"} user={currentUser} />
         <Button
           mode="contained-tonal"
           buttonColor="#E4E7EC"

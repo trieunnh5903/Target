@@ -120,7 +120,7 @@ const EditProfile = () => {
   return (
     <Container>
       <View style={styles.avatarContainer}>
-        {currentUser && <CustomAvatar size={"large"} user={currentUser} />}
+        <CustomAvatar size={"large"} user={currentUser} />
         <Button
           textColor="black"
           style={{ alignSelf: "center" }}

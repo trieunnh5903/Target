@@ -1,37 +1,59 @@
-import { Pressable } from "react-native";
+import { Alert, Pressable } from "react-native";
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { RootTabParamList } from "@/types/navigation";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { CreatePostScreen, HomeScreen, ProfileScreen } from "@/screens";
 import { IconButton } from "react-native-paper";
-import { authAPI } from "@/api";
-import { useAppDispatch } from "@/hooks";
+import { authAPI, userAPI } from "@/api";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { logout } from "@/redux/slices/authSlice";
+import { CustomAvatar } from "@/components";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const CustomBottomTab = () => {
   const dispatch = useAppDispatch();
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
   const handleLogout = async () => {
-    await authAPI.signOut().then(() => {
-      dispatch(logout());
-    });
+    try {
+      if (currentUser?.uid) {
+        await userAPI.deletePushToken(currentUser.uid);
+      }
+      await authAPI.signOut().then(() => {
+        dispatch(logout());
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed logout. Please try again.", [
+        { text: "OK" },
+      ]);
+    }
   };
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarShowLabel: false,
+        tabBarHideOnKeyboard: true,
         tabBarIcon: ({ focused, color, size }) => {
           if (route.name === "Home") {
-            return <MaterialIcons name={"home"} size={size} color={color} />;
+            return (
+              <MaterialCommunityIcons
+                name={focused ? "home" : "home-outline"}
+                size={size}
+                color="black"
+              />
+            );
           } else if (route.name === "Create") {
-            return <MaterialIcons name={"create"} size={size} color={color} />;
+            return (
+              <MaterialCommunityIcons
+                name="plus-box-outline"
+                size={size}
+                color="black"
+              />
+            );
           }
-          return (
-            <MaterialIcons name={"account-circle"} size={size} color={color} />
-          );
+          return <CustomAvatar user={currentUser} size={size} />;
         },
-        tabBarActiveTintColor: "tomato",
-        tabBarInactiveTintColor: "gray",
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

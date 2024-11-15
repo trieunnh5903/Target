@@ -1,9 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import React, { Fragment, memo, useState } from "react";
 import ThemedView from "../ThemedView";
 import { Post, User } from "@/types";
@@ -18,6 +13,7 @@ import { postsCollection } from "@/api/collections";
 import firestore from "@react-native-firebase/firestore";
 import { useAppSelector } from "@/hooks";
 import { notificationAPI } from "@/api";
+import CustomAvatar from "../CustomAvatar";
 
 interface PostItemProps {
   data: Post;
@@ -78,21 +74,11 @@ const PostItem: React.FC<PostItemProps> = ({ data }) => {
   );
 };
 
-const PostHeader = ({ displayName, photoURL }: User) => {
+const PostHeader = (props: User) => {
   return (
     <ThemedView style={styles.postHeader}>
-      <ThemedView style={styles.avatar}>
-        {photoURL ? (
-          <Image source={{ uri: photoURL }} style={styles.avatar} />
-        ) : (
-          <MaterialCommunityIcons
-            name="account-circle-outline"
-            size={33}
-            color="black"
-          />
-        )}
-      </ThemedView>
-      <ThemedText>{displayName}</ThemedText>
+      <CustomAvatar size={"small"} user={props} />
+      <ThemedText>{props.displayName}</ThemedText>
     </ThemedView>
   );
 };

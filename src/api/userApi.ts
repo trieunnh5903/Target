@@ -4,6 +4,7 @@ import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { generateKeywords } from "@/utils/userUtils";
 import { ImagePickerAsset } from "expo-image-picker";
 import axios from "axios";
+import firestore from "@react-native-firebase/firestore";
 
 const uploadAvatar = async (assets: ImagePickerAsset) => {
   console.log("uploadAvatar");
@@ -102,6 +103,19 @@ const updatePushToken = async (token: string, userId: string) => {
   }
 };
 
+const deletePushToken = async (userId: string) => {
+  try {
+    console.log("deletePushToken");
+
+    await usersCollection.doc(userId).update({
+      pushToken: firestore.FieldValue.delete(),
+    });
+  } catch (error) {
+    console.log("deletePushToken", error);
+    throw error;
+  }
+};
+
 const searchUsersByDisplayName = async (searchTerm: string, limit = 10) => {
   try {
     console.log("searchUsersByDisplayName");
@@ -134,4 +148,5 @@ export const userAPI = {
   createUserProfile,
   updateUser,
   uploadAvatar,
+  deletePushToken,
 };
