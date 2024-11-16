@@ -1,9 +1,9 @@
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import React, { Fragment, memo, useState } from "react";
-import ThemedView from "../ThemedView";
 import { Post, User } from "@/types";
 import { Image } from "expo-image";
 import ThemedText from "../ThemedText";
+import CustomView from "../CustomView";
 import Animated from "react-native-reanimated";
 import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -62,7 +62,7 @@ const PostItem: React.FC<PostItemProps> = ({ data }) => {
   };
 
   return (
-    <ThemedView>
+    <CustomView>
       <PostHeader {...data.postedBy} />
       <PostMedia
         data={data}
@@ -70,16 +70,16 @@ const PostItem: React.FC<PostItemProps> = ({ data }) => {
         likesCount={likesCount}
         toggleLike={toggleLike}
       />
-    </ThemedView>
+    </CustomView>
   );
 };
 
 const PostHeader = (props: User) => {
   return (
-    <ThemedView style={styles.postHeader}>
+    <CustomView style={styles.postHeader}>
       <CustomAvatar size={"small"} user={props} />
       <ThemedText>{props.displayName}</ThemedText>
-    </ThemedView>
+    </CustomView>
   );
 };
 
@@ -106,7 +106,7 @@ const PostMedia = ({
         />
       </Animated.ScrollView>
       <View style={styles.actionsWrapper}>
-        <ThemedView
+        <CustomView
           style={{
             flexDirection: "row",
             gap: SPACING.small / 2,
@@ -120,7 +120,7 @@ const PostMedia = ({
             color={isLike ? theme.colors.error : theme.colors.onBackground}
           />
           <ThemedText style={styles.textBold}>{likesCount}</ThemedText>
-        </ThemedView>
+        </CustomView>
       </View>
       <View style={styles.description}>
         <Text>

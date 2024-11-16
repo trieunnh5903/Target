@@ -1,8 +1,11 @@
-import { StyleSheet, View } from "react-native";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import React, { PropsWithChildren } from "react";
 
-const Container = ({ children }: PropsWithChildren) => {
-  return <View style={styles.container}>{children}</View>;
+interface ContainerProps extends PropsWithChildren {
+  style?: StyleProp<ViewStyle>;
+}
+const Container: React.FC<ContainerProps> = ({ children, style }) => {
+  return <View style={[styles.container, style]}>{children}</View>;
 };
 
 export default Container;

@@ -5,7 +5,7 @@ import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import * as StatusBar from "expo-status-bar";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types/navigation";
-import { EditProfile, SignInScreen } from "@/screens";
+import { EditProfile, SignInScreen, SignUpScreen } from "@/screens";
 import { useAppDispatch, useNotificationObserver } from "@/hooks";
 import CustomBottomTab from "@/navigation/CustomBottomTab";
 import { fetchUserById } from "@/redux/slices/authSlice";
@@ -57,8 +57,16 @@ export default function App() {
                 </Stack.Group>
               </Stack.Group>
             ) : (
-              <Stack.Group>
-                <Stack.Screen name="Auth" component={SignInScreen} />
+              <Stack.Group
+                screenOptions={{
+                  animation: "slide_from_right",
+                  headerShown: true,
+                  headerTitle: "",
+                  headerShadowVisible: false,
+                }}
+              >
+                <Stack.Screen name="SignIn" component={SignInScreen} />
+                <Stack.Screen name="SignUp" component={SignUpScreen} />
               </Stack.Group>
             )}
           </Stack.Navigator>

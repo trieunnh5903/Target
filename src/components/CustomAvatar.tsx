@@ -1,6 +1,7 @@
 import React from "react";
 import { User } from "@/types";
 import { Avatar } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface CustomAvatarProps {
   user: User | null;
@@ -27,13 +28,15 @@ const CustomAvatar: React.FC<CustomAvatarProps> = ({
         style={{ backgroundColor: "white" }}
       />
     );
-  } else if (user?.displayName) {
-    return (
-      <Avatar.Text size={sizeValue} label={user.displayName.slice(0, 1)} />
-    );
   }
 
-  return <Avatar.Icon size={sizeValue} icon={"account-circle-outline"} />;
+  return (
+    <MaterialCommunityIcons
+      name={"account-circle"}
+      size={sizeValue}
+      color="black"
+    />
+  );
 };
 
 export default CustomAvatar;

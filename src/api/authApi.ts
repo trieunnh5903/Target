@@ -15,14 +15,15 @@ const signUp = async (email: string, password: string) => {
     };
   } catch (error: any) {
     let errorMessage = "Đã xảy ra lỗi khi đăng ký";
-    switch (error.code) {
-      case "auth/email-already-in-use":
+    const errorCode = error.message.split(" ")[0];
+    switch (errorCode) {
+      case "[auth/email-already-in-use]":
         errorMessage = "Email này đã được sử dụng";
         break;
-      case "auth/invalid-email":
+      case "[auth/invalid-email]":
         errorMessage = "Email không hợp lệ";
         break;
-      case "auth/weak-password":
+      case "[auth/weak-password]":
         errorMessage = "Mật khẩu phải có ít nhất 6 ký tự";
         break;
     }
@@ -47,20 +48,21 @@ const signIn = async (email: string, password: string) => {
       userCredential,
     };
   } catch (error: any) {
-    console.log(error);
-
     let errorMessage = "Đã xảy ra lỗi khi đăng nhập";
-    switch (error.code) {
-      case "auth/invalid-email":
+    const errorCode = error.message.split(" ")[0];
+    console.log(errorCode);
+
+    switch (errorCode) {
+      case "[auth/invalid-email]":
         errorMessage = "Email không hợp lệ";
         break;
-      case "auth/user-disabled":
+      case "[auth/user-disabled]":
         errorMessage = "Tài khoản đã bị vô hiệu hóa";
         break;
-      case "auth/user-not-found":
+      case "[auth/user-not-found]":
         errorMessage = "Không tìm thấy tài khoản";
         break;
-      case "auth/wrong-password":
+      case "[auth/wrong-password]":
         errorMessage = "Mật khẩu không đúng";
         break;
     }

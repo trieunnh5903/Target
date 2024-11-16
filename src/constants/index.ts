@@ -87,6 +87,9 @@ export const GLOBAL_STYLE = StyleSheet.create({
   justifyContentBetween: {
     justifyContent: "space-between",
   },
+  justifyContentEnd: {
+    justifyContent: "flex-end",
+  },
   scrollSpaceAround: {
     flexGrow: 1,
     justifyContent: "space-around",

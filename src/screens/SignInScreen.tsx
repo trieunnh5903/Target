@@ -1,115 +1,120 @@
-import { Button, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import React, { useState } from "react";
-import { TextInput } from "react-native-paper";
+import { Button, Text, TextInput } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
 import { useAppDispatch } from "@/hooks";
 import { fetchUserById } from "@/redux/slices/authSlice";
+import { Container, CustomView } from "@/components";
+import { GLOBAL_STYLE } from "@/constants";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
+import CustomTextInput from "@/components/CustomTextInput";
+import { RootStackScreenProps } from "@/types/navigation";
 
-const SignInScreen = () => {
+const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
+  navigation,
+}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLogin, setIsLogin] = useState(true);
-  const [userName, setUserName] = useState("");
+  const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
 
   const handleError = (error: string | null) => {
     if (error) {
       setError(error);
+      Alert.alert("Lỗi", error, [{ text: "OK" }]);
     } else {
       setError("");
     }
+
     console.log(error);
   };
 
-  const handleAuth = async () => {
+  const handleSignIn = async () => {
     try {
-      if (!email || !password || (!isLogin && !userName)) {
+      setLoading(true);
+      if (!email || !password) {
         throw new Error("Vui lòng nhập đầy đủ thông tin");
       }
 
-      const { error, userCredential } = await (isLogin
-        ? authAPI.signIn(email, password)
-        : authAPI.signUp(email, password));
-
+      const { error, userCredential } = await authAPI.signIn(email, password);
       if (error || !userCredential) throw new Error(error);
-
-      if (!isLogin) {
-        const { error: createUserError } = await userAPI.createUserProfile(
-          userCredential.user,
-          userName
-        );
-        if (createUserError) throw new Error(createUserError);
-      }
       dispatch(fetchUserById(userCredential.user.uid));
     } catch (error) {
       handleError((error as Error).message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!email) {
-      setError("Vui lòng nhập email");
-      return;
-    }
+  // const handleResetPassword = async () => {
+  //   if (!email) {
+  //     setError("Vui lòng nhập email");
+  //     return;
+  //   }
 
-    const { error: resetError } = await authAPI.resetPassword(email);
-    if (resetError) {
-      setError(resetError);
-    } else {
-      setError("Email đặt lại mật khẩu đã được gửi");
-    }
-  };
+  //   const { error: resetError } = await authAPI.resetPassword(email);
+  //   if (resetError) {
+  //     setError(resetError);
+  //   } else {
+  //     setError("Email đặt lại mật khẩu đã được gửi");
+  //   }
+  // };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{isLogin ? "Đăng nhập" : "Đăng ký"}</Text>
+    <Container style={[GLOBAL_STYLE.justifyContentCenter]}>
+      <CustomView style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}>
+        <CustomView style={styles.languageContainer}>
+          <Text variant="titleMedium">English</Text>
+        </CustomView>
+        <CustomView paddingTop={24} style={[GLOBAL_STYLE.alignItemsCenter]}>
+          <Image
+            source={require("../../assets/icon.png")}
+            style={{ width: 60, height: 60 }}
+          />
+        </CustomView>
+      </CustomView>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Mật khẩu"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      {!isLogin && (
-        <TextInput
-          style={styles.input}
-          placeholder="Display name"
-          value={userName}
-          onChangeText={setUserName}
-          keyboardType="default"
-          autoCapitalize="sentences"
+      <CustomView padding={16} style={styles.form}>
+        <CustomTextInput
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
-      )}
+        <CustomTextInput
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+        <Button mode="contained" loading={loading} onPress={handleSignIn}>
+          Login
+        </Button>
+      </CustomView>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      <Button title={isLogin ? "Đăng nhập" : "Đăng ký"} onPress={handleAuth} />
-
-      <Button
-        title={`Chuyển sang ${isLogin ? "đăng ký" : "đăng nhập"}`}
-        onPress={() => setIsLogin(!isLogin)}
-      />
-
-      {isLogin && (
-        <Button title="Quên mật khẩu?" onPress={handleResetPassword} />
-      )}
-    </View>
+      <CustomView
+        padding={16}
+        style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.justifyContentBetween]}
+      >
+        <Button>You forget password?</Button>
+        <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
+          Create new account
+        </Button>
+      </CustomView>
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
+  languageContainer: { position: "absolute", top: 0 },
+
+  form: {
+    gap: 16,
+    flex: 1,
+  },
   container: {
     flex: 1,
     padding: 20,

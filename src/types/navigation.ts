@@ -7,12 +7,14 @@ import { StackScreenProps } from "@react-navigation/stack";
 
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<RootTabParamList>;
-  Auth: NavigatorScreenParams<AuthStackParamList>;
+  SignIn: undefined;
+  SignUp: undefined;
   EditProfile: undefined;
 };
 
 export type AuthStackParamList = {
   SignIn: undefined;
+  SignUp: undefined;
 };
 
 export type RootTabParamList = {

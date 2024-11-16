@@ -163,7 +163,7 @@ const EditProfile = () => {
           {selectedField && (
             <CustomTextInput
               ref={inputRef}
-              error={error}
+              helperText={error}
               onChangeText={(text) => {
                 setSelectedField({ ...selectedField, value: text.trim() });
                 if (error) setError(null);

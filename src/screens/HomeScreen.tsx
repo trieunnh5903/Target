@@ -6,7 +6,7 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Animated from "react-native-reanimated";
-import { PostItem, ThemedView } from "@/components";
+import { PostItem, CustomView } from "@/components";
 import { Post } from "@/types";
 import { postAPI } from "@/api/postApi";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
@@ -58,7 +58,7 @@ const HomeScreen = () => {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <CustomView style={styles.container}>
       <Animated.FlatList
         overScrollMode="never"
         refreshControl={
@@ -80,7 +80,7 @@ const HomeScreen = () => {
           </View>
         }
       />
-    </ThemedView>
+    </CustomView>
   );
 };
 

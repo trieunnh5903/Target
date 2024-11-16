@@ -40,20 +40,18 @@ const uploadAvatar = async (assets: ImagePickerAsset) => {
   }
 };
 
-const createUserProfile = async (
-  userData: FirebaseAuthTypes.User,
-  displayName: string
-) => {
+const createUserProfile = async (userData: FirebaseAuthTypes.User) => {
   try {
     console.log("createUserProfile");
 
-    const { uid, email, metadata, photoURL, phoneNumber } = userData;
+    const { uid, email, metadata, photoURL, phoneNumber, displayName } =
+      userData;
     const keywords = displayName ? generateKeywords(displayName) : null;
     const user: User = {
       email: email as string,
       creationTime: metadata.creationTime as string,
       lastSignInTime: metadata.lastSignInTime as string,
-      displayName,
+      displayName: displayName ?? "User",
       phoneNumber,
       photoURL,
       uid,

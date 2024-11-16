@@ -8,7 +8,6 @@ import { IconButton } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { logout } from "@/redux/slices/authSlice";
-import { CustomAvatar } from "@/components";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const CustomBottomTab = () => {
@@ -23,6 +22,7 @@ const CustomBottomTab = () => {
         dispatch(logout());
       });
     } catch (error) {
+      console.log(error);
       Alert.alert("Error", "Failed logout. Please try again.", [
         { text: "OK" },
       ]);
@@ -52,7 +52,13 @@ const CustomBottomTab = () => {
               />
             );
           }
-          return <CustomAvatar user={currentUser} size={size} />;
+          return (
+            <MaterialCommunityIcons
+              name={focused ? "account-circle" : "account-circle-outline"}
+              size={size}
+              color="black"
+            />
+          );
         },
       })}
     >
