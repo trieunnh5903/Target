@@ -8,6 +8,7 @@ import { IconButton } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { logout } from "@/redux/slices/authSlice";
+import { CustomAvatar } from "@/components";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const CustomBottomTab = () => {
@@ -18,6 +19,7 @@ const CustomBottomTab = () => {
       if (currentUser?.uid) {
         await userAPI.deletePushToken(currentUser.uid);
       }
+
       await authAPI.signOut().then(() => {
         dispatch(logout());
       });
@@ -34,31 +36,43 @@ const CustomBottomTab = () => {
       screenOptions={({ route }) => ({
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,
+        tabBarActiveTintColor: "black",
+        tabBarInactiveTintColor: "black",
         tabBarIcon: ({ focused, color, size }) => {
-          if (route.name === "Home") {
-            return (
-              <MaterialCommunityIcons
-                name={focused ? "home" : "home-outline"}
-                size={size}
-                color="black"
-              />
-            );
-          } else if (route.name === "Create") {
-            return (
-              <MaterialCommunityIcons
-                name="plus-box-outline"
-                size={size}
-                color="black"
-              />
-            );
-          }
-          return (
-            <MaterialCommunityIcons
-              name={focused ? "account-circle" : "account-circle-outline"}
+          let icon = (
+            <CustomAvatar
               size={size}
-              color="black"
+              user={currentUser}
+              focused={focused}
+              color={color}
             />
           );
+
+          switch (route.name) {
+            case "Home":
+              icon = (
+                <MaterialCommunityIcons
+                  name={focused ? "home" : "home-outline"}
+                  size={size}
+                  color={color}
+                />
+              );
+              break;
+
+            case "Create":
+              icon = (
+                <MaterialCommunityIcons
+                  name="plus-box-outline"
+                  size={size}
+                  color={color}
+                />
+              );
+
+            default:
+              break;
+          }
+
+          return icon;
         },
       })}
     >

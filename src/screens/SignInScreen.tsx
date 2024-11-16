@@ -1,12 +1,11 @@
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 import React, { useState } from "react";
-import { Button, Text, TextInput } from "react-native-paper";
-import { authAPI, userAPI } from "@/api";
+import { Button, Text } from "react-native-paper";
+import { authAPI } from "@/api";
 import { useAppDispatch } from "@/hooks";
 import { fetchUserById } from "@/redux/slices/authSlice";
 import { Container, CustomView } from "@/components";
 import { GLOBAL_STYLE } from "@/constants";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import CustomTextInput from "@/components/CustomTextInput";
 import { RootStackScreenProps } from "@/types/navigation";
