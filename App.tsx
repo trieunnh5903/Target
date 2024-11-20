@@ -1,16 +1,23 @@
 import { NavigationContainer } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import { PaperProvider } from "react-native-paper";
+import { IconButton, PaperProvider } from "react-native-paper";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import * as StatusBar from "expo-status-bar";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types/navigation";
-import { EditProfile, SignInScreen, SignUpScreen } from "@/screens";
+import {
+  CameraPicker,
+  EditImage,
+  EditProfile,
+  SignInScreen,
+  SignUpScreen,
+} from "@/screens";
 import { useAppDispatch, useNotificationObserver } from "@/hooks";
 import CustomBottomTab from "@/navigation/CustomBottomTab";
 import { fetchUserById } from "@/redux/slices/authSlice";
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
@@ -36,42 +43,62 @@ export default function App() {
   }
 
   return (
-    <Provider store={store}>
-      <PaperProvider>
-        <NavigationContainer>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {user ? (
-              <Stack.Group>
-                <Stack.Screen name="Tabs" component={CustomBottomTab} />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <PaperProvider>
+          <NavigationContainer>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+              {user ? (
+                <Stack.Group>
+                  <Stack.Screen name="Tabs" component={CustomBottomTab} />
+                  <Stack.Group
+                    screenOptions={{
+                      headerShown: true,
+                      headerShadowVisible: false,
+                    }}
+                  >
+                    <Stack.Screen
+                      name="EditProfile"
+                      options={{ headerTitle: "Edit your profile" }}
+                      component={EditProfile}
+                    />
+                    <Stack.Screen
+                      name="EditImage"
+                      options={({ route, navigation }) => {
+                        return {
+                          headerTitle: "",
+                          headerLeft(props) {
+                            return (
+                              <IconButton
+                                icon={"close"}
+                                onPress={() => navigation.goBack()}
+                              />
+                            );
+                          },
+                        };
+                      }}
+                      component={EditImage}
+                    />
+                  </Stack.Group>
+                  <Stack.Screen name="CameraPicker" component={CameraPicker} />
+                </Stack.Group>
+              ) : (
                 <Stack.Group
                   screenOptions={{
+                    animation: "slide_from_right",
                     headerShown: true,
+                    headerTitle: "",
                     headerShadowVisible: false,
                   }}
                 >
-                  <Stack.Screen
-                    name="EditProfile"
-                    options={{ headerTitle: "Edit your profile" }}
-                    component={EditProfile}
-                  />
+                  <Stack.Screen name="SignIn" component={SignInScreen} />
+                  <Stack.Screen name="SignUp" component={SignUpScreen} />
                 </Stack.Group>
-              </Stack.Group>
-            ) : (
-              <Stack.Group
-                screenOptions={{
-                  animation: "slide_from_right",
-                  headerShown: true,
-                  headerTitle: "",
-                  headerShadowVisible: false,
-                }}
-              >
-                <Stack.Screen name="SignIn" component={SignInScreen} />
-                <Stack.Screen name="SignUp" component={SignUpScreen} />
-              </Stack.Group>
-            )}
-          </Stack.Navigator>
-        </NavigationContainer>
-      </PaperProvider>
-    </Provider>
+              )}
+            </Stack.Navigator>
+          </NavigationContainer>
+        </PaperProvider>
+      </Provider>
+    </GestureHandlerRootView>
   );
 }

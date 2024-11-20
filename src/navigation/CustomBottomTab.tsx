@@ -33,6 +33,7 @@ const CustomBottomTab = () => {
 
   return (
     <Tab.Navigator
+      initialRouteName="Create"
       screenOptions={({ route }) => ({
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,
@@ -81,7 +82,7 @@ const CustomBottomTab = () => {
         name="Create"
         component={CreatePostScreen}
         options={({ route, navigation }) => ({
-          title: "Create a post",
+          title: "New post",
           headerShown: true,
           tabBarStyle: { display: "none" },
           headerLeft() {

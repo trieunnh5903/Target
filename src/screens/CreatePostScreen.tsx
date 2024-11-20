@@ -1,138 +1,189 @@
 import {
-  Alert,
-  Keyboard,
+  ActivityIndicator,
+  FlatList,
+  ListRenderItem,
   StyleSheet,
-  TextInput,
+  Text,
+  TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
-import * as ImagePicker from "expo-image-picker";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import * as MediaLibrary from "expo-media-library";
 import { Image } from "expo-image";
-import auth from "@react-native-firebase/auth";
-import { RootTabScreenProps } from "@/types/navigation";
-import { useFocusEffect } from "@react-navigation/native";
 import { IconButton } from "react-native-paper";
-import { notificationAPI, postAPI } from "@/api";
+import { RootTabScreenProps } from "@/types/navigation";
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from "react-native-reanimated";
+import { launchCamera } from "react-native-image-picker";
+interface ImageItemProps {
+  uri: string;
+  size: number;
+  onPress: () => void;
+}
+
+const ImageItem: React.FC<ImageItemProps> = memo(function ImageItem({
+  uri,
+  size,
+  onPress,
+}) {
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <View style={[styles.imageWrapper]}>
+        <Image
+          source={{ uri: uri }}
+          style={[styles.image, { width: size, height: size }]}
+        />
+      </View>
+    </TouchableOpacity>
+  );
+});
 
 const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   navigation,
 }) => {
-  const currentUser = auth().currentUser;
-  const [description, setDescription] = useState("");
-  const [assets, setAssets] = useState<ImagePicker.ImagePickerAsset | null>(
-    null
-  );
+  const [media, setMedia] = useState<MediaLibrary.Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [endCursor, setEndCursor] = useState<
+    MediaLibrary.AssetRef | undefined
+  >();
   const dimension = useWindowDimensions();
-  const [loading, setLoading] = useState(false);
+  const imageSize = dimension.width / 4;
+  const ITEMS_PER_PAGE = 20;
+  const scrollY = useSharedValue(0);
 
-  useFocusEffect(
-    useCallback(() => {
-      (async () => {
-        try {
-          let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 1,
-            allowsEditing: true,
-            aspect: [1, 1],
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const loadImages = useCallback(
+    async (after: MediaLibrary.AssetRef | undefined = undefined) => {
+      try {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+
+        if (status === "granted") {
+          const {
+            assets,
+            endCursor: newEndCursor,
+            hasNextPage,
+          } = await MediaLibrary.getAssetsAsync({
+            mediaType: "photo",
+            sortBy: ["creationTime"],
+            first: ITEMS_PER_PAGE,
+            after: after,
           });
 
-          if (!result.canceled) {
-            setAssets(result.assets[0]);
+          if (after) {
+            setMedia((prevMedia) => [...prevMedia, ...assets]);
           } else {
-            if (navigation.canGoBack()) {
-              navigation.goBack();
-            }
+            setMedia(assets);
           }
-        } catch (error) {
-          console.log(error);
-          Alert.alert("Error", "Failed to pick image. Please try again.", [
-            { text: "OK", onPress: () => navigation.goBack() },
-          ]);
+
+          setEndCursor(newEndCursor);
+          setHasMore(hasNextPage);
         }
-      })();
-    }, [navigation])
+      } catch (error) {
+        console.error("Error loading images:", error);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    []
   );
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("blur", () => {
-      setAssets(null);
-      setDescription("");
+  useLayoutEffect(() => {
+    const onCameraPress = async () => {
+      try {
+        const result = await launchCamera({ mediaType: "photo" });
+        if (!result.didCancel && result.assets) {
+          navigation.navigate("EditImage", { asset: result.assets[0] });
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    navigation.setOptions({
+      headerRight: () => {
+        return <IconButton icon={"camera"} onPress={onCameraPress} />;
+      },
     });
-    return unsubscribe;
+    return () => {};
   }, [navigation]);
 
-  const onSubmit = async () => {
-    if (loading || !assets || !currentUser?.uid) {
-      return;
-    }
+  useEffect(() => {
+    loadImages();
+  }, [loadImages]);
 
-    try {
-      setLoading(true);
-      Keyboard.dismiss();
+  console.log("hasMore", hasMore);
 
-      const image = await postAPI.uploadImage(assets);
-      if (!image) {
-        throw new Error("Failed to upload image");
-      }
-
-      const newPost = await postAPI.createPost({
-        content: description.trim(),
-        images: image,
-        userId: currentUser.uid,
-      });
-
-      if (newPost) {
-        await notificationAPI.notificationNewPost(newPost);
-        setDescription("");
-        setAssets(null);
-        navigation.goBack();
-      }
-    } catch (error) {
-      console.log("onSubmit", error);
-      Alert.alert("Error", "Failed to create post. Please try again.", [
-        { text: "OK" },
-      ]);
-    } finally {
-      setLoading(false);
+  const handleLoadMore = async () => {
+    if (!loadingMore && hasMore) {
+      setLoadingMore(true);
+      await loadImages(endCursor);
     }
   };
 
-  if (!assets) return <View style={styles.container} />;
+  const handleImagePress = (image: MediaLibrary.Asset) => {
+    navigation.navigate("EditImage", { asset: image });
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  const renderItem: ListRenderItem<MediaLibrary.Asset> = ({ item }) => {
+    return (
+      <ImageItem
+        uri={item.uri}
+        size={imageSize}
+        onPress={() => handleImagePress(item)}
+      />
+    );
+  };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#0000ff" />
+        <Text style={styles.loadingText}>Đang tải thêm...</Text>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.flex1}>
-        {assets?.uri && (
-          <Image source={{ uri: assets.uri }} style={styles.image} />
-        )}
-      </View>
-      <View style={styles.flex1}>
-        <View style={[styles.inputWrapper, { width: dimension.width - 40 }]}>
-          <TextInput
-            autoFocus
-            value={description}
-            onChangeText={setDescription}
-            style={[styles.input]}
-            placeholder="What do you think?"
-            multiline
-            maxLength={500}
-            editable={!loading}
-          />
-          <View style={styles.buttonContainer}>
-            <View style={styles.flex1} />
-            <IconButton
-              icon={"send"}
-              onPress={onSubmit}
-              loading={loading}
-              containerColor={loading ? "#cccccc" : "black"}
-              disabled={loading}
-              mode="contained"
-              iconColor="white"
-            />
-          </View>
-        </View>
-      </View>
+      <Animated.FlatList
+        onScroll={onScroll}
+        data={media}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={true}
+        keyExtractor={(item) => item.filename}
+        numColumns={4}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
+      />
     </View>
   );
 };
@@ -140,44 +191,42 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 export default CreatePostScreen;
 
 const styles = StyleSheet.create({
+  scrollBarContainer: {
+    width: 6,
+    backgroundColor: "transparent",
+    borderRadius: 3,
+    marginRight: 2,
+    position: "absolute",
+    right: 0,
+  },
+  scrollIndicator: {
+    width: 6,
+    borderRadius: 3,
+    // backgroundColor: "#888",
+    backgroundColor: "red",
+  },
+
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: "#fff",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
   },
-  imageContainer: {
-    flex: 1,
-    width: "100%",
+  list: {},
+  imageWrapper: {},
+  image: {},
+  footerLoader: {
+    padding: 10,
     alignItems: "center",
+    flexDirection: "row",
     justifyContent: "center",
   },
-  image: {
-    height: "100%",
-    aspectRatio: 1,
-    borderRadius: 20,
-  },
-  inputContainer: {
-    flex: 1,
-  },
-  inputWrapper: {
-    backgroundColor: "#eaeaea",
-    borderRadius: 20,
-    margin: 20,
-    padding: 6,
-    flex: 1,
-  },
-  input: {
-    padding: 8,
-    flex: 1,
-    textAlignVertical: "top",
-    fontSize: 16,
-    width: "100%",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  flex1: {
-    flex: 1,
+  loadingText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: "#666",
   },
 });
