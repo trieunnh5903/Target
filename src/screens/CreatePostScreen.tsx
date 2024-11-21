@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  FlatList,
   ListRenderItem,
   StyleSheet,
   Text,
@@ -13,7 +12,6 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useRef,
   useState,
 } from "react";
 import * as MediaLibrary from "expo-media-library";
@@ -109,7 +107,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     const onCameraPress = async () => {
       try {
         const result = await launchCamera({ mediaType: "photo" });
-        if (!result.didCancel && result.assets) {
+        if (!result.didCancel && result.assets && result.assets.length > 0) {
           navigation.navigate("EditImage", { asset: result.assets[0] });
         }
       } catch (error) {
@@ -128,8 +126,6 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   useEffect(() => {
     loadImages();
   }, [loadImages]);
-
-  console.log("hasMore", hasMore);
 
   const handleLoadMore = async () => {
     if (!loadingMore && hasMore) {
@@ -202,7 +198,6 @@ const styles = StyleSheet.create({
   scrollIndicator: {
     width: 6,
     borderRadius: 3,
-    // backgroundColor: "#888",
     backgroundColor: "red",
   },
 
