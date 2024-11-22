@@ -7,9 +7,16 @@ import {
   SaveFormat,
 } from "expo-image-manipulator";
 import React, { useMemo, useState } from "react";
-import { View, Image, StyleSheet, Dimensions, Modal } from "react-native";
+import {
+  View,
+  Image,
+  StyleSheet,
+  Dimensions,
+  Modal,
+  Alert,
+} from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { Button, IconButton, Text } from "react-native-paper";
+import { Button, IconButton } from "react-native-paper";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -28,43 +35,58 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
       height: originalHeight = cropSize,
     },
   } = route.params;
+
   const originalRatio = originalWidth / originalHeight;
   const [image, setImage] = useState<ImageResult | null>(null);
-  const [aspectRatio, setAspectRatio] = useState(1 / 1);
+  const [resizeFull, setResizeFull] = useState(true);
   const translationX = useSharedValue(0);
   const translationY = useSharedValue(0);
   const prevTranslationY = useSharedValue(0);
   const prevTranslationX = useSharedValue(0);
   const girdOverlayOpacity = useSharedValue(0);
+  const girdOverlayTranslateX = useSharedValue(0);
+  const girdOverlayTranslateY = useSharedValue(0);
 
   const displayWidth = useMemo(
     () =>
-      originalWidth > originalHeight ? cropSize * originalRatio : cropSize,
-    [originalHeight, originalRatio, originalWidth]
+      resizeFull
+        ? originalWidth > originalHeight
+          ? cropSize * originalRatio
+          : cropSize
+        : originalWidth > originalHeight
+        ? cropSize
+        : cropSize - 70,
+    [originalHeight, originalRatio, originalWidth, resizeFull]
   );
 
   const displayHeight = useMemo(
     () =>
-      originalWidth > originalHeight ? cropSize : cropSize / originalRatio,
-    [originalHeight, originalRatio, originalWidth]
+      resizeFull
+        ? originalWidth > originalHeight
+          ? cropSize
+          : cropSize / originalRatio
+        : originalWidth > originalHeight
+        ? cropSize / originalRatio
+        : (cropSize - 70) / originalRatio,
+    [originalHeight, originalRatio, originalWidth, resizeFull]
   );
 
-  const limitTranslateY = useMemo(
+  const possibleTranslateY = useMemo(
     () => cropSize / 2 - displayHeight / 2,
     [displayHeight]
   );
-  const limitTranslateX = useMemo(
+
+  console.log(possibleTranslateY);
+
+  const possibleTranslateX = useMemo(
     () => cropSize / 2 - displayWidth / 2,
     [displayWidth]
   );
 
-  // const displaySize =
-  //   originalWidth > originalHeight
-  //     ? { height: cropSize, width: cropSize * (originalWidth / originalHeight) }
-  //     : {
-  //         width: cropSize,
-  //         height: cropSize / (originalWidth / originalHeight),
-  //       };
+  const limitTranslateY = useMemo(
+    () => Math.abs(cropSize / 2 - displayHeight / 2 - 100),
+    [displayHeight]
+  );
 
   const animatedImageStyle = useAnimatedStyle(() => ({
     transform: [
@@ -75,36 +97,104 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
 
   const girdOverlayStyle = useAnimatedStyle(() => ({
     opacity: girdOverlayOpacity.value,
+    transform: [
+      { translateX: girdOverlayTranslateX.value },
+      { translateY: girdOverlayTranslateY.value },
+    ],
   }));
 
   const pan = Gesture.Pan()
-    .onTouchesDown((e) => {
+    .onTouchesDown(() => {
       girdOverlayOpacity.value = withTiming(1);
     })
     .onTouchesUp(() => {
       girdOverlayOpacity.value = withTiming(0);
     })
-    .onStart(() => {
+    .onStart((e) => {
       prevTranslationY.value = translationY.value;
       prevTranslationX.value = translationX.value;
     })
     .onUpdate((event) => {
-      translationY.value = prevTranslationY.value + event.translationY;
-      translationX.value = prevTranslationX.value + event.translationX;
-    })
-    .onEnd(() => {
-      if (translationY.value > Math.abs(limitTranslateY)) {
-        translationY.value = withTiming(-limitTranslateY);
-      } else if (translationY.value < -Math.abs(limitTranslateY)) {
-        translationY.value = withTiming(limitTranslateY);
+      const newTranslationY = prevTranslationY.value + event.translationY;
+      const newTranslationX = prevTranslationX.value + event.translationX;
+
+      if (resizeFull) {
+        translationY.value = Math.max(
+          -limitTranslateY,
+          Math.min(limitTranslateY, newTranslationY)
+        );
+      } else {
+        translationY.value =
+          cropSize < displayHeight
+            ? Math.max(
+                -limitTranslateY,
+                Math.min(limitTranslateY, newTranslationY)
+              )
+            : 0;
       }
 
-      if (translationX.value > Math.abs(limitTranslateX)) {
-        translationX.value = withTiming(-limitTranslateX);
-      } else if (translationX.value < -Math.abs(limitTranslateX)) {
-        translationX.value = withTiming(limitTranslateX);
+      translationX.value = Math.max(
+        -Math.abs(possibleTranslateX - 100),
+        Math.min(Math.abs(possibleTranslateX - 100), newTranslationX)
+      );
+
+      if (Math.abs(translationY.value) > Math.abs(possibleTranslateY)) {
+        girdOverlayTranslateY.value =
+          translationY.value > 0
+            ? translationY.value - Math.abs(possibleTranslateY)
+            : translationY.value + Math.abs(possibleTranslateY);
+      } else {
+        girdOverlayTranslateY.value = 0;
       }
+
+      if (resizeFull) {
+        if (Math.abs(translationX.value) > Math.abs(possibleTranslateX)) {
+          girdOverlayTranslateX.value =
+            translationX.value > 0
+              ? translationX.value - Math.abs(possibleTranslateX)
+              : translationX.value + Math.abs(possibleTranslateX);
+        } else {
+          girdOverlayTranslateX.value = 0;
+        }
+      } else {
+        girdOverlayTranslateX.value = translationX.value;
+      }
+    })
+    .onEnd(() => {
+      if (resizeFull) {
+        if (translationY.value > Math.abs(possibleTranslateY)) {
+          translationY.value = withTiming(-possibleTranslateY);
+        } else if (translationY.value < -Math.abs(possibleTranslateY)) {
+          translationY.value = withTiming(possibleTranslateY);
+        }
+
+        if (translationX.value > Math.abs(possibleTranslateX)) {
+          translationX.value = withTiming(-possibleTranslateX);
+        } else if (translationX.value < -Math.abs(possibleTranslateX)) {
+          translationX.value = withTiming(possibleTranslateX);
+        }
+      } else {
+        translationX.value = withTiming(0);
+        if (cropSize < displayHeight) {
+          if (translationY.value > Math.abs(possibleTranslateY)) {
+            translationY.value = withTiming(-possibleTranslateY);
+          } else if (translationY.value < -Math.abs(possibleTranslateY)) {
+            translationY.value = withTiming(possibleTranslateY);
+          }
+        } else {
+          translationY.value = withTiming(0);
+        }
+      }
+
+      girdOverlayTranslateY.value = withTiming(0);
+      girdOverlayTranslateX.value = withTiming(0);
     });
+
+  const changeAspectRatio = () => {
+    setResizeFull(!resizeFull);
+    translationX.value = withTiming(0);
+    translationY.value = withTiming(0);
+  };
 
   const handleCrop = async () => {
     if (!imageUri) return;
@@ -131,13 +221,28 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
         ],
         { compress: 1, format: SaveFormat.PNG }
       );
-      // console.log(manipResult);
       setImage(manipResult);
     } catch (error) {
       console.log("handleCrop", error);
-      alert("Crop failed.");
+      Alert.alert(
+        "Crop error",
+        error instanceof Error ? error.message : "Crop image failed"
+      );
     }
   };
+
+  const gridCropWidth = resizeFull
+    ? cropSize
+    : displayWidth > displayHeight
+    ? cropSize
+    : displayWidth;
+
+  const gridCropHeight = resizeFull
+    ? cropSize
+    : displayWidth > displayHeight
+    ? displayHeight
+    : cropSize;
+
   return (
     <View style={styles.container}>
       <View style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}>
@@ -152,13 +257,27 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
               ]}
             />
           </GestureDetector>
+
           {/* grid crop */}
           <Animated.View
-            style={[styles.cropBox, girdOverlayStyle]}
+            style={[
+              styles.cropBox,
+              { width: cropSize, height: cropSize },
+              girdOverlayStyle,
+            ]}
             pointerEvents="none"
           >
-            <CameraGridOverlay />
+            <GridOverlay width={gridCropWidth} height={gridCropHeight} />
           </Animated.View>
+
+          <IconButton
+            icon={"resize"}
+            mode="contained"
+            containerColor="black"
+            iconColor="white"
+            style={styles.resize}
+            onPress={changeAspectRatio}
+          />
         </View>
       </View>
 
@@ -182,30 +301,47 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
   );
 };
 
-const CameraGridOverlay = () => {
-  const screenWidth = Dimensions.get("window").width;
-  const cellSize = screenWidth / 3;
+interface GridOverlayProps {
+  width: number;
+  height: number;
+}
+const GridOverlay: React.FC<GridOverlayProps> = ({ width, height }) => {
+  const spacingLineHorizontal = height / 3;
+  const spacingLineVertical = width / 3;
 
   return (
-    <View style={styles.girdOverlay}>
+    <View style={[styles.girdOverlay, { width, height }]}>
       {/* vertial line */}
-      <View style={[styles.verticalLine, { left: cellSize }]} />
-      <View style={[styles.verticalLine, { left: cellSize * 2 }]} />
+      <View style={[styles.verticalLine, { left: spacingLineVertical }]} />
+      <View style={[styles.verticalLine, { left: spacingLineVertical * 2 }]} />
 
       {/* horizontal line */}
-      <View style={[styles.horizontalLine, { top: cellSize }]} />
-      <View style={[styles.horizontalLine, { top: cellSize * 2 }]} />
+      <View
+        style={[
+          styles.horizontalLine,
+          { width: width, top: spacingLineHorizontal },
+        ]}
+      />
+      <View
+        style={[
+          styles.horizontalLine,
+          { width: width, top: spacingLineHorizontal * 2 },
+        ]}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  resize: { position: "absolute", bottom: 4, left: 4 },
   girdOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    // position: "absolute",
+    // top: 0,
+    // left: 0,
+    // right: 0,
+    // bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "transparent",
   },
   verticalLine: {
@@ -217,7 +353,6 @@ const styles = StyleSheet.create({
   horizontalLine: {
     position: "absolute",
     height: 1,
-    width: "100%",
     backgroundColor: "rgba(255,255,255,1)",
   },
   container: {
@@ -231,16 +366,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
     borderRadius: 16,
+    backgroundColor: "red",
   },
-  image: {
-    width: cropSize * 1.5, // Tăng kích thước ảnh để dễ crop hơn
-    height: cropSize * 1.5,
-  },
+
   cropBox: {
     position: "absolute",
-    width: cropSize,
-    height: cropSize,
     borderColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
