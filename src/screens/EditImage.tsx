@@ -71,21 +71,36 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
     [originalHeight, originalRatio, originalWidth, resizeFull]
   );
 
+  const gridCropWidth = resizeFull
+    ? cropSize
+    : displayWidth > displayHeight
+    ? cropSize
+    : displayWidth;
+
+  const gridCropHeight = resizeFull
+    ? cropSize
+    : displayWidth > displayHeight
+    ? displayHeight
+    : cropSize;
+
   const possibleTranslateY = useMemo(
-    () => cropSize / 2 - displayHeight / 2,
+    () => Math.abs(displayHeight / 2 - cropSize / 2),
     [displayHeight]
   );
 
-  console.log(possibleTranslateY);
-
   const possibleTranslateX = useMemo(
-    () => cropSize / 2 - displayWidth / 2,
+    () => Math.abs(displayWidth / 2 - cropSize / 2),
     [displayWidth]
   );
 
+  const limitTranslateX = useMemo(
+    () => Math.abs(possibleTranslateX + 100),
+    [possibleTranslateX]
+  );
+
   const limitTranslateY = useMemo(
-    () => Math.abs(cropSize / 2 - displayHeight / 2 - 100),
-    [displayHeight]
+    () => Math.abs(possibleTranslateY + 100),
+    [possibleTranslateY]
   );
 
   const animatedImageStyle = useAnimatedStyle(() => ({
@@ -134,25 +149,25 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
       }
 
       translationX.value = Math.max(
-        -Math.abs(possibleTranslateX - 100),
-        Math.min(Math.abs(possibleTranslateX - 100), newTranslationX)
+        -limitTranslateX,
+        Math.min(limitTranslateX, newTranslationX)
       );
 
-      if (Math.abs(translationY.value) > Math.abs(possibleTranslateY)) {
+      if (Math.abs(translationY.value) > possibleTranslateY) {
         girdOverlayTranslateY.value =
           translationY.value > 0
-            ? translationY.value - Math.abs(possibleTranslateY)
-            : translationY.value + Math.abs(possibleTranslateY);
+            ? translationY.value - possibleTranslateY
+            : translationY.value + possibleTranslateY;
       } else {
         girdOverlayTranslateY.value = 0;
       }
 
       if (resizeFull) {
-        if (Math.abs(translationX.value) > Math.abs(possibleTranslateX)) {
+        if (Math.abs(translationX.value) > possibleTranslateX) {
           girdOverlayTranslateX.value =
             translationX.value > 0
-              ? translationX.value - Math.abs(possibleTranslateX)
-              : translationX.value + Math.abs(possibleTranslateX);
+              ? translationX.value - possibleTranslateX
+              : translationX.value + possibleTranslateX;
         } else {
           girdOverlayTranslateX.value = 0;
         }
@@ -162,24 +177,24 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
     })
     .onEnd(() => {
       if (resizeFull) {
-        if (translationY.value > Math.abs(possibleTranslateY)) {
-          translationY.value = withTiming(-possibleTranslateY);
-        } else if (translationY.value < -Math.abs(possibleTranslateY)) {
+        if (translationY.value > possibleTranslateY) {
           translationY.value = withTiming(possibleTranslateY);
+        } else if (translationY.value < -possibleTranslateY) {
+          translationY.value = withTiming(-possibleTranslateY);
         }
 
-        if (translationX.value > Math.abs(possibleTranslateX)) {
-          translationX.value = withTiming(-possibleTranslateX);
-        } else if (translationX.value < -Math.abs(possibleTranslateX)) {
+        if (translationX.value > possibleTranslateX) {
           translationX.value = withTiming(possibleTranslateX);
+        } else if (translationX.value < -possibleTranslateX) {
+          translationX.value = withTiming(-possibleTranslateX);
         }
       } else {
         translationX.value = withTiming(0);
         if (cropSize < displayHeight) {
-          if (translationY.value > Math.abs(possibleTranslateY)) {
-            translationY.value = withTiming(-possibleTranslateY);
-          } else if (translationY.value < -Math.abs(possibleTranslateY)) {
+          if (translationY.value > possibleTranslateY) {
             translationY.value = withTiming(possibleTranslateY);
+          } else if (translationY.value < -possibleTranslateY) {
+            translationY.value = withTiming(-possibleTranslateY);
           }
         } else {
           translationY.value = withTiming(0);
@@ -230,18 +245,6 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
       );
     }
   };
-
-  const gridCropWidth = resizeFull
-    ? cropSize
-    : displayWidth > displayHeight
-    ? cropSize
-    : displayWidth;
-
-  const gridCropHeight = resizeFull
-    ? cropSize
-    : displayWidth > displayHeight
-    ? displayHeight
-    : cropSize;
 
   return (
     <View style={styles.container}>
