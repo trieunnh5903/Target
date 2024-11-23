@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
 export const SPACING = {
   small: 8,
@@ -6,6 +6,9 @@ export const SPACING = {
   large: 24,
   extraLarge: 32,
 };
+
+export const CROP_SIZE = Dimensions.get("window").width;
+export const POST_WIDTH = CROP_SIZE;
 
 export const GLOBAL_STYLE = StyleSheet.create({
   flex_1: {
