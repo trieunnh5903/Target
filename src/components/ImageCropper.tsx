@@ -151,6 +151,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
     borderRadius: 16,
-    backgroundColor: "red",
+    borderWidth: 1,
+    borderColor: 'lightgray',
   },
 });

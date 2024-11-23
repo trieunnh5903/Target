@@ -48,13 +48,10 @@ export const useCropsGesture = ({
           Math.min(limitTranslateY, newTranslationY)
         );
       } else {
-        translationY.value =
-          CROP_SIZE < displayHeight
-            ? Math.max(
-                -limitTranslateY,
-                Math.min(limitTranslateY, newTranslationY)
-              )
-            : 0;
+        translationY.value = Math.max(
+          -limitTranslateY,
+          Math.min(limitTranslateY, newTranslationY)
+        );
       }
 
       translationX.value = Math.max(
@@ -62,13 +59,17 @@ export const useCropsGesture = ({
         Math.min(limitTranslateX, newTranslationX)
       );
 
-      if (Math.abs(translationY.value) > possibleTranslateY) {
-        gridTranslateY.value =
-          translationY.value > 0
-            ? translationY.value - possibleTranslateY
-            : translationY.value + possibleTranslateY;
+      if (displayHeight < CROP_SIZE) {
+        gridTranslateY.value = translationY.value;
       } else {
-        gridTranslateY.value = 0;
+        if (Math.abs(translationY.value) > possibleTranslateY) {
+          gridTranslateY.value =
+            translationY.value > 0
+              ? translationY.value - possibleTranslateY
+              : translationY.value + possibleTranslateY;
+        } else {
+          gridTranslateY.value = 0;
+        }
       }
 
       if (resizeFull) {
