@@ -1,6 +1,6 @@
 import { CROP_SIZE } from "@/constants";
 import { Gesture } from "react-native-gesture-handler";
-import { useSharedValue, withTiming } from "react-native-reanimated";
+import { clamp, useSharedValue, withTiming } from "react-native-reanimated";
 
 interface CropGestureConfig {
   resizeFull: boolean;
@@ -42,21 +42,16 @@ export const useCropsGesture = ({
       const newTranslationY = prevTranslationY.value + event.translationY;
       const newTranslationX = prevTranslationX.value + event.translationX;
 
-      if (resizeFull) {
-        translationY.value = Math.max(
-          -limitTranslateY,
-          Math.min(limitTranslateY, newTranslationY)
-        );
-      } else {
-        translationY.value = Math.max(
-          -limitTranslateY,
-          Math.min(limitTranslateY, newTranslationY)
-        );
-      }
+      translationY.value = clamp(
+        newTranslationY,
+        -limitTranslateY,
+        limitTranslateY
+      );
 
-      translationX.value = Math.max(
+      translationX.value = clamp(
+        newTranslationX,
         -limitTranslateX,
-        Math.min(limitTranslateX, newTranslationX)
+        limitTranslateX
       );
 
       if (displayHeight < CROP_SIZE) {
