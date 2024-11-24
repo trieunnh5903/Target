@@ -1,6 +1,11 @@
 import { CROP_SIZE } from "@/constants";
 import { Gesture } from "react-native-gesture-handler";
-import { clamp, useSharedValue, withTiming } from "react-native-reanimated";
+import {
+  clamp,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 interface CropGestureConfig {
   resizeFull: boolean;
@@ -83,31 +88,31 @@ export const useCropsGesture = ({
     .onEnd(() => {
       if (resizeFull) {
         if (translationY.value > possibleTranslateY) {
-          translationY.value = withTiming(possibleTranslateY);
+          translationY.value = withSpring(possibleTranslateY);
         } else if (translationY.value < -possibleTranslateY) {
-          translationY.value = withTiming(-possibleTranslateY);
+          translationY.value = withSpring(-possibleTranslateY);
         }
 
         if (translationX.value > possibleTranslateX) {
-          translationX.value = withTiming(possibleTranslateX);
+          translationX.value = withSpring(possibleTranslateX);
         } else if (translationX.value < -possibleTranslateX) {
-          translationX.value = withTiming(-possibleTranslateX);
+          translationX.value = withSpring(-possibleTranslateX);
         }
       } else {
-        translationX.value = withTiming(0);
+        translationX.value = withSpring(0);
         if (CROP_SIZE < displayHeight) {
           if (translationY.value > possibleTranslateY) {
-            translationY.value = withTiming(possibleTranslateY);
+            translationY.value = withSpring(possibleTranslateY);
           } else if (translationY.value < -possibleTranslateY) {
-            translationY.value = withTiming(-possibleTranslateY);
+            translationY.value = withSpring(-possibleTranslateY);
           }
         } else {
-          translationY.value = withTiming(0);
+          translationY.value = withSpring(0);
         }
       }
 
-      gridTranslateY.value = withTiming(0);
-      gridTranslateX.value = withTiming(0);
+      gridTranslateY.value = withSpring(0);
+      gridTranslateX.value = withSpring(0);
     });
 
   const resetGesture = () => {
