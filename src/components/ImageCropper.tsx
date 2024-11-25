@@ -16,7 +16,7 @@ interface ImageCropperProps {
   onResizePress: () => void;
   gridHeight: number;
   gridWidth: number;
-  imageUri: string;
+  uri: string;
   gesture: ComposedGesture | GestureType;
   displayWidth: number;
   displayHeight: number;
@@ -30,7 +30,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   onResizePress,
   gridHeight,
   gridWidth,
-  imageUri,
+  uri,
   displayHeight,
   displayWidth,
   gesture,
@@ -42,7 +42,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
 }) => {
   const spacingLineHorizontal = gridHeight / 3;
   const spacingLineVertical = gridWidth / 3;
-
   const animatedImageStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translationX.value },
@@ -58,12 +57,14 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     ],
   }));
 
+  if (!uri) return null;
+
   return (
     <View style={styles.imageArea}>
       {/*image */}
       <GestureDetector gesture={gesture}>
         <Animated.Image
-          source={{ uri: imageUri }}
+          source={{ uri }}
           style={[
             { width: displayWidth, height: displayHeight },
             animatedImageStyle,
@@ -82,13 +83,11 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         <View
           style={[styles.girdOverlay, { width: gridWidth, height: gridHeight }]}
         >
-          {/* vertial line */}
           <View style={[styles.verticalLine, { left: spacingLineVertical }]} />
           <View
             style={[styles.verticalLine, { left: spacingLineVertical * 2 }]}
           />
 
-          {/* horizontal line */}
           <View
             style={[
               styles.horizontalLine,
@@ -152,6 +151,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'lightgray',
+    borderColor: "lightgray",
   },
 });

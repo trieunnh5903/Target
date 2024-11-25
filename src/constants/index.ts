@@ -7,8 +7,11 @@ export const SPACING = {
   extraLarge: 32,
 };
 
-export const CROP_SIZE = Dimensions.get("window").width;
-export const POST_WIDTH = CROP_SIZE;
+export const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
+  Dimensions.get("window");
+
+export const CROP_SIZE = SCREEN_WIDTH;
+export const POST_WIDTH = SCREEN_WIDTH;
 
 export const GLOBAL_STYLE = StyleSheet.create({
   flex_1: {

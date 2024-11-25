@@ -5,7 +5,6 @@ import {
 } from "@react-navigation/native";
 import { StackScreenProps } from "@react-navigation/stack";
 import * as MediaLibrary from "expo-media-library";
-import * as ImagePicker from "react-native-image-picker";
 
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<RootTabParamList>;
@@ -13,9 +12,15 @@ export type RootStackParamList = {
   SignUp: undefined;
   EditProfile: undefined;
   EditImage: {
-    asset: MediaLibrary.Asset | ImagePicker.Asset;
+    asset: {
+      width: number;
+      height: number;
+      uri: string;
+    };
   };
-  CameraPicker: undefined;
+  CameraScreen: {
+    newestImage: MediaLibrary.Asset;
+  };
 };
 
 export type AuthStackParamList = {

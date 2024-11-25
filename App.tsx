@@ -6,7 +6,7 @@ import * as StatusBar from "expo-status-bar";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types/navigation";
 import {
-  CameraPicker,
+  CameraScreen,
   EditImage,
   EditProfile,
   SignInScreen,
@@ -64,10 +64,10 @@ export default function App() {
                     />
                     <Stack.Screen
                       name="EditImage"
-                      options={({ route, navigation }) => {
+                      options={({ navigation }) => {
                         return {
                           headerTitle: "",
-                          headerLeft(props) {
+                          headerLeft() {
                             return (
                               <IconButton
                                 icon={"close"}
@@ -80,7 +80,7 @@ export default function App() {
                       component={EditImage}
                     />
                   </Stack.Group>
-                  <Stack.Screen name="CameraPicker" component={CameraPicker} />
+                  <Stack.Screen name="CameraScreen" component={CameraScreen} />
                 </Stack.Group>
               ) : (
                 <Stack.Group

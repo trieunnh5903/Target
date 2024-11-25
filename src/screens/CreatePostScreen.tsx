@@ -22,7 +22,7 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
-import { launchCamera } from "react-native-image-picker";
+import { StatusBar } from "expo-status-bar";
 interface ImageItemProps {
   uri: string;
   size: number;
@@ -105,14 +105,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 
   useLayoutEffect(() => {
     const onCameraPress = async () => {
-      try {
-        const result = await launchCamera({ mediaType: "photo" });
-        if (!result.didCancel && result.assets && result.assets.length > 0) {
-          navigation.navigate("EditImage", { asset: result.assets[0] });
-        }
-      } catch (error) {
-        console.log(error);
-      }
+      navigation.navigate("CameraScreen", { newestImage: media[0] });
     };
 
     navigation.setOptions({
@@ -121,7 +114,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
       },
     });
     return () => {};
-  }, [navigation]);
+  }, [media, navigation]);
 
   useEffect(() => {
     loadImages();
@@ -135,7 +128,9 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   };
 
   const handleImagePress = (image: MediaLibrary.Asset) => {
-    navigation.navigate("EditImage", { asset: image });
+    navigation.navigate("EditImage", {
+      asset: { height: image.height, width: image.width, uri: image.uri },
+    });
   };
 
   if (loading) {
@@ -169,6 +164,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 
   return (
     <View style={styles.container}>
+      <StatusBar style="auto" animated />
       <Animated.FlatList
         onScroll={onScroll}
         data={media}
