@@ -12,7 +12,6 @@ import {
   SignInScreen,
   SignUpScreen,
 } from "@/screens";
-import { useAppDispatch, useNotificationObserver } from "@/hooks";
 import CustomBottomTab from "@/navigation/CustomBottomTab";
 import { fetchUserById } from "@/redux/slices/authSlice";
 import { Provider } from "react-redux";
@@ -23,13 +22,13 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const { init } = useNotificationObserver();
+  // const { init } = useNotificationObserver();
 
   useEffect(() => {
     StatusBar.setStatusBarStyle("auto");
     const subscriber = auth().onAuthStateChanged((user) => {
       setUser(user);
-      init(user);
+      // init(user);
       if (user) {
         store.dispatch(fetchUserById(user.uid));
       }
