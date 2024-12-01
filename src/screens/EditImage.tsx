@@ -37,7 +37,6 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
     possibleTranslateY,
   } = useCropDimensions({
     resizeFull,
-
     originalHeight,
     originalWidth,
   });

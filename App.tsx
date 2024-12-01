@@ -50,6 +50,7 @@ export default function App() {
               {user ? (
                 <Stack.Group>
                   <Stack.Screen name="Tabs" component={CustomBottomTab} />
+                  <Stack.Screen name="CameraScreen" component={CameraScreen} />
                   <Stack.Group
                     screenOptions={{
                       headerShown: true,
@@ -63,23 +64,14 @@ export default function App() {
                     />
                     <Stack.Screen
                       name="EditImage"
-                      options={({ navigation }) => {
+                      options={() => {
                         return {
                           headerTitle: "",
-                          headerLeft() {
-                            return (
-                              <IconButton
-                                icon={"close"}
-                                onPress={() => navigation.goBack()}
-                              />
-                            );
-                          },
                         };
                       }}
                       component={EditImage}
                     />
                   </Stack.Group>
-                  <Stack.Screen name="CameraScreen" component={CameraScreen} />
                 </Stack.Group>
               ) : (
                 <Stack.Group

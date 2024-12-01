@@ -1,6 +1,9 @@
 import { Alert, Pressable } from "react-native";
 import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import {
+  BottomTabNavigationOptions,
+  createBottomTabNavigator,
+} from "@react-navigation/bottom-tabs";
 import { RootTabParamList } from "@/types/navigation";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { CreatePostScreen, HomeScreen, ProfileScreen } from "@/screens";
@@ -9,6 +12,7 @@ import { authAPI, userAPI } from "@/api";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { CustomAvatar } from "@/components";
+import { RouteProp } from "@react-navigation/native";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const CustomBottomTab = () => {
@@ -31,57 +35,59 @@ const CustomBottomTab = () => {
     }
   };
 
-  return (
-    <Tab.Navigator
-      initialRouteName="Create"
-      screenOptions={({ route }) => ({
-        tabBarShowLabel: false,
-        tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: "black",
-        tabBarInactiveTintColor: "black",
-        tabBarIcon: ({ focused, color, size }) => {
-          let icon = (
-            <CustomAvatar
+  const screenOptions: (props: {
+    route: RouteProp<RootTabParamList, keyof RootTabParamList>;
+    navigation: any;
+  }) => BottomTabNavigationOptions = ({ route }) => ({
+    tabBarShowLabel: false,
+    tabBarHideOnKeyboard: true,
+    tabBarActiveTintColor: "black",
+    tabBarInactiveTintColor: "black",
+    tabBarIcon: ({ focused, color, size }) => {
+      let icon = (
+        <CustomAvatar
+          size={size}
+          user={currentUser}
+          focused={focused}
+          color={color}
+        />
+      );
+
+      switch (route.name) {
+        case "Home":
+          icon = (
+            <MaterialCommunityIcons
+              name={focused ? "home" : "home-outline"}
               size={size}
-              user={currentUser}
-              focused={focused}
+              color={color}
+            />
+          );
+          break;
+
+        case "Create":
+          icon = (
+            <MaterialCommunityIcons
+              name="plus-box-outline"
+              size={size}
               color={color}
             />
           );
 
-          switch (route.name) {
-            case "Home":
-              icon = (
-                <MaterialCommunityIcons
-                  name={focused ? "home" : "home-outline"}
-                  size={size}
-                  color={color}
-                />
-              );
-              break;
+        default:
+          break;
+      }
 
-            case "Create":
-              icon = (
-                <MaterialCommunityIcons
-                  name="plus-box-outline"
-                  size={size}
-                  color={color}
-                />
-              );
+      return icon;
+    },
+  });
 
-            default:
-              break;
-          }
-
-          return icon;
-        },
-      })}
-    >
+  return (
+    <Tab.Navigator initialRouteName="Create" screenOptions={screenOptions}>
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen
         name="Create"
         component={CreatePostScreen}
-        options={({ route, navigation }) => ({
+        options={({ navigation }) => ({
           title: "New post",
           headerShown: true,
           tabBarStyle: { display: "none" },

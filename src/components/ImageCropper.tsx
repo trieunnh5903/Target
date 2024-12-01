@@ -9,7 +9,7 @@ import {
   GestureDetector,
   GestureType,
 } from "react-native-gesture-handler";
-import { CROP_SIZE } from "@/constants";
+import { CROP_SIZE, GLOBAL_STYLE } from "@/constants";
 import { IconButton } from "react-native-paper";
 
 interface ImageCropperProps {
@@ -23,8 +23,9 @@ interface ImageCropperProps {
   translationX: SharedValue<number>;
   translationY: SharedValue<number>;
   gridOpacity: SharedValue<number>;
-  gridTranslateX: SharedValue<number>;
-  gridTranslateY: SharedValue<number>;
+  gridTranslateX?: SharedValue<number>;
+  gridTranslateY?: SharedValue<number>;
+  animatedGrid?: boolean;
 }
 const ImageCropper: React.FC<ImageCropperProps> = ({
   onResizePress,
@@ -34,6 +35,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   displayHeight,
   displayWidth,
   gesture,
+  animatedGrid,
   translationX,
   translationY,
   gridOpacity,
@@ -52,8 +54,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   const gridAnimatedStyle = useAnimatedStyle(() => ({
     opacity: gridOpacity.value,
     transform: [
-      { translateX: gridTranslateX.value },
-      { translateY: gridTranslateY.value },
+      { translateX: animatedGrid ? gridTranslateX?.value ?? 0 : 0 },
+      { translateY: animatedGrid ? gridTranslateY?.value ?? 0 : 0 },
     ],
   }));
 
@@ -62,15 +64,25 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   return (
     <View style={styles.imageArea}>
       {/*image */}
-      <GestureDetector gesture={gesture}>
-        <Animated.Image
-          source={{ uri }}
-          style={[
-            { width: displayWidth, height: displayHeight },
-            animatedImageStyle,
-          ]}
-        />
-      </GestureDetector>
+      <View
+        style={[
+          { width: gridWidth, height: gridHeight },
+          styles.imageContainer,
+        ]}
+      >
+        <GestureDetector gesture={gesture}>
+          <Animated.Image
+            source={{ uri }}
+            style={[
+              {
+                width: displayWidth,
+                height: displayHeight,
+              },
+              animatedImageStyle,
+            ]}
+          />
+        </GestureDetector>
+      </View>
 
       <Animated.View
         style={[
@@ -118,39 +130,39 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
 export default ImageCropper;
 
 const styles = StyleSheet.create({
+  imageContainer: {
+    overflow: "hidden",
+    borderRadius: 16,
+    ...GLOBAL_STYLE.center,
+  },
   verticalLine: {
     position: "absolute",
     width: 1,
     height: "100%",
-    backgroundColor: "rgba(255,255,255,1)",
+    backgroundColor: "lightgray",
   },
   horizontalLine: {
     position: "absolute",
     height: 1,
-    backgroundColor: "rgba(255,255,255,1)",
+    backgroundColor: "lightgray",
   },
 
   girdOverlay: {
-    justifyContent: "center",
-    alignItems: "center",
+    ...GLOBAL_STYLE.center,
     backgroundColor: "transparent",
   },
   cropBox: {
     position: "absolute",
     borderColor: "white",
-    justifyContent: "center",
-    alignItems: "center",
+    ...GLOBAL_STYLE.center,
   },
   resize: { position: "absolute", bottom: 4, left: 4 },
 
   imageArea: {
     width: CROP_SIZE,
     height: CROP_SIZE,
-    justifyContent: "center",
-    alignItems: "center",
+    ...GLOBAL_STYLE.center,
     overflow: "hidden",
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "lightgray",
   },
 });

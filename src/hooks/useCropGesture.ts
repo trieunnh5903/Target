@@ -1,7 +1,8 @@
 import { CROP_SIZE } from "@/constants";
 import { Gesture } from "react-native-gesture-handler";
 import {
-  clamp,
+  Extrapolation,
+  interpolate,
   useSharedValue,
   withSpring,
   withTiming,
@@ -47,16 +48,38 @@ export const useCropsGesture = ({
       const newTranslationY = prevTranslationY.value + event.translationY;
       const newTranslationX = prevTranslationX.value + event.translationX;
 
-      translationY.value = clamp(
-        newTranslationY,
-        -limitTranslateY,
-        limitTranslateY
+      translationX.value = interpolate(
+        newTranslationX,
+        [
+          -limitTranslateX,
+          -possibleTranslateX,
+          possibleTranslateX,
+          limitTranslateX,
+        ],
+        [
+          prevTranslationX.value + event.translationX * 0.3,
+          newTranslationX,
+          newTranslationX,
+          prevTranslationX.value + event.translationX * 0.3,
+        ],
+        Extrapolation.CLAMP
       );
 
-      translationX.value = clamp(
-        newTranslationX,
-        -limitTranslateX,
-        limitTranslateX
+      translationY.value = interpolate(
+        newTranslationY,
+        [
+          -limitTranslateY,
+          -possibleTranslateY,
+          possibleTranslateY,
+          limitTranslateY,
+        ],
+        [
+          prevTranslationY.value + event.translationY * 0.3,
+          newTranslationY,
+          newTranslationY,
+          prevTranslationY.value + event.translationY * 0.3,
+        ],
+        Extrapolation.CLAMP
       );
 
       if (displayHeight < CROP_SIZE) {
