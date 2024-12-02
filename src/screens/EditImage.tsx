@@ -31,10 +31,8 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
     displayWidth,
     gridHeight,
     gridWidth,
-    limitTranslateX,
-    limitTranslateY,
-    possibleTranslateX,
-    possibleTranslateY,
+    boundaryTranslateX,
+    boundaryTranslateY,
   } = useCropDimensions({
     resizeFull,
     originalHeight,
@@ -51,10 +49,8 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
     translationY,
   } = useCropsGesture({
     displayHeight,
-    limitTranslateX,
-    limitTranslateY,
-    possibleTranslateX,
-    possibleTranslateY,
+    boundaryTranslateX,
+    boundaryTranslateY,
     resizeFull,
   });
 
@@ -65,10 +61,10 @@ const CropImageScreen: React.FC<RootStackScreenProps<"EditImage">> = ({
 
   const generateCropOption = () => {
     const cropXDisplay =
-      displayWidth > CROP_SIZE ? possibleTranslateX - translationX.value : 0;
+      displayWidth > CROP_SIZE ? boundaryTranslateX - translationX.value : 0;
 
     const cropYDisplay =
-      displayHeight > CROP_SIZE ? possibleTranslateY - translationY.value : 0;
+      displayHeight > CROP_SIZE ? boundaryTranslateY - translationY.value : 0;
 
     const scale = originalWidth / displayWidth;
     const cropXOriginal = cropXDisplay * scale;

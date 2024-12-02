@@ -1,108 +1,98 @@
 import { CROP_SIZE } from "@/constants";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface CropDimensionConfig {
   resizeFull: boolean;
   originalWidth: number;
   originalHeight: number;
 }
-
 export const useCropDimensions = ({
   resizeFull,
-
   originalHeight,
   originalWidth,
 }: CropDimensionConfig) => {
+  const [imageOrientation, setImgeOrientation] = useState<
+    // 4:5 | 1.91:1 | 1:1
+    "Portrait" | "Landscape" | "Square"
+  >();
+
+  useEffect(() => {
+    const imageType =
+      originalHeight === originalWidth
+        ? "Square"
+        : originalHeight > originalWidth
+        ? "Portrait"
+        : originalWidth > originalHeight
+        ? "Landscape"
+        : "Square";
+    setImgeOrientation(imageType);
+  }, [originalHeight, originalWidth, resizeFull]);
+
   const originalRatio = originalWidth / originalHeight;
-  const displayWidth = useMemo(
-    () =>
-      resizeFull
-        ? originalWidth > originalHeight
-          ? CROP_SIZE * originalRatio
-          : CROP_SIZE
-        : originalWidth > originalHeight
-        ? CROP_SIZE
-        : CROP_SIZE - 70,
-    [originalHeight, originalRatio, originalWidth, resizeFull]
-  );
 
-  const displayHeight = useMemo(
-    () =>
-      resizeFull
-        ? originalWidth > originalHeight
-          ? CROP_SIZE
-          : CROP_SIZE / originalRatio
-        : originalWidth > originalHeight
-        ? CROP_SIZE / originalRatio
-        : (CROP_SIZE - 70) / originalRatio,
-    [originalHeight, originalRatio, originalWidth, resizeFull]
-  );
+  const gridWidth = useMemo(() => {
+    switch (imageOrientation) {
+      case "Portrait":
+        return resizeFull ? CROP_SIZE : CROP_SIZE * (4 / 5);
+      case "Landscape":
+        return CROP_SIZE;
+      default:
+        return CROP_SIZE;
+    }
+  }, [imageOrientation, resizeFull]);
 
-  const gridWidth = useMemo(
-    () =>
-      resizeFull
-        ? CROP_SIZE
-        : displayWidth > displayHeight
-        ? CROP_SIZE
-        : displayWidth,
-    [displayHeight, displayWidth, resizeFull]
-  );
+  const gridHeight = useMemo(() => {
+    switch (imageOrientation) {
+      case "Portrait":
+        return CROP_SIZE;
+      case "Landscape":
+        return resizeFull ? CROP_SIZE : CROP_SIZE / originalRatio;
+      default:
+        return CROP_SIZE;
+    }
+  }, [imageOrientation, originalRatio, resizeFull]);
 
-  const gridHeight = useMemo(
-    () =>
-      resizeFull
-        ? CROP_SIZE
-        : displayWidth > displayHeight
-        ? displayHeight
-        : CROP_SIZE,
-    [displayHeight, displayWidth, resizeFull]
-  );
+  const displayWidth = useMemo(() => {
+    switch (imageOrientation) {
+      case "Portrait":
+        return resizeFull ? CROP_SIZE : gridWidth;
+      case "Landscape":
+        return resizeFull ? CROP_SIZE * originalRatio : CROP_SIZE;
 
-  const possibleTranslateY = useMemo(
+      default:
+        return CROP_SIZE;
+    }
+  }, [gridWidth, imageOrientation, originalRatio, resizeFull]);
+
+  const displayHeight = useMemo(() => {
+    switch (imageOrientation) {
+      case "Portrait":
+        return resizeFull
+          ? CROP_SIZE / originalRatio
+          : gridWidth / originalRatio;
+      case "Landscape":
+        return resizeFull ? CROP_SIZE : CROP_SIZE / originalRatio;
+      default:
+        return CROP_SIZE;
+    }
+  }, [gridWidth, imageOrientation, originalRatio, resizeFull]);
+
+  const boundaryTranslateY = useMemo(
     () => Math.abs(displayHeight / 2 - CROP_SIZE / 2),
     [displayHeight]
   );
 
-  const possibleTranslateX = useMemo(
+  const boundaryTranslateX = useMemo(
     () => Math.abs(displayWidth / 2 - CROP_SIZE / 2),
     [displayWidth]
   );
 
-  const limitTranslateX = useMemo(
-    () => Math.abs(possibleTranslateX + 100),
-    [possibleTranslateX]
-  );
-
-  const limitTranslateY = useMemo(
-    () => Math.abs(possibleTranslateY + 100),
-    [possibleTranslateY]
-  );
-
-  // const scale = useMemo(
-  //   () => originalWidth / displayWidth,
-  //   [displayWidth, originalWidth]
-  // );
-
-  // const cropWidthOriginal = useMemo(
-  //   () => Math.min(displayWidth, CROP_SIZE) * scale,
-  //   [CROP_SIZE, displayWidth, scale]
-  // );
-
-  // const cropHeightOriginal = useMemo(
-  //   () => Math.min(displayHeight, CROP_SIZE) * scale,
-  //   [CROP_SIZE, displayHeight, scale]
-  // );
   return {
-    // cropWidthOriginal,
-    // cropHeightOriginal,
-    // scale,
     displayWidth,
     displayHeight,
     gridWidth,
     gridHeight,
-    possibleTranslateX,
-    possibleTranslateY,
-    limitTranslateX,
-    limitTranslateY,
+    boundaryTranslateX,
+    boundaryTranslateY,
   };
 };

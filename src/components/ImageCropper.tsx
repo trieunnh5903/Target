@@ -132,7 +132,13 @@ export default ImageCropper;
 const styles = StyleSheet.create({
   imageContainer: {
     overflow: "hidden",
-    borderRadius: 16,
+    ...GLOBAL_STYLE.center,
+    borderRadius: 10,
+  },
+
+  cropBox: {
+    position: "absolute",
+    borderColor: "white",
     ...GLOBAL_STYLE.center,
   },
   verticalLine: {
@@ -151,18 +157,13 @@ const styles = StyleSheet.create({
     ...GLOBAL_STYLE.center,
     backgroundColor: "transparent",
   },
-  cropBox: {
-    position: "absolute",
-    borderColor: "white",
-    ...GLOBAL_STYLE.center,
-  },
+
   resize: { position: "absolute", bottom: 4, left: 4 },
 
   imageArea: {
     width: CROP_SIZE,
     height: CROP_SIZE,
     ...GLOBAL_STYLE.center,
-    overflow: "hidden",
-    borderRadius: 16,
+    // overflow: "hidden",
   },
 });
