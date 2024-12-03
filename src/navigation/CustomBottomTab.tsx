@@ -82,7 +82,7 @@ const CustomBottomTab = () => {
   });
 
   return (
-    <Tab.Navigator initialRouteName="Create" screenOptions={screenOptions}>
+    <Tab.Navigator initialRouteName="Home" screenOptions={screenOptions}>
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen
         name="Create"

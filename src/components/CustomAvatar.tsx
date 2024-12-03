@@ -21,7 +21,7 @@ const CustomAvatar: React.FC<CustomAvatarProps> = ({
     size === "large"
       ? 90
       : size === "medium"
-      ? 33
+      ? 40
       : size === "small"
       ? 24
       : size;

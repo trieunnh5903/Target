@@ -6,14 +6,15 @@ import ThemedText from "../ThemedText";
 import CustomView from "../CustomView";
 import Animated from "react-native-reanimated";
 import { useTheme } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { SPACING } from "@/constants";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { GLOBAL_STYLE, SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
 import { postsCollection } from "@/api/collections";
 import firestore from "@react-native-firebase/firestore";
-import { useAppSelector } from "@/hooks";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { notificationAPI } from "@/api";
 import CustomAvatar from "../CustomAvatar";
+import { openSheet } from "@/redux/slices/bottomSheetSlice";
 
 interface PostItemProps {
   data: Post;
@@ -91,6 +92,10 @@ const PostMedia = ({
 }: PostMediaProps) => {
   const dimension = useWindowDimensions();
   const theme = useTheme();
+  const dispath = useAppDispatch();
+  const handleOpenComment = () => {
+    dispath(openSheet({ type: "comment", props: {} }));
+  };
   return (
     <Fragment>
       <Animated.ScrollView
@@ -105,14 +110,9 @@ const PostMedia = ({
           style={{ width: dimension.width, aspectRatio: 1 }}
         />
       </Animated.ScrollView>
+
       <View style={styles.actionsWrapper}>
-        <CustomView
-          style={{
-            flexDirection: "row",
-            gap: SPACING.small / 2,
-            alignItems: "center",
-          }}
-        >
+        <CustomView style={styles.action}>
           <MaterialCommunityIcons
             name={isLike ? "heart" : "heart-outline"}
             onPress={toggleLike}
@@ -121,7 +121,18 @@ const PostMedia = ({
           />
           <ThemedText style={styles.textBold}>{likesCount}</ThemedText>
         </CustomView>
+
+        <CustomView style={styles.action}>
+          <Ionicons
+            onPress={handleOpenComment}
+            name="chatbubble-outline"
+            size={24}
+            color="black"
+          />
+          <ThemedText style={styles.textBold}>{likesCount}</ThemedText>
+        </CustomView>
       </View>
+
       <View style={styles.description}>
         <Text>
           <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
@@ -135,7 +146,13 @@ const PostMedia = ({
 };
 
 export default memo(PostItem);
+
 const styles = StyleSheet.create({
+  action: {
+    flexDirection: "row",
+    gap: SPACING.small / 2,
+    alignItems: "center",
+  },
   description: {
     paddingHorizontal: SPACING.medium,
   },
@@ -166,9 +183,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   actionsWrapper: {
-    gap: SPACING.small,
+    gap: SPACING.medium,
     padding: SPACING.medium,
     paddingBottom: SPACING.small,
+    ...GLOBAL_STYLE.rowHCenter,
   },
   avatar: {
     width: 33,

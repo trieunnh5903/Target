@@ -17,6 +17,7 @@ import { fetchUserById } from "@/redux/slices/authSlice";
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetManager } from "@/components";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
@@ -87,6 +88,7 @@ export default function App() {
                 </Stack.Group>
               )}
             </Stack.Navigator>
+            <BottomSheetManager />
           </NavigationContainer>
         </PaperProvider>
       </Provider>

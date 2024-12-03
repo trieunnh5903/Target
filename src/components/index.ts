@@ -6,3 +6,4 @@ export { default as ImageCropper } from "./ImageCropper";
 export { default as GridCrop } from "./GridCrop";
 export { default as CustomKeyboardAvoidingView } from "./CustomKeyboardAvoidingView";
 export { default as PostItem } from "./post/PostItem";
+export { default as BottomSheetManager } from "./bottomSheet/BottomSheetManager";
