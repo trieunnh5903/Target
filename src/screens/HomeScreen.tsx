@@ -4,12 +4,16 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Animated from "react-native-reanimated";
 import { PostItem, CustomView } from "@/components";
 import { Post } from "@/types";
 import { postAPI } from "@/api/postApi";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { GLOBAL_STYLE } from "@/constants";
+
+import { CommentBottomSheet } from "@/components/bottomSheet";
 
 const HomeScreen = () => {
   const [loading, setLoading] = useState(false);
@@ -56,6 +60,13 @@ const HomeScreen = () => {
       setLoading(false);
     }
   };
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const commentBottomSheetRef = useRef<BottomSheetModal>(null);
+
+  const handleOpenComment = useCallback((postId: string) => {
+    setSelectedPostId(postId);
+    commentBottomSheetRef.current?.present();
+  }, []);
 
   return (
     <CustomView style={styles.container}>
@@ -67,19 +78,25 @@ const HomeScreen = () => {
         scrollEventThrottle={16}
         data={posts}
         renderItem={({ item }) => {
-          return <PostItem data={item} />;
+          return (
+            <PostItem
+              data={item}
+              onCommentPress={() => handleOpenComment(item.id)}
+            />
+          );
         }}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
-        ListEmptyComponent={<ActivityIndicator size="large" />}
+        ListEmptyComponent={<ActivityIndicator style={{alignSelf: 'center'}} size="small" />}
         ListFooterComponent={
           <View style={styles.loadingContainer}>
-            {loading && <ActivityIndicator size="large" />}
+            {loading && <ActivityIndicator size="small" />}
           </View>
         }
       />
+      <CommentBottomSheet ref={commentBottomSheetRef} postId={selectedPostId} />
     </CustomView>
   );
 };
@@ -87,6 +104,10 @@ const HomeScreen = () => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
+  footerInput: {
+    ...GLOBAL_STYLE.rowHCenter,
+    gap: 10,
+  },
   container: { flex: 1, backgroundColor: "white" },
   loadingContainer: {
     padding: 16,

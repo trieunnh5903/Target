@@ -18,3 +18,13 @@ export type User = {
   phoneNumber: string | null;
   keywords: string[] | null;
 };
+
+export type Comment = {
+  id: string;
+  userId: string;
+  content: string;
+  createdAt: { nanoseconds: number; seconds: number };
+  postId: string;
+  avatarUrl: string;
+  displayName: string;
+};

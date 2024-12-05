@@ -1,11 +1,16 @@
-import { Post } from "@/types";
+import { Comment, Post } from "@/types";
 import firestore, {
+  Filter,
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
 import axios from "axios";
 import { ImagePickerAsset } from "expo-image-picker";
 import { userAPI } from "./userApi";
-import { postsCollection, usersCollection } from "./collections";
+import {
+  commentsCollection,
+  postsCollection,
+  usersCollection,
+} from "./collections";
 
 const getPosts = async ({
   lastPost,
@@ -109,4 +114,56 @@ const createPost = async ({
   }
 };
 
-export const postAPI = { createPost, getPosts, uploadImage };
+const fetchComments = async (postId: string) => {
+  try {
+    console.log("fetchComments");
+
+    const querySnapshot = await commentsCollection
+      .where(Filter("postId", "==", postId))
+      .orderBy("createdAt", "desc")
+      .get();
+    const comments = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Omit<Comment, "avatarUrl" | "displayName">[];
+
+    const enrichedComments = await Promise.all(
+      comments.map(async (comment) => {
+        const userData = await userAPI.fetchUserById(comment.userId);
+        if (userData) {
+          return {
+            ...comment,
+            displayName: userData.displayName,
+            avatarUrl: userData.photoURL,
+          };
+        } else {
+          return comment;
+        }
+      })
+    );
+    return enrichedComments as Comment[];
+  } catch (error) {
+    console.log("fetchComments", error);
+    throw error;
+  }
+};
+
+const addComment = async (
+  comment: Pick<Comment, "content" | "postId" | "userId">
+) => {
+  try {
+    await commentsCollection.add({
+      ...comment,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
+    console.log("createComment", error);
+  }
+};
+export const postAPI = {
+  createPost,
+  getPosts,
+  uploadImage,
+  addComment,
+  fetchComments,
+};

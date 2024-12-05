@@ -33,6 +33,7 @@ const CustomView: React.FC<CustomViewProps> = ({
           paddingLeft,
           paddingRight,
           padding,
+          backgroundColor: 'white'
         },
         style,
       ]}

@@ -6,13 +6,13 @@ import CustomView from "./CustomView";
 import { OpaqueColorValue, StyleSheet } from "react-native";
 
 interface CustomAvatarProps {
-  user: User | null;
+  avatarUrl: string | null | undefined;
   size: "large" | "small" | "medium" | number;
   focused?: boolean;
   color?: string | OpaqueColorValue | undefined;
 }
 const CustomAvatar: React.FC<CustomAvatarProps> = ({
-  user,
+  avatarUrl,
   focused,
   size = "small",
   color,
@@ -26,12 +26,12 @@ const CustomAvatar: React.FC<CustomAvatarProps> = ({
       ? 24
       : size;
 
-  if (user?.photoURL) {
+  if (avatarUrl) {
     return (
       <CustomView style={[focused === true ? styles.avatarFocus : null]}>
         <Avatar.Image
           size={sizeValue}
-          source={{ uri: user?.photoURL }}
+          source={{ uri: avatarUrl }}
           style={{
             backgroundColor: "white",
           }}

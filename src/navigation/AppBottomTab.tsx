@@ -15,7 +15,7 @@ import { CustomAvatar } from "@/components";
 import { RouteProp } from "@react-navigation/native";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
-const CustomBottomTab = () => {
+const AppBottomTab = () => {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const handleLogout = async () => {
@@ -47,7 +47,7 @@ const CustomBottomTab = () => {
       let icon = (
         <CustomAvatar
           size={size}
-          user={currentUser}
+          avatarUrl={currentUser?.photoURL}
           focused={focused}
           color={color}
         />
@@ -117,4 +117,4 @@ const CustomBottomTab = () => {
   );
 };
 
-export default CustomBottomTab;
+export default AppBottomTab;

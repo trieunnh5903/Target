@@ -14,10 +14,11 @@ import firestore from "@react-native-firebase/firestore";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { notificationAPI } from "@/api";
 import CustomAvatar from "../CustomAvatar";
-import { openSheet } from "@/redux/slices/bottomSheetSlice";
+import { BottomSheetState, openSheet } from "@/redux/slices/bottomSheetSlice";
 
 interface PostItemProps {
   data: Post;
+  onCommentPress: () => void;
 }
 
 interface PostMediaProps extends PostItemProps {
@@ -26,7 +27,7 @@ interface PostMediaProps extends PostItemProps {
   likesCount: number;
 }
 
-const PostItem: React.FC<PostItemProps> = ({ data }) => {
+const PostItem: React.FC<PostItemProps> = ({ data, onCommentPress }) => {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [liked, setLiked] = useState(
     data.likes && data.likes[currentUser?.uid as string] === true ? true : false
@@ -66,6 +67,7 @@ const PostItem: React.FC<PostItemProps> = ({ data }) => {
     <CustomView>
       <PostHeader {...data.postedBy} />
       <PostMedia
+        onCommentPress={onCommentPress}
         data={data}
         isLike={liked}
         likesCount={likesCount}
@@ -78,7 +80,7 @@ const PostItem: React.FC<PostItemProps> = ({ data }) => {
 const PostHeader = (props: User) => {
   return (
     <CustomView style={styles.postHeader}>
-      <CustomAvatar size={"small"} user={props} />
+      <CustomAvatar size={"small"} avatarUrl={props.photoURL} />
       <ThemedText>{props.displayName}</ThemedText>
     </CustomView>
   );
@@ -89,13 +91,10 @@ const PostMedia = ({
   isLike,
   toggleLike,
   likesCount,
+  onCommentPress,
 }: PostMediaProps) => {
   const dimension = useWindowDimensions();
   const theme = useTheme();
-  const dispath = useAppDispatch();
-  const handleOpenComment = () => {
-    dispath(openSheet({ type: "comment", props: {} }));
-  };
   return (
     <Fragment>
       <Animated.ScrollView
@@ -124,7 +123,7 @@ const PostMedia = ({
 
         <CustomView style={styles.action}>
           <Ionicons
-            onPress={handleOpenComment}
+            onPress={onCommentPress}
             name="chatbubble-outline"
             size={24}
             color="black"
