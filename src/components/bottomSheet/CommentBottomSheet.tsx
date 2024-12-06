@@ -12,6 +12,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
   BottomSheetFlatList,
+  BottomSheetFlatListMethods,
   BottomSheetFooterProps,
   BottomSheetModal,
   useBottomSheetModal,
@@ -20,22 +21,25 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppSelector } from "@/hooks";
 import { useSharedValue } from "react-native-reanimated";
 import { useBackHandler } from "@react-native-community/hooks";
-
+import firestore from "@react-native-firebase/firestore";
 import CommentBottomSheetFooter from "./CommentBottomSheetFooter";
-import { postAPI } from "@/api";
-import { Comment } from "@/types";
+import { notificationAPI, postAPI } from "@/api";
+import { Comment, Post } from "@/types";
 import CommentItem from "../CommentItem";
 import dayjs from "dayjs";
+import { postsCollection } from "@/api/collections";
 
 interface CommentBottomSheetProps {
-  postId: string | null;
+  selectedPost: Post | null;
 }
 
 const CommentBottomSheet = forwardRef<
   BottomSheetModal,
   CommentBottomSheetProps
->(({ postId }, ref) => {
+>(({ selectedPost }, ref) => {
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [comments, setComments] = useState<Comment[]>([]);
+  const listRef = useRef<BottomSheetFlatListMethods>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const animatedPosition = useSharedValue(0);
@@ -65,9 +69,9 @@ const CommentBottomSheet = forwardRef<
   useEffect(() => {
     (async () => {
       try {
-        if (!postId) return;
+        if (!selectedPost?.id) return;
         setIsFetching(true);
-        const data = await postAPI.fetchComments(postId);
+        const data = await postAPI.fetchComments(selectedPost.id);
         setComments(data);
       } catch (error) {
         setComments([]);
@@ -75,7 +79,7 @@ const CommentBottomSheet = forwardRef<
         setIsFetching(false);
       }
     })();
-  }, [postId]);
+  }, [selectedPost]);
 
   useBackHandler(() => {
     if (isBottomSheetOpen) {
@@ -90,8 +94,9 @@ const CommentBottomSheet = forwardRef<
     []
   );
 
-  const handleSendMessage = useCallback(async () => {
-    if (commentText.current.trim() === "" || !postId || !user?.uid) return;
+  const sendCommentToServer = useCallback(async () => {
+    if (commentText.current.trim() === "" || !selectedPost?.id || !user?.uid)
+      return;
     const now = dayjs();
     const newCommentData: Comment = {
       id: Date.now().toString(),
@@ -103,28 +108,69 @@ const CommentBottomSheet = forwardRef<
       },
       avatarUrl: user.photoURL!,
       displayName: user.displayName || "User",
-      postId,
+      postId: selectedPost.id,
     };
 
     setSendingId(newCommentData.id);
     setComments((prevComments) => [newCommentData, ...prevComments]);
+    listRef.current?.scrollToOffset({ animated: true, offset: 0 });
+
     try {
-      await postAPI.addComment({
-        content: commentText.current.trim(),
-        postId: postId,
-        userId: user.uid,
+      await firestore().runTransaction(async (transaction) => {
+        await postAPI.addComment({
+          content: commentText.current.trim(),
+          postId: selectedPost.id,
+          userId: user.uid,
+        });
+
+        const postSnapshot = await transaction.get(
+          postsCollection.doc(selectedPost.id)
+        );
+        if (!postSnapshot.exists) return;
+        transaction.update(postsCollection.doc(selectedPost.id), {
+          commentsCount: postSnapshot.data()?.commentsCount ?? 0 + 1,
+        });
       });
     } catch (error) {
       console.error("Lỗi thêm bình luận:", error);
       setComments((prevComments) =>
         prevComments.filter((comment) => comment.id !== newCommentData.id)
       );
+      throw new Error(`${error}`);
     }
 
     setTimeout(() => {
       setSendingId(null);
     }, 1000);
-  }, [postId, user]);
+  }, [selectedPost?.id, user]);
+
+  const notificationNewComment = useCallback(async () => {
+    if (!selectedPost) return;
+    try {
+      const isInteracted = selectedPost.commentIds?.hasOwnProperty(
+        currentUser?.uid ?? ""
+      );
+      if (!isInteracted && currentUser?.uid !== selectedPost.postedBy.uid) {
+        await notificationAPI.notificationPostCommented(
+          selectedPost.postedBy.uid,
+          currentUser?.displayName,
+          selectedPost.id
+        );
+      }
+    } catch (error) {
+      console.log("notificationNewComment", error);
+      throw new Error(error as string);
+    }
+  }, [currentUser?.displayName, currentUser?.uid, selectedPost]);
+
+  const onSendMessagePress = useCallback(() => {
+    (async () => {
+      try {
+        await sendCommentToServer();
+        await notificationNewComment();
+      } catch (error) {}
+    })();
+  }, [notificationNewComment, sendCommentToServer]);
 
   const handleSheetChanges = useCallback(
     (index: number) => {
@@ -152,7 +198,7 @@ const CommentBottomSheet = forwardRef<
         {...props}
         user={user}
         onChangeText={onCommentTextChange}
-        onSendPress={handleSendMessage}
+        onSendPress={onSendMessagePress}
       />
     );
   };
@@ -168,6 +214,7 @@ const CommentBottomSheet = forwardRef<
       bottomInset={bottomSafeArea}
     >
       <BottomSheetFlatList
+        ref={listRef}
         contentContainerStyle={[styles.listCommentContainer]}
         data={comments}
         keyExtractor={(comment) => comment.id}

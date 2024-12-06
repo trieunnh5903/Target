@@ -12,7 +12,7 @@ import {
   SignUpScreen,
 } from "@/screens";
 import { useAppDispatch } from "@/hooks";
-import { fetchUserById } from "@/redux/slices/authSlice";
+import { fetchCurrentUser } from "@/redux/slices/authSlice";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -20,14 +20,12 @@ const AppNavigationContainer = () => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initializing, setInitializing] = useState(true);
   const dispatch = useAppDispatch();
-  // const { init } = useNotificationObserver();
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged((user) => {
       setUser(user);
-      // init(user);
       if (user) {
-        dispatch(fetchUserById(user.uid));
+        dispatch(fetchCurrentUser(user.uid));
       }
       if (initializing) setInitializing(false);
     });

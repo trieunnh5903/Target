@@ -5,7 +5,9 @@ export type Post = {
   images: string;
   createdAt: { nanoseconds: number; seconds: number };
   likes?: { [userId: string]: boolean };
+  commentIds?: { [userId: string]: boolean };
   likesCount?: number;
+  commentsCount?: number;
 };
 
 export type User = {

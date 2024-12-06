@@ -1,77 +1,68 @@
-import { Post } from "@/types";
 import { usersCollection } from "./collections";
 import axios from "axios";
 
-async function notificationNewPost(post: Post) {
-  try {
-    console.log("notificationNewPost");
-    const users = (await usersCollection.get()).docs;
-    const tokens: string[] = [];
-    users.forEach((user) => {
-      const data = user.data();
-      if (data.pushToken) {
-        tokens.push(data.pushToken);
-      }
-    });
+const expoPushInstance = axios.create({
+  baseURL: "https://exp.host",
+  headers: {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "Accept-encoding": "gzip, deflate",
+  },
+});
 
-    const messages = tokens.map((token) => ({
-      to: token,
-      sound: "default",
-      title: "New Post",
-      body: `${post.postedBy.displayName} just created a new post.`,
-      data: {
-        post: post.id,
-      },
-    }));
-
-    await fetch("https://exp.host/--/api/v2/push/send", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Accept-encoding": "gzip, deflate",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(messages),
-    });
-  } catch (error) {
-    console.log("notificationNewPost", error);
-  }
-}
-
-const notificationLiked = async (
-  postById: string,
-  userLikedName: string,
+const notificationPostLiked = async (
+  postAuthorId: string,
+  likedBy: string,
   postId: string
 ) => {
   try {
     console.log("notificationLiked");
-    const pushToken = (await usersCollection.doc(postById).get()).data()
+    const pushToken = (await usersCollection.doc(postAuthorId).get()).data()
       ?.pushToken;
     if (!pushToken) return;
     const message = {
       to: pushToken,
       sound: "default",
-      body: `${userLikedName} liked your post.`,
+      body: `${likedBy} liked your post.`,
       data: {
         postId: postId,
       },
     };
 
-    const res = await axios.post(
-      "https://exp.host/--/api/v2/push/send",
-      message,
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "Accept-encoding": "gzip, deflate",
-        },
-      }
-    );
+    const res = await expoPushInstance.post("/--/api/v2/push/send", message);
     console.log(res.data);
   } catch (error) {
-    console.log("notificationLiked", error);
+    console.log("notificationPostLiked", error);
   }
 };
 
-export const notificationAPI = { notificationNewPost, notificationLiked };
+const notificationPostCommented = async (
+  postAuthorId: string,
+  displayNameCommented: string | null | undefined = "Someone",
+  postId: string
+) => {
+  try {
+    console.log("notificationPostCommented");
+    const pushToken = (await usersCollection.doc(postAuthorId).get()).data()
+      ?.pushToken;
+    if (!pushToken) return;
+    const message = {
+      to: pushToken,
+      sound: "default",
+      body: `${displayNameCommented} commented on your post`,
+      data: {
+        postId: postId,
+      },
+    };
+
+    const res = await expoPushInstance.post("/--/api/v2/push/send", message);
+    console.log(res.data);
+  } catch (error) {
+    console.log("notificationPostCommented", error);
+  }
+};
+
+export const notificationAPI = {
+  notificationPostLiked,
+  notificationPostCommented,
+};

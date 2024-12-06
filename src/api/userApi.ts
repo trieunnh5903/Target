@@ -92,7 +92,6 @@ const fetchUserById = async (userId: string) => {
 const updatePushToken = async (token: string, userId: string) => {
   try {
     console.log("updatePushToken");
-
     await usersCollection.doc(userId).update({
       pushToken: token,
     });
@@ -104,7 +103,6 @@ const updatePushToken = async (token: string, userId: string) => {
 const deletePushToken = async (userId: string) => {
   try {
     console.log("deletePushToken");
-
     await usersCollection.doc(userId).update({
       pushToken: firestore.FieldValue.delete(),
     });

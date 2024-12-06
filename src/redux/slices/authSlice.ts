@@ -14,7 +14,7 @@ const initialState: AuthState = {
   error: null,
 };
 
-export const fetchUserById = createAsyncThunk(
+export const fetchCurrentUser = createAsyncThunk(
   "users/fetchByIdStatus",
   async (userId: string) => {
     return await userAPI.fetchUserById(userId);
@@ -40,19 +40,19 @@ const authSlice = createSlice({
     },
   },
   extraReducers(builder) {
-    builder.addCase(fetchUserById.pending, (state) => {
+    builder.addCase(fetchCurrentUser.pending, (state) => {
       if (state.loading === "idle") {
         state.loading = "pending";
       }
     });
-    builder.addCase(fetchUserById.fulfilled, (state, actions) => {
+    builder.addCase(fetchCurrentUser.fulfilled, (state, actions) => {
       state.loading = "idle";
       state.currentUser = actions.payload;
     });
 
-    builder.addCase(fetchUserById.rejected, (state) => {
+    builder.addCase(fetchCurrentUser.rejected, (state) => {
       state.loading = "idle";
-      state.error = "fetchUserById error";
+      state.error = "fetchCurrentUser error";
     });
   },
 });

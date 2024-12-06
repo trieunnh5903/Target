@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button, Text } from "react-native-paper";
 import { authAPI } from "@/api";
 import { useAppDispatch } from "@/hooks";
-import { fetchUserById } from "@/redux/slices/authSlice";
+import { fetchCurrentUser } from "@/redux/slices/authSlice";
 import { Container, CustomView } from "@/components";
 import { GLOBAL_STYLE } from "@/constants";
 import { Image } from "expo-image";
@@ -39,7 +39,7 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
 
       const { error, userCredential } = await authAPI.signIn(email, password);
       if (error || !userCredential) throw new Error(error);
-      dispatch(fetchUserById(userCredential.user.uid));
+      dispatch(fetchCurrentUser(userCredential.user.uid));
     } catch (error) {
       handleError((error as Error).message);
     } finally {

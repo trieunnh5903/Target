@@ -14,11 +14,17 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { GLOBAL_STYLE } from "@/constants";
 
 import { CommentBottomSheet } from "@/components/bottomSheet";
+import { useAppSelector } from "@/hooks";
 
 const HomeScreen = () => {
   const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
+  const currentToken = useAppSelector(
+    (state) => state.notification.expoPushToken
+  );
+  console.log("currentToken", currentToken);
+
   const [lastPost, setLastPost] =
     useState<FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null>(
       null
@@ -60,11 +66,11 @@ const HomeScreen = () => {
       setLoading(false);
     }
   };
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const commentBottomSheetRef = useRef<BottomSheetModal>(null);
 
-  const handleOpenComment = useCallback((postId: string) => {
-    setSelectedPostId(postId);
+  const handleOpenComment = useCallback((post: Post) => {
+    setSelectedPost(post);
     commentBottomSheetRef.current?.present();
   }, []);
 
@@ -81,7 +87,7 @@ const HomeScreen = () => {
           return (
             <PostItem
               data={item}
-              onCommentPress={() => handleOpenComment(item.id)}
+              onCommentPress={() => handleOpenComment(item)}
             />
           );
         }}
@@ -89,14 +95,14 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
-        ListEmptyComponent={<ActivityIndicator style={{alignSelf: 'center'}} size="small" />}
+        ListEmptyComponent={<ActivityIndicator size="small" />}
         ListFooterComponent={
           <View style={styles.loadingContainer}>
             {loading && <ActivityIndicator size="small" />}
           </View>
         }
       />
-      <CommentBottomSheet ref={commentBottomSheetRef} postId={selectedPostId} />
+      <CommentBottomSheet ref={commentBottomSheetRef} selectedPost={selectedPost} />
     </CustomView>
   );
 };

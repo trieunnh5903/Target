@@ -43,6 +43,7 @@ const AppBottomTab = () => {
     tabBarHideOnKeyboard: true,
     tabBarActiveTintColor: "black",
     tabBarInactiveTintColor: "black",
+    headerShadowVisible: false,
     tabBarIcon: ({ focused, color, size }) => {
       let icon = (
         <CustomAvatar

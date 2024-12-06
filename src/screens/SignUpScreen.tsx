@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button, Text } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
 import { useAppDispatch } from "@/hooks";
-import { fetchUserById } from "@/redux/slices/authSlice";
+import { fetchCurrentUser } from "@/redux/slices/authSlice";
 import {
   Container,
   CustomKeyboardAvoidingView,
@@ -40,7 +40,7 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
         userCredential.user
       );
       if (createUserError) throw new Error(createUserError);
-      dispatch(fetchUserById(userCredential.user.uid));
+      dispatch(fetchCurrentUser(userCredential.user.uid));
     } catch (error) {
       handleError((error as Error).message);
     }

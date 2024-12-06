@@ -11,10 +11,10 @@ import { GLOBAL_STYLE, SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
 import { postsCollection } from "@/api/collections";
 import firestore from "@react-native-firebase/firestore";
-import { useAppDispatch, useAppSelector } from "@/hooks";
+import { useAppSelector } from "@/hooks";
 import { notificationAPI } from "@/api";
 import CustomAvatar from "../CustomAvatar";
-import { BottomSheetState, openSheet } from "@/redux/slices/bottomSheetSlice";
+import { isNumber } from "lodash";
 
 interface PostItemProps {
   data: Post;
@@ -33,7 +33,6 @@ const PostItem: React.FC<PostItemProps> = ({ data, onCommentPress }) => {
     data.likes && data.likes[currentUser?.uid as string] === true ? true : false
   );
   const [likesCount, setLikesCount] = useState(data.likesCount ?? 0);
-
   const toggleLike = async () => {
     setLiked(!liked);
     setLikesCount(likesCount + (liked ? -1 : 1));
@@ -52,11 +51,16 @@ const PostItem: React.FC<PostItemProps> = ({ data, onCommentPress }) => {
           [`likes.${currentUser?.uid}`]: !liked,
         });
       });
-      await notificationAPI.notificationLiked(
-        data.postedBy.uid,
-        data.postedBy.displayName ?? "Someone",
-        data.id
-      );
+
+      const isInteracted = data.likes?.hasOwnProperty(currentUser?.uid ?? "");
+
+      if (!isInteracted && data.postedBy.uid !== currentUser?.uid) {
+        await notificationAPI.notificationPostLiked(
+          data.postedBy.uid,
+          currentUser?.displayName ?? "Someone",
+          data.id
+        );
+      }
     } catch (error) {
       console.log("toggleLike", error);
       setLiked(liked);
@@ -95,6 +99,7 @@ const PostMedia = ({
 }: PostMediaProps) => {
   const dimension = useWindowDimensions();
   const theme = useTheme();
+
   return (
     <Fragment>
       <Animated.ScrollView
@@ -128,7 +133,11 @@ const PostMedia = ({
             size={24}
             color="black"
           />
-          <ThemedText style={styles.textBold}>{likesCount}</ThemedText>
+          <ThemedText style={styles.textBold}>
+            {data.commentsCount && data.commentsCount > 0
+              ? data.commentsCount
+              : ""}
+          </ThemedText>
         </CustomView>
       </View>
 
