@@ -1,32 +1,30 @@
 export type Post = {
   id: string;
   postedBy: User;
-  content: string;
+  caption: string;
   images: string;
   createdAt: { nanoseconds: number; seconds: number };
   likes?: { [userId: string]: boolean };
-  commentIds?: { [userId: string]: boolean };
+  comments?: { [userId: string]: boolean };
   likesCount?: number;
   commentsCount?: number;
 };
 
 export type User = {
-  uid: string;
+  id: string;
   displayName: string | null;
   email: string;
-  photoURL: string | null;
+  avatarURL: string | null;
   creationTime: string;
   lastSignInTime: string;
   phoneNumber: string | null;
   keywords: string[] | null;
 };
 
-export type Comment = {
+export type Comment = Pick<User, "avatarURL" | "displayName"> & {
   id: string;
-  userId: string;
+  userId: Pick<User, "id">;
   content: string;
   createdAt: { nanoseconds: number; seconds: number };
-  postId: string;
-  avatarUrl: string;
-  displayName: string;
+  postId: Pick<Post, "id">;
 };

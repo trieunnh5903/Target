@@ -20,13 +20,14 @@ const AppBottomTab = () => {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const handleLogout = async () => {
     try {
-      if (currentUser?.uid) {
-        await userAPI.deletePushToken(currentUser.uid);
+      if (currentUser?.id) {
+        await userAPI.deletePushToken(currentUser.id);
       }
 
-      await authAPI.signOut().then(() => {
+      const { error } = await authAPI.signOut();
+      if (!error) {
         dispatch(logout());
-      });
+      }
     } catch (error) {
       console.log(error);
       Alert.alert("Error", "Failed logout. Please try again.", [
@@ -48,7 +49,7 @@ const AppBottomTab = () => {
       let icon = (
         <CustomAvatar
           size={size}
-          avatarUrl={currentUser?.photoURL}
+          avatarUrl={currentUser?.avatarURL}
           focused={focused}
           color={color}
         />
@@ -90,7 +91,6 @@ const AppBottomTab = () => {
         component={CreatePostScreen}
         options={({ navigation }) => ({
           title: "New post",
-          headerShown: true,
           tabBarStyle: { display: "none" },
           headerLeft() {
             return (

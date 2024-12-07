@@ -29,9 +29,9 @@ const authSlice = createSlice({
       state.currentUser = action.payload.data;
     },
 
-    updatePhotoURL: (state, action: PayloadAction<{ photoURL: string }>) => {
+    updatePhotoURL: (state, action: PayloadAction<{ avatarURL: string }>) => {
       if (state.currentUser) {
-        state.currentUser.photoURL = action.payload.photoURL;
+        state.currentUser.avatarURL = action.payload.avatarURL;
       }
     },
 

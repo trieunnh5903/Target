@@ -36,7 +36,6 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
       if (!email || !password) {
         throw new Error("Vui lòng nhập đầy đủ thông tin");
       }
-
       const { error, userCredential } = await authAPI.signIn(email, password);
       if (error || !userCredential) throw new Error(error);
       dispatch(fetchCurrentUser(userCredential.user.uid));
@@ -60,7 +59,7 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
   //     setError("Email đặt lại mật khẩu đã được gửi");
   //   }
   // };
-
+  
   return (
     <Container style={[GLOBAL_STYLE.justifyContentCenter]}>
       <CustomView style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}>
@@ -69,8 +68,8 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
         </CustomView>
         <CustomView paddingTop={24} style={[GLOBAL_STYLE.alignItemsCenter]}>
           <Image
-            source={require("../../assets/icon.png")}
-            style={{ width: 60, height: 60 }}
+            source={require("../../assets/adaptive-icon.png")}
+            style={{ width: 100, height: 100 }}
           />
         </CustomView>
       </CustomView>

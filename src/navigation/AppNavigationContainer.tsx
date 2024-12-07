@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationOptions,
+} from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types/navigation";
 import { NavigationContainer } from "@react-navigation/native";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
@@ -36,44 +39,35 @@ const AppNavigationContainer = () => {
     return null;
   }
 
+  const authScreenOptions: NativeStackNavigationOptions = {
+    animation: "slide_from_right",
+    headerTitle: "",
+    headerShadowVisible: false
+  };
+
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator>
         {user ? (
-          <Stack.Group>
-            <Stack.Screen name="Tabs" component={AppBottomTab} />
-            <Stack.Screen name="CameraScreen" component={CameraScreen} />
-            <Stack.Group
-              screenOptions={{
-                headerShown: true,
-                headerShadowVisible: false,
-              }}
-            >
-              <Stack.Screen
-                name="EditProfile"
-                options={{ headerTitle: "Edit your profile" }}
-                component={EditProfile}
-              />
-              <Stack.Screen
-                name="EditImage"
-                options={() => {
-                  return {
-                    headerTitle: "",
-                  };
-                }}
-                component={EditImage}
-              />
+          <Stack.Group screenOptions={{ headerShadowVisible: false }}>
+            <Stack.Group screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="Tabs" component={AppBottomTab} />
+              <Stack.Screen name="CameraScreen" component={CameraScreen} />
             </Stack.Group>
+
+            <Stack.Screen
+              name="EditProfile"
+              options={{ headerTitle: "Edit your profile" }}
+              component={EditProfile}
+            />
+            <Stack.Screen
+              name="EditImage"
+              options={{ headerTitle: "" }}
+              component={EditImage}
+            />
           </Stack.Group>
         ) : (
-          <Stack.Group
-            screenOptions={{
-              animation: "slide_from_right",
-              headerShown: true,
-              headerTitle: "",
-              headerShadowVisible: false,
-            }}
-          >
+          <Stack.Group screenOptions={authScreenOptions}>
             <Stack.Screen name="SignIn" component={SignInScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
           </Stack.Group>
