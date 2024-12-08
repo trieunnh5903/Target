@@ -82,7 +82,7 @@ const CommentBottomSheetFooter = ({
         </View>
 
         <CustomView paddingTop={10} style={styles.footerInput}>
-          <CustomAvatar avatarUrl={user?.photoURL} size={"medium"} />
+          <CustomAvatar avatarUrl={user?.avatarURL} size={"medium"} />
           <BottomSheetTextInput
             ref={inputRef}
             placeholder="Comment..."

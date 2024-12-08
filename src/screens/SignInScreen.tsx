@@ -1,7 +1,7 @@
-import { Alert, StyleSheet } from "react-native";
+import { Alert, Pressable, StyleSheet } from "react-native";
 import React, { useState } from "react";
-import { Button, Text } from "react-native-paper";
-import { authAPI } from "@/api";
+import { Button, IconButton, Text } from "react-native-paper";
+import { authAPI, userAPI } from "@/api";
 import { useAppDispatch } from "@/hooks";
 import { fetchCurrentUser } from "@/redux/slices/authSlice";
 import { Container, CustomView } from "@/components";
@@ -43,6 +43,18 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
       handleError((error as Error).message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { user } = await authAPI.signInGoogle();
+      const { error } = await userAPI.createUserProfile(user);
+      if (!error) {
+        dispatch(fetchCurrentUser(user.uid));
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -95,9 +107,18 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
 
       <CustomView
         padding={16}
-        style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.justifyContentBetween]}
+        style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.justifyContentEnd]}
       >
-        <Button>You forget password?</Button>
+        <Pressable
+          style={[GLOBAL_STYLE.rowCenter, styles.googleLogin]}
+          onPress={handleGoogleSignIn}
+        >
+          <Image
+            source={require("../../assets/icons8-google-48.png")}
+            style={{ width: 24, height: 24 }}
+          />
+          <Text>Sign in with Google</Text>
+        </Pressable>
         <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
           Create new account
         </Button>
@@ -108,7 +129,14 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
 
 const styles = StyleSheet.create({
   languageContainer: { position: "absolute", top: 0 },
-
+  googleLogin: {
+    gap: 8,
+    borderColor: "lightgray",
+    borderWidth: 1,
+    padding: 8,
+    borderRadius: 20,
+    marginBottom: 16,
+  },
   form: {
     gap: 16,
     flex: 1,

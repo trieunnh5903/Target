@@ -84,7 +84,7 @@ const PostItem: React.FC<PostItemProps> = ({ data, onCommentPress }) => {
 const PostHeader = (props: User) => {
   return (
     <CustomView style={styles.postHeader}>
-      <CustomAvatar size={"small"} avatarUrl={props.photoURL} />
+      <CustomAvatar size={"small"} avatarUrl={props.avatarURL} />
       <ThemedText>{props.displayName}</ThemedText>
     </CustomView>
   );
@@ -145,7 +145,7 @@ const PostMedia = ({
         <Text>
           <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
           {"  "}
-          {data.content}
+          {data.caption}
         </Text>
         <Text>{dayJs.getTimeFromNow(data.createdAt.seconds)}</Text>
       </View>

@@ -42,7 +42,7 @@ const AppNavigationContainer = () => {
   const authScreenOptions: NativeStackNavigationOptions = {
     animation: "slide_from_right",
     headerTitle: "",
-    headerShadowVisible: false
+    headerShadowVisible: false,
   };
 
   return (

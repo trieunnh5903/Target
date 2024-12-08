@@ -19,51 +19,49 @@ export interface ValidationError {
 
 interface CustomTextInputProps extends TextInputProps {
   helperText?: ValidationError | null;
-  onChangeText: (text: string) => void;
+  onChangeText?: (text: string) => void;
 }
 
 const CustomTextInput = forwardRef<any, CustomTextInputProps>(
-  ({ helperText, value, onChangeText, secureTextEntry, ...rest }, ref) => {
+  ({ helperText, onChangeText, secureTextEntry, ...rest }, ref) => {
     const [text, setText] = useState("");
-    const [passwordVisible, setPasswordVisible] = useState(true);
-    const inputRef = useRef<RNTextInput>(null);
+    const [passwordVisible, setPasswordVisible] = useState(false);
     const [focus, setFocus] = useState(false);
     const errorColor = useTheme().colors.error;
     const borderColor = helperText ? errorColor : !focus ? "#E4E7EC" : "black";
     const onClearPress = () => {
       setText("");
+      onChangeText?.("");
     };
 
     const handleOnChangeText = (value: string) => {
       setText(value);
-      onChangeText(value);
+      onChangeText?.(value);
     };
 
     const onEyePress = () => {
       setPasswordVisible(!passwordVisible);
     };
     return (
-      <View
-        style={{
-          borderWidth: 2,
-          borderColor: borderColor,
-          borderRadius: 16,
-          overflow: "hidden",
-        }}
-      >
-        <CustomView style={GLOBAL_STYLE.rowHCenter}>
+      <View>
+        <CustomView
+          style={[
+            styles.input,
+            {
+              borderColor: borderColor,
+            },
+          ]}
+        >
           <TextInput
-            ref={inputRef}
+            ref={ref}
             onFocus={() => setFocus(true)}
             onBlur={() => setFocus(false)}
             mode="flat"
+            secureTextEntry={secureTextEntry && passwordVisible}
             onChangeText={handleOnChangeText}
             value={text}
-            style={{
-              flex: 1,
-            }}
-            secureTextEntry={secureTextEntry && passwordVisible}
             underlineStyle={{ opacity: 0 }}
+            style={GLOBAL_STYLE.flex_1}
             theme={{
               colors: {
                 primary: "black",
@@ -74,19 +72,18 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
             {...rest}
           />
           {text && (
-            <Animated.View entering={FadeIn}>
-              <MaterialCommunityIcons
-                onPress={onClearPress}
-                name="close"
-                size={24}
-                style={{ padding: 8 }}
-              />
-            </Animated.View>
+            <IconButton
+              icon={"close"}
+              onPress={onClearPress}
+              style={{ margin: 0 }}
+              animated
+            />
           )}
           {secureTextEntry && (
             <IconButton
               icon={passwordVisible ? "eye" : "eye-off"}
               onPress={onEyePress}
+              style={{ marginLeft: 0 }}
             />
           )}
         </CustomView>
@@ -110,6 +107,12 @@ CustomTextInput.displayName = "CustomTextInput";
 export default memo(CustomTextInput);
 
 const styles = StyleSheet.create({
+  input: {
+    borderWidth: 2,
+    borderRadius: 16,
+    overflow: "hidden",
+    ...GLOBAL_STYLE.rowHCenter,
+  },
   errorText: {
     marginTop: 4,
   },

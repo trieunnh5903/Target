@@ -81,7 +81,7 @@ const EditProfile = () => {
               [selectedField.fieldName]: selectedField.value,
             };
 
-      await userAPI.updateUser(currentUser.uid, updateData);
+      await userAPI.updateUser(currentUser.id, updateData);
       dispatch(updateCurrentUser({ data: { ...currentUser, ...updateData } }));
       handleCloseModal();
     } catch (error) {
@@ -107,11 +107,11 @@ const EditProfile = () => {
 
       const avtarURL = await userAPI.uploadAvatar(asset);
 
-      await userAPI.updateUser(currentUser?.uid, {
+      await userAPI.updateUser(currentUser?.id, {
         photoURL: avtarURL,
       });
 
-      dispatch(updatePhotoURL({ photoURL: avtarURL }));
+      dispatch(updatePhotoURL({ avatarURL: avtarURL }));
     } catch (error) {
       console.log("handleChangePhoto", error);
     }
@@ -120,7 +120,7 @@ const EditProfile = () => {
   return (
     <Container>
       <View style={styles.avatarContainer}>
-        <CustomAvatar size={"large"} avatarUrl={currentUser?.photoURL} />
+        <CustomAvatar size={"large"} avatarUrl={currentUser?.avatarURL} />
         <Button
           textColor="black"
           style={{ alignSelf: "center" }}

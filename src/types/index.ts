@@ -23,8 +23,8 @@ export type User = {
 
 export type Comment = Pick<User, "avatarURL" | "displayName"> & {
   id: string;
-  userId: Pick<User, "id">;
+  userId: User["id"];
   content: string;
   createdAt: { nanoseconds: number; seconds: number };
-  postId: Pick<Post, "id">;
+  postId: Post["id"];
 };

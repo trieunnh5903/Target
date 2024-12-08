@@ -90,16 +90,21 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
             onChangeText={setPassword}
             secureTextEntry
           />
+
+          <CustomTextInput
+            label="Confirm Password"
+            autoComplete="new-password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+
           <Button mode="contained" onPress={handleSignUp}>
             Register
           </Button>
         </CustomView>
 
-        <CustomView
-          padding={16}
-          style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.justifyContentBetween]}
-        >
-          <Button>You forget password?</Button>
+        <CustomView padding={16}>
           <Button mode="outlined" onPress={() => navigation.navigate("SignIn")}>
             Already have account
           </Button>
@@ -113,7 +118,7 @@ const styles = StyleSheet.create({
   languageContainer: { position: "absolute", top: 0 },
   form: {
     gap: 16,
-    flex: 1,
+    flex: 2,
   },
   container: {
     flex: 1,

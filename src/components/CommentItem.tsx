@@ -17,7 +17,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 }) => {
   return (
     <CustomView style={[GLOBAL_STYLE.rowHCenter, { gap: 8 }]}>
-      <CustomAvatar size={"medium"} avatarUrl={comment.avatarUrl} />
+      <CustomAvatar size={"medium"} avatarUrl={comment.avatarURL} />
       <CustomView>
         <CustomView style={GLOBAL_STYLE.row}>
           <Text style={{ fontSize: 12, fontWeight: "bold" }}>
