@@ -85,6 +85,34 @@ const uploadImage = async (assets: ImagePickerAsset) => {
   }
 };
 
+const likePost = async (
+  postId: string,
+  likeById: string,
+  type: "like" | "dislike"
+) => {
+  try {
+    const postRef = postsCollection.doc(postId);
+    await firestore().runTransaction(async (transaction) => {
+      const postDoc = await transaction.get(postRef);
+      if (!postDoc.exists) {
+        throw new Error("Post does not exist!");
+      }
+      const currentLikesCount = postDoc.data()?.likesCount ?? 0;
+      const plusWith = type === "dislike" ? -1 : 1;
+      const newLikesCount = currentLikesCount + plusWith;
+      transaction.update(postRef, {
+        likesCount: newLikesCount,
+        [`likes.${likeById}`]: type === "like",
+      });
+    });
+
+    return { isSuccess: true };
+  } catch (error) {
+    console.log("likePost", error);
+    return { isSuccess: false };
+  }
+};
+
 const createPost = async ({
   content,
   images,
@@ -166,4 +194,5 @@ export const postAPI = {
   uploadImage,
   addComment,
   fetchComments,
+  likePost,
 };

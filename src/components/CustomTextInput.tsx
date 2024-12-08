@@ -9,8 +9,6 @@ import {
   IconButton,
 } from "react-native-paper";
 import CustomView from "./CustomView";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Animated, { FadeIn } from "react-native-reanimated";
 
 export interface ValidationError {
   message: string;
@@ -57,11 +55,12 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
             onFocus={() => setFocus(true)}
             onBlur={() => setFocus(false)}
             mode="flat"
-            secureTextEntry={secureTextEntry && passwordVisible}
+            secureTextEntry={secureTextEntry && !passwordVisible}
             onChangeText={handleOnChangeText}
             value={text}
             underlineStyle={{ opacity: 0 }}
-            style={GLOBAL_STYLE.flex_1}
+            style={[GLOBAL_STYLE.flex_1]}
+            contentStyle={{ paddingRight: 0 }}
             theme={{
               colors: {
                 primary: "black",
@@ -75,13 +74,13 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
             <IconButton
               icon={"close"}
               onPress={onClearPress}
-              style={{ margin: 0 }}
+              style={secureTextEntry !== undefined && { margin: 0 }}
               animated
             />
           )}
           {secureTextEntry && (
             <IconButton
-              icon={passwordVisible ? "eye" : "eye-off"}
+              icon={!passwordVisible ? "eye" : "eye-off"}
               onPress={onEyePress}
               style={{ marginLeft: 0 }}
             />

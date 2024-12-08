@@ -15,7 +15,7 @@ const NotificationProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const dispatch = useAppDispatch();
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
-  const userId = useAppSelector((state) => state.auth.currentUser?.uid);
+  const userId = useAppSelector((state) => state.auth.currentUser?.id);
   const pushToken = useRef<string>();
 
   useEffect(() => {

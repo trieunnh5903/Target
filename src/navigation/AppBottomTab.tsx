@@ -45,7 +45,8 @@ const AppBottomTab = () => {
     tabBarActiveTintColor: "black",
     tabBarInactiveTintColor: "black",
     headerShadowVisible: false,
-    tabBarIcon: ({ focused, color, size }) => {
+    tabBarIcon: ({ focused, color }) => {
+      const size = 32
       let icon = (
         <CustomAvatar
           size={size}

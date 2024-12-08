@@ -23,7 +23,7 @@ const CustomAvatar: React.FC<CustomAvatarProps> = ({
       : size === "medium"
       ? 40
       : size === "small"
-      ? 24
+      ? 32
       : size;
 
   if (avatarUrl) {

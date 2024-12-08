@@ -29,8 +29,7 @@ const notificationPostLiked = async (
       },
     };
 
-    const res = await expoPushInstance.post("/--/api/v2/push/send", message);
-    console.log(res.data);
+    await expoPushInstance.post("/--/api/v2/push/send", message);
   } catch (error) {
     console.log("notificationPostLiked", error);
   }
