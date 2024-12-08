@@ -1,4 +1,5 @@
 import auth from "@react-native-firebase/auth";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 const signUp = async (email: string, password: string) => {
   try {
@@ -97,4 +98,19 @@ const resetPassword = async (email: string) => {
   }
 };
 
-export const authAPI = { signIn, signUp, signOut, resetPassword };
+const signInGoogle = async () => {
+  try {
+    await GoogleSignin.hasPlayServices();
+    const response = await GoogleSignin.signIn();
+    const idToken = response.data?.idToken;
+    if (!idToken) {
+      throw new Error("No ID token found");
+    }
+    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+    return auth().signInWithCredential(googleCredential);
+  } catch (error) {
+    throw new Error(`${error}`);
+  }
+};
+
+export const authAPI = { signIn, signUp, signOut, resetPassword, signInGoogle };

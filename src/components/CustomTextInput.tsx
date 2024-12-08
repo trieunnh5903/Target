@@ -5,7 +5,11 @@ import {
   TextInputProps,
   TextInput,
   useTheme,
+  IconButton,
 } from "react-native-paper";
+import CustomView from "./CustomView";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { GLOBAL_STYLE } from "@/constants";
 
 export interface ValidationError {
   message: string;
@@ -14,35 +18,74 @@ export interface ValidationError {
 
 interface CustomTextInputProps extends TextInputProps {
   helperText?: ValidationError | null;
+  onChangeText?: (text: string) => void;
 }
 
 const CustomTextInput = forwardRef<any, CustomTextInputProps>(
-  ({ helperText, ...rest }, ref) => {
+  ({ helperText, onChangeText, secureTextEntry, ...rest }, ref) => {
+    const [text, setText] = useState("");
+    const [passwordVisible, setPasswordVisible] = useState(false);
     const [focus, setFocus] = useState(false);
     const errorColor = useTheme().colors.error;
     const borderColor = helperText ? errorColor : !focus ? "#E4E7EC" : "black";
+    const onClearPress = () => {
+      setText("");
+      onChangeText?.("");
+    };
+
+    const handleOnChangeText = (value: string) => {
+      setText(value);
+      onChangeText?.(value);
+    };
+
+    const onEyePress = () => {
+      setPasswordVisible(!passwordVisible);
+    };
     return (
       <View>
-        <TextInput
-          ref={ref}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
-          mode="flat"
-          style={{
-            borderWidth: 2,
-            borderColor: borderColor,
-            borderRadius: 16,
-          }}
-          underlineStyle={{ opacity: 0 }}
-          theme={{
-            colors: {
-              primary: "black",
-              surfaceVariant: "white",
+        <CustomView
+          style={[
+            styles.input,
+            {
+              borderColor: borderColor,
             },
-            roundness: 16,
-          }}
-          {...rest}
-        />
+          ]}
+        >
+          <TextInput
+            ref={ref}
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+            mode="flat"
+            secureTextEntry={secureTextEntry && passwordVisible}
+            onChangeText={handleOnChangeText}
+            value={text}
+            underlineStyle={{ opacity: 0 }}
+            style={GLOBAL_STYLE.flex_1}
+            theme={{
+              colors: {
+                primary: "black",
+                surfaceVariant: "white",
+              },
+              roundness: 16,
+            }}
+            {...rest}
+          />
+          {text && (
+            <IconButton
+              icon={"close"}
+              onPress={onClearPress}
+              style={{ margin: 0 }}
+            />
+          )}
+          {secureTextEntry && (
+            <IconButton
+              icon={passwordVisible ? "eye" : "eye-off"}
+              onPress={onEyePress}
+              style={{ marginLeft: 0 }}
+            />
+          )}
+        </CustomView>
+
         {helperText && (
           <HelperText
             type={helperText.type}
@@ -62,6 +105,12 @@ CustomTextInput.displayName = "CustomTextInput";
 export default CustomTextInput;
 
 const styles = StyleSheet.create({
+  input: {
+    borderWidth: 2,
+    borderRadius: 16,
+    overflow: "hidden",
+    ...GLOBAL_STYLE.rowHCenter,
+  },
   errorText: {
     marginTop: 4,
   },

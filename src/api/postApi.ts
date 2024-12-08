@@ -125,7 +125,7 @@ const fetchComments = async (postId: string) => {
     const comments = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    })) as Omit<Comment, "avatarUrl" | "displayName">[];
+    })) as Omit<Comment, "avatarURL" | "displayName">[];
 
     const enrichedComments = await Promise.all(
       comments.map(async (comment) => {
@@ -134,7 +134,7 @@ const fetchComments = async (postId: string) => {
           return {
             ...comment,
             displayName: userData.displayName,
-            avatarUrl: userData.photoURL,
+            avatarURL: userData.avatarURL,
           };
         } else {
           return comment;

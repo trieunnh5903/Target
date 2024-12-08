@@ -51,10 +51,10 @@ const createUserProfile = async (userData: FirebaseAuthTypes.User) => {
       email: email as string,
       creationTime: metadata.creationTime as string,
       lastSignInTime: metadata.lastSignInTime as string,
-      displayName: displayName ?? "User",
+      displayName: displayName ?? "No Name",
       phoneNumber,
-      photoURL,
-      uid,
+      avatarURL: photoURL,
+      id: uid,
       keywords,
     };
     await usersCollection.doc(uid).set(user);

@@ -1,7 +1,6 @@
-import { StatusBar, StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React, {
   forwardRef,
-  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -95,18 +94,18 @@ const CommentBottomSheet = forwardRef<
   );
 
   const sendCommentToServer = useCallback(async () => {
-    if (commentText.current.trim() === "" || !selectedPost?.id || !user?.uid)
+    if (commentText.current.trim() === "" || !selectedPost?.id || !user?.id)
       return;
     const now = dayjs();
     const newCommentData: Comment = {
       id: Date.now().toString(),
-      userId: user.uid,
+      userId: user.id,
       content: commentText.current,
       createdAt: {
         seconds: Math.floor(now.valueOf() / 1000),
         nanoseconds: now.valueOf(),
       },
-      avatarUrl: user.photoURL!,
+      avatarURL: user.avatarURL,
       displayName: user.displayName || "User",
       postId: selectedPost.id,
     };
@@ -120,7 +119,7 @@ const CommentBottomSheet = forwardRef<
         await postAPI.addComment({
           content: commentText.current.trim(),
           postId: selectedPost.id,
-          userId: user.uid,
+          userId: user.id,
         });
 
         const postSnapshot = await transaction.get(
@@ -147,12 +146,12 @@ const CommentBottomSheet = forwardRef<
   const notificationNewComment = useCallback(async () => {
     if (!selectedPost) return;
     try {
-      const isInteracted = selectedPost.commentIds?.hasOwnProperty(
-        currentUser?.uid ?? ""
+      const isInteracted = selectedPost.comments?.hasOwnProperty(
+        currentUser?.id ?? ""
       );
-      if (!isInteracted && currentUser?.uid !== selectedPost.postedBy.uid) {
+      if (!isInteracted && currentUser?.id !== selectedPost.postedBy.id) {
         await notificationAPI.notificationPostCommented(
-          selectedPost.postedBy.uid,
+          selectedPost.postedBy.id,
           currentUser?.displayName,
           selectedPost.id
         );
@@ -161,7 +160,7 @@ const CommentBottomSheet = forwardRef<
       console.log("notificationNewComment", error);
       throw new Error(error as string);
     }
-  }, [currentUser?.displayName, currentUser?.uid, selectedPost]);
+  }, [currentUser?.displayName, currentUser?.id, selectedPost]);
 
   const onSendMessagePress = useCallback(() => {
     (async () => {

@@ -91,6 +91,7 @@ const HomeScreen = () => {
             />
           );
         }}
+        pinchGestureEnabled={false}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         onEndReached={handleLoadMore}

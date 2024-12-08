@@ -7,6 +7,7 @@ import { AppNavigationContainer } from "@/navigation";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { NotificationProvider } from "@/provider";
 import * as Notifications from "expo-notifications";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -16,6 +17,9 @@ Notifications.setNotificationHandler({
   }),
 });
 
+GoogleSignin.configure({
+  webClientId: "1098310179471-mv3lrl6o7akn8gb0b259kud7kvsgea8n.apps.googleusercontent.com",
+});
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

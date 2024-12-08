@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationOptions,
+} from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types/navigation";
 import { NavigationContainer } from "@react-navigation/native";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
@@ -36,6 +39,12 @@ const AppNavigationContainer = () => {
     return null;
   }
 
+  const authScreenOptions: NativeStackNavigationOptions = {
+    animation: "slide_from_right",
+    headerTitle: "",
+    headerShadowVisible: false,
+  };
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -66,14 +75,7 @@ const AppNavigationContainer = () => {
             </Stack.Group>
           </Stack.Group>
         ) : (
-          <Stack.Group
-            screenOptions={{
-              animation: "slide_from_right",
-              headerShown: true,
-              headerTitle: "",
-              headerShadowVisible: false,
-            }}
-          >
+          <Stack.Group screenOptions={authScreenOptions}>
             <Stack.Screen name="SignIn" component={SignInScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
           </Stack.Group>
