@@ -1,31 +1,11 @@
-import {
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-  Image,
-} from "react-native";
-import React, { Fragment, memo, useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import React, { memo, useState } from "react";
 import { Post } from "@/types";
-import ThemedText from "../ThemedText";
 import CustomView from "../CustomView";
-import Animated, {
-  Extrapolation,
-  interpolate,
-  runOnJS,
-  useAnimatedReaction,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
-import { useTheme } from "react-native-paper";
-import { Octicons } from "@expo/vector-icons";
-import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
+import { useSharedValue, withSpring } from "react-native-reanimated";
+import { GLOBAL_STYLE, SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
 import { useAppSelector } from "@/hooks";
-import CustomAvatar from "../CustomAvatar";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { Image as ExpoImage } from "expo-image";
 import Header from "./Header";
 import ImageArea from "./ImageArea";
 import ActionGroups from "./ActionGroups";
