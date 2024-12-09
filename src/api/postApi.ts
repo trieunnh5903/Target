@@ -11,7 +11,6 @@ import {
   postsCollection,
   usersCollection,
 } from "./collections";
-
 const getPosts = async ({
   lastPost,
   limit,
@@ -101,7 +100,7 @@ const likePost = async (
       const plusWith = type === "dislike" ? -1 : 1;
       const newLikesCount = currentLikesCount + plusWith;
       transaction.update(postRef, {
-        likesCount: newLikesCount,
+        likesCount: Math.max(0, newLikesCount),
         [`likes.${likeById}`]: type === "like",
       });
     });
