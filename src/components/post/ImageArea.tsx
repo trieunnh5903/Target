@@ -1,5 +1,5 @@
-import { Image, StyleSheet } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import { Image, StyleSheet, View } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import CustomView from "../CustomView";
 import { GLOBAL_STYLE, SCREEN_WIDTH } from "@/constants";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -17,6 +17,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { Octicons } from "@expo/vector-icons";
 import { Image as ExpoImage } from "expo-image";
+import ImageModal from "./ImageModal";
+import { useOriginImageLayout } from "@/hooks";
+import { useBackHandler } from "@react-native-community/hooks";
 
 interface ImageAreaProps {
   source: string;
@@ -35,6 +38,12 @@ const ImageArea: React.FC<ImageAreaProps> = ({
   animatedIsLiked,
 }) => {
   const [aspectRatio, setAspectRatio] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const isHeartHidden = useSharedValue(-1);
+  const imageRef = useRef<View>(null);
+  const { originImageLayout, updateOriginImageLayout } = useOriginImageLayout({
+    imageRef,
+  });
 
   useEffect(() => {
     if (source) {
@@ -50,19 +59,34 @@ const ImageArea: React.FC<ImageAreaProps> = ({
     }
   }, [source]);
 
-  const isHidden = useSharedValue(-1);
+  const hideModal = () => {
+    setIsModalOpen(false);
+  };
 
-  const tapGesture = Gesture.Tap()
+  const showModal = () => {
+    updateOriginImageLayout();
+    setTimeout(() => {
+      setIsModalOpen(true);
+    });
+  };
+
+  const singleTapGesture = Gesture.Tap()
+    .numberOfTaps(1)
+    .onEnd(() => {
+      runOnJS(showModal)();
+    });
+
+  const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
     .onStart(() => {
       isDoubleTap.value = true;
-      isHidden.value = 1;
+      isHeartHidden.value = 1;
       animatedIsLiked.value = aleadyLiked;
     })
     .onEnd(() => {
       heartProgress.value = 0;
       heartProgress.value = withSpring(1, {}, () => {
-        isHidden.value = withDelay(500, withTiming(-1));
+        isHeartHidden.value = withDelay(500, withTiming(-1));
         isDoubleTap.value = false;
       });
       if (!aleadyLiked) {
@@ -73,7 +97,7 @@ const ImageArea: React.FC<ImageAreaProps> = ({
   const heartAnimatedStyle = useAnimatedStyle(() => {
     return {
       opacity:
-        isHidden.value === 1
+        isHeartHidden.value === 1
           ? interpolate(
               heartProgress.value,
               [0.8, 1],
@@ -91,15 +115,29 @@ const ImageArea: React.FC<ImageAreaProps> = ({
 
   return (
     <CustomView style={GLOBAL_STYLE.center}>
-      <GestureDetector gesture={tapGesture}>
-        <ExpoImage
-          source={{ uri: source }}
+      <GestureDetector
+        gesture={Gesture.Exclusive(doubleTapGesture, singleTapGesture)}
+      >
+        <View
+          ref={imageRef}
           style={{
             width: SCREEN_WIDTH,
             aspectRatio: aspectRatio,
           }}
-        />
+        >
+          <ExpoImage source={{ uri: source }} style={GLOBAL_STYLE.fullSize} />
+        </View>
       </GestureDetector>
+
+      {isModalOpen && (
+        <ImageModal
+          source={source}
+          isOpen={isModalOpen}
+          onClose={hideModal}
+          origin={originImageLayout}
+        />
+      )}
+
       <Animated.View
         pointerEvents={"none"}
         style={[styles.bigHeartContainer, heartAnimatedStyle]}

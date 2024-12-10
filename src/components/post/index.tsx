@@ -44,7 +44,7 @@ const PostItem: React.FC<PostItemProps> = ({
 
   let isProcessing = false;
   const toggleLike = async () => {
-    if (isProcessing) return; // Nếu đang xử lý, không gửi thêm yêu cầu
+    if (isProcessing) return;
     isProcessing = true;
     if (!isDoubleTap.value) {
       heartProgress.value = 0;

@@ -1,4 +1,4 @@
-import { Dimensions, StyleSheet } from "react-native";
+import { Dimensions, StatusBar, StyleSheet } from "react-native";
 
 export const SPACING = {
   small: 8,
@@ -9,6 +9,8 @@ export const SPACING = {
 
 export const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
   Dimensions.get("window");
+
+export const STATUS_BAR_HEIGHT = StatusBar.currentHeight ?? 0;
 
 export const CROP_SIZE = SCREEN_WIDTH;
 export const POST_WIDTH = SCREEN_WIDTH;
