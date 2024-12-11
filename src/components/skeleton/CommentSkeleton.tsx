@@ -9,6 +9,7 @@ const MyLoader = (props: IContentLoaderProps) => (
   <ContentLoader
     height={60}
     speed={1}
+    animate={false}
     backgroundColor="#f3f3f3"
     foregroundColor="#ecebeb"
   >

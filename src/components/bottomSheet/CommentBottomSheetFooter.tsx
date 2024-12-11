@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import {
   BottomSheetFooter,
   BottomSheetFooterProps,
@@ -10,7 +10,6 @@ import { Divider, IconButton, Text } from "react-native-paper";
 import { GLOBAL_STYLE, SCREEN_WIDTH } from "@/constants";
 import CustomView from "../CustomView";
 import CustomAvatar from "../CustomAvatar";
-import { User } from "@/types";
 import Animated, {
   FadeInDown,
   runOnJS,
@@ -18,22 +17,22 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInput } from "react-native-gesture-handler";
+import { useAppSelector } from "@/hooks";
 
 interface CommentBottomSheetFooterProps extends BottomSheetFooterProps {
-  user: User | null;
   emojis: string[];
   onChangeText: (text: string) => void;
   onSendPress: () => void;
-  onChangeHeight: (height: number) => void;
+  height: number;
 }
 const CommentBottomSheetFooter = ({
   animatedFooterPosition,
-  user,
-  onChangeHeight,
+  emojis,
   onChangeText,
   onSendPress,
-  emojis,
+  height,
 }: CommentBottomSheetFooterProps) => {
+  const user = useAppSelector((state) => state.auth.currentUser);
   const inputRef = useRef<TextInput>(null);
   const { bottom: bottomSafeArea } = useSafeAreaInsets();
   const { animatedIndex } = useBottomSheet();
@@ -69,13 +68,9 @@ const CommentBottomSheetFooter = ({
       bottomInset={bottomSafeArea}
       animatedFooterPosition={animatedFooterPosition}
     >
-      <Animated.View
-        onLayout={(event) => {
-          onChangeHeight(event.nativeEvent.layout.height);
-        }}
-      >
+      <Animated.View style={GLOBAL_STYLE.justifyContentEnd}>
         <Divider />
-        <CustomView padding={10} style={{ width: SCREEN_WIDTH }}>
+        <CustomView padding={10} style={{ width: SCREEN_WIDTH, height }}>
           <View style={[GLOBAL_STYLE.row, { gap: 4 }]}>
             {emojis.slice(0, 10).map((emoji) => (
               <Text
@@ -93,15 +88,13 @@ const CommentBottomSheetFooter = ({
             <BottomSheetTextInput
               ref={inputRef}
               placeholder="Comment..."
-              style={{ height: "100%", flex: 1, marginLeft: 10 }}
+              style={styles.textInput}
               value={commentText}
               onChangeText={handleInputChange}
+              autoFocus
             />
             {commentText && (
-              <Animated.View
-                entering={FadeInDown}
-                style={{ position: "absolute", right: 0 }}
-              >
+              <Animated.View entering={FadeInDown} style={styles.sendContainer}>
                 <IconButton
                   icon={"arrow-up"}
                   size={22}
@@ -117,15 +110,17 @@ const CommentBottomSheetFooter = ({
   );
 };
 
-export default CommentBottomSheetFooter;
+export default memo(CommentBottomSheetFooter);
 
 const styles = StyleSheet.create({
+  sendContainer: { position: "absolute", right: 0 },
   emoji: {
     flex: 1,
     aspectRatio: 1,
     fontSize: 22,
     textAlign: "center",
   },
+  textInput: { height: "100%", flex: 1, marginLeft: 10 },
   footerInput: {
     ...GLOBAL_STYLE.rowHCenter,
   },

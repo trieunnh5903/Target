@@ -80,8 +80,6 @@ const updateUser = async (
 
 const fetchUserById = async (userId: string) => {
   try {
-    console.log("fetchUserById");
-
     return (await usersCollection.doc(userId).get()).data() as User;
   } catch (error) {
     console.log("getUserById", error);

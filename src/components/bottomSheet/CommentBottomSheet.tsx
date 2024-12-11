@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 import React, {
   forwardRef,
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -18,10 +19,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppSelector } from "@/hooks";
-import Animated, {
-  useAnimatedReaction,
-  useSharedValue,
-} from "react-native-reanimated";
+import Animated, { useSharedValue } from "react-native-reanimated";
 import { useBackHandler } from "@react-native-community/hooks";
 import firestore from "@react-native-firebase/firestore";
 import CommentBottomSheetFooter from "./CommentBottomSheetFooter";
@@ -43,41 +41,44 @@ const CommentBottomSheet = forwardRef<
   CommentBottomSheetProps
 >(({ selectedPost }, ref) => {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
-  const footerHeight = useSharedValue(0);
   const [comments, setComments] = useState<Comment[]>([]);
   const listRef = useRef<BottomSheetFlatListMethods>(null);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const animatedPosition = useSharedValue(0);
   const commentText = useRef("");
   const { bottom: bottomSafeArea, top: topSafeArea } = useSafeAreaInsets();
-  const user = useAppSelector((state) => state.auth.currentUser);
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const isBottomSheetOpen = useRef(false);
   const snapPoints = useMemo(() => ["100%"], []);
   const { dismissAll } = useBottomSheetModal();
-  const unicodeArray = [
-    "\u2764", // ❤
-    "\u{1F64C}", // 🙌
-    "\u{1F60E}", // 😎
-    "\u{1F600}", // 😀
-    "\u{1F601}", // 😁
-    "\u{1F602}", // 😂
-    "\u{1F923}", // 🤣
-    "\u{1F60A}", // 😊
-    "\u{1F60D}", // 😍
-    "\u{1F914}", // 🤔
-    "\u{1F44D}", // 👍
-    "\u{1F44C}", // 👌
-  ];
+  const FOOTER_HEIGHT = 102;
+
+  const unicodeArray = useMemo(
+    () => [
+      "\u2764", // ❤
+      "\u{1F64C}", // 🙌
+      "\u{1F60E}", // 😎
+      "\u{1F600}", // 😀
+      "\u{1F601}", // 😁
+      "\u{1F602}", // 😂
+      "\u{1F923}", // 🤣
+      "\u{1F60A}", // 😊
+      "\u{1F60D}", // 😍
+      "\u{1F914}", // 🤔
+      "\u{1F44D}", // 👍
+      "\u{1F44C}", // 👌
+    ],
+    []
+  );
 
   console.log("CommentBottomSheetComponent");
 
   useEffect(() => {
     (async () => {
+      setComments([]);
+      setIsFetching(true);
       try {
         if (!selectedPost?.id) return;
-        setComments([]);
-        setIsFetching(true);
         const data = await postAPI.fetchComments(selectedPost.id);
         setComments(data);
       } catch {
@@ -89,7 +90,7 @@ const CommentBottomSheet = forwardRef<
   }, [selectedPost]);
 
   useBackHandler(() => {
-    if (isBottomSheetOpen) {
+    if (isBottomSheetOpen.current) {
       dismissAll();
       return true;
     }
@@ -102,19 +103,23 @@ const CommentBottomSheet = forwardRef<
   );
 
   const sendCommentToServer = useCallback(async () => {
-    if (commentText.current.trim() === "" || !selectedPost?.id || !user?.id)
+    if (
+      commentText.current.trim() === "" ||
+      !selectedPost?.id ||
+      !currentUser?.id
+    )
       return;
     const now = dayjs();
     const newCommentData: Comment = {
       id: Date.now().toString(),
-      userId: user.id,
+      userId: currentUser.id,
       content: commentText.current,
       createdAt: {
         seconds: Math.floor(now.valueOf() / 1000),
         nanoseconds: now.valueOf(),
       },
-      avatarURL: user.avatarURL,
-      displayName: user.displayName || "User",
+      avatarURL: currentUser.avatarURL,
+      displayName: currentUser.displayName,
       postId: selectedPost.id,
     };
 
@@ -127,7 +132,7 @@ const CommentBottomSheet = forwardRef<
         await postAPI.addComment({
           content: commentText.current.trim(),
           postId: selectedPost.id,
-          userId: user.id,
+          userId: currentUser.id,
         });
 
         const postSnapshot = await transaction.get(
@@ -149,7 +154,7 @@ const CommentBottomSheet = forwardRef<
     setTimeout(() => {
       setSendingId(null);
     }, 1000);
-  }, [selectedPost?.id, user]);
+  }, [selectedPost?.id, currentUser]);
 
   const notificationNewComment = useCallback(async () => {
     if (!selectedPost) return;
@@ -179,14 +184,11 @@ const CommentBottomSheet = forwardRef<
     })();
   }, [notificationNewComment, sendCommentToServer]);
 
-  const handleSheetChanges = useCallback(
-    (index: number) => {
-      if (index !== -1 && !isBottomSheetOpen) {
-        setIsBottomSheetOpen(true);
-      }
-    },
-    [isBottomSheetOpen]
-  );
+  const handleSheetChanges = useCallback((index: number) => {
+    if (index !== -1 && !isBottomSheetOpen.current) {
+      isBottomSheetOpen.current = true;
+    }
+  }, []);
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
@@ -201,12 +203,11 @@ const CommentBottomSheet = forwardRef<
   const renderFooter = (props: BottomSheetFooterProps) => {
     return (
       <CommentBottomSheetFooter
-        onChangeHeight={(height) => (footerHeight.value = height)}
+        height={FOOTER_HEIGHT}
         emojis={unicodeArray}
-        {...props}
-        user={user}
         onChangeText={onCommentTextChange}
         onSendPress={onSendMessagePress}
+        {...props}
       />
     );
   };
@@ -217,7 +218,7 @@ const CommentBottomSheet = forwardRef<
       <CustomView>
         {Array.from({
           length: Math.ceil(
-            (SCREEN_HEIGHT - 24 - STATUS_BAR_HEIGHT - footerHeight.value) / 60
+            (SCREEN_HEIGHT - 24 - STATUS_BAR_HEIGHT - FOOTER_HEIGHT) / 60
           ),
         }).map((_, index) => {
           return (
@@ -228,7 +229,7 @@ const CommentBottomSheet = forwardRef<
         })}
       </CustomView>
     );
-  }, [footerHeight.value, isFetching]);
+  }, [isFetching]);
 
   return (
     <BottomSheetModal
@@ -250,15 +251,13 @@ const CommentBottomSheet = forwardRef<
         renderItem={({ item }) => (
           <CommentItem comment={item} commentSendingId={sendingId} />
         )}
-        ListFooterComponent={
-          <Animated.View style={{ marginTop: footerHeight }} />
-        }
+        ListFooterComponent={<CustomView paddingTop={FOOTER_HEIGHT} />}
       />
     </BottomSheetModal>
   );
 });
 CommentBottomSheet.displayName = "CommentBottomSheet";
-export default CommentBottomSheet;
+export default memo(CommentBottomSheet);
 
 const styles = StyleSheet.create({
   listCommentContainer: {
