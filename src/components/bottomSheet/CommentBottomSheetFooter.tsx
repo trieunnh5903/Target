@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   BottomSheetFooter,
   BottomSheetFooterProps,
@@ -24,10 +24,12 @@ interface CommentBottomSheetFooterProps extends BottomSheetFooterProps {
   emojis: string[];
   onChangeText: (text: string) => void;
   onSendPress: () => void;
+  onChangeHeight: (height: number) => void;
 }
 const CommentBottomSheetFooter = ({
   animatedFooterPosition,
   user,
+  onChangeHeight,
   onChangeText,
   onSendPress,
   emojis,
@@ -67,44 +69,50 @@ const CommentBottomSheetFooter = ({
       bottomInset={bottomSafeArea}
       animatedFooterPosition={animatedFooterPosition}
     >
-      <Divider />
-      <CustomView padding={10} style={{ width: SCREEN_WIDTH }}>
-        <View style={[GLOBAL_STYLE.row, { gap: 4 }]}>
-          {emojis.slice(0, 10).map((emoji) => (
-            <Text
-              onPress={() => onEmojiPress(emoji)}
-              key={emoji}
-              style={styles.emoji}
-            >
-              {emoji}
-            </Text>
-          ))}
-        </View>
+      <Animated.View
+        onLayout={(event) => {
+          onChangeHeight(event.nativeEvent.layout.height);
+        }}
+      >
+        <Divider />
+        <CustomView padding={10} style={{ width: SCREEN_WIDTH }}>
+          <View style={[GLOBAL_STYLE.row, { gap: 4 }]}>
+            {emojis.slice(0, 10).map((emoji) => (
+              <Text
+                onPress={() => onEmojiPress(emoji)}
+                key={emoji}
+                style={styles.emoji}
+              >
+                {emoji}
+              </Text>
+            ))}
+          </View>
 
-        <CustomView paddingTop={10} style={styles.footerInput}>
-          <CustomAvatar avatarUrl={user?.avatarURL} size={"medium"} />
-          <BottomSheetTextInput
-            ref={inputRef}
-            placeholder="Comment..."
-            style={{ height: "100%", flex: 1, marginLeft: 10 }}
-            value={commentText}
-            onChangeText={handleInputChange}
-          />
-          {commentText && (
-            <Animated.View
-              entering={FadeInDown}
-              style={{ position: "absolute", right: 0 }}
-            >
-              <IconButton
-                icon={"arrow-up"}
-                size={22}
-                onPress={onSendPress}
-                mode="contained"
-              />
-            </Animated.View>
-          )}
+          <CustomView paddingTop={10} style={styles.footerInput}>
+            <CustomAvatar avatarUrl={user?.avatarURL} size={"medium"} />
+            <BottomSheetTextInput
+              ref={inputRef}
+              placeholder="Comment..."
+              style={{ height: "100%", flex: 1, marginLeft: 10 }}
+              value={commentText}
+              onChangeText={handleInputChange}
+            />
+            {commentText && (
+              <Animated.View
+                entering={FadeInDown}
+                style={{ position: "absolute", right: 0 }}
+              >
+                <IconButton
+                  icon={"arrow-up"}
+                  size={22}
+                  onPress={onSendPress}
+                  mode="contained"
+                />
+              </Animated.View>
+            )}
+          </CustomView>
         </CustomView>
-      </CustomView>
+      </Animated.View>
     </BottomSheetFooter>
   );
 };
