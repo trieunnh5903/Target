@@ -23,8 +23,6 @@ const PostItem: React.FC<PostItemProps> = memo(
         ? true
         : false;
 
-    // const [likesCount, setLikesCount] = useState(data.likesCount ?? 0);
-
     const heartProgress = useSharedValue(1);
     const isDoubleTap = useSharedValue(false);
     const animatedIsLiked = useSharedValue(liked);

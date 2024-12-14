@@ -18,7 +18,7 @@ import {
   useBottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppSelector } from "@/hooks";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { useSharedValue } from "react-native-reanimated";
 import { useBackHandler } from "@react-native-community/hooks";
 import firestore from "@react-native-firebase/firestore";
@@ -31,6 +31,7 @@ import { postsCollection } from "@/api/collections";
 import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from "@/constants";
 import { CommentSkeleton } from "../skeleton";
 import CustomView from "../CustomView";
+import { postUpdated } from "@/redux/slices/postSlice";
 
 interface CommentBottomSheetProps {
   selectedPost: Post | null;
@@ -65,7 +66,7 @@ const CommentBottomSheet = forwardRef<
   const isBottomSheetOpen = useRef(false);
   const snapPoints = useMemo(() => ["100%"], []);
   const { dismissAll } = useBottomSheetModal();
-
+  const dispatch = useAppDispatch();
   console.log("CommentBottomSheetComponent");
 
   useEffect(() => {
@@ -98,27 +99,7 @@ const CommentBottomSheet = forwardRef<
   );
 
   const sendCommentToServer = useCallback(async () => {
-    if (
-      commentText.current.trim() === "" ||
-      !selectedPost?.id ||
-      !currentUser?.id
-    )
-      return;
-    const now = dayjs();
-    const newCommentData: Comment = {
-      id: Date.now().toString(),
-      userId: currentUser.id,
-      content: commentText.current,
-      createdAt: Math.floor(now.valueOf() / 1000),
-      avatarURL: currentUser.avatarURL,
-      displayName: currentUser.displayName,
-      postId: selectedPost.id,
-    };
-
-    setSendingId(newCommentData.id);
-    setComments((prevComments) => [newCommentData, ...prevComments]);
-    listRef.current?.scrollToOffset({ animated: true, offset: 0 });
-
+    if (!currentUser || !selectedPost) return;
     try {
       await firestore().runTransaction(async (transaction) => {
         await postAPI.addComment({
@@ -132,21 +113,18 @@ const CommentBottomSheet = forwardRef<
         );
         if (!postSnapshot.exists) return;
         transaction.update(postsCollection.doc(selectedPost.id), {
-          commentsCount: postSnapshot.data()?.commentsCount ?? 0 + 1,
+          commentsCount: (postSnapshot.data()?.commentsCount ?? 0) + 1,
         });
       });
     } catch (error) {
       console.error("Lỗi thêm bình luận:", error);
-      setComments((prevComments) =>
-        prevComments.filter((comment) => comment.id !== newCommentData.id)
-      );
       throw new Error(`${error}`);
     }
 
     setTimeout(() => {
       setSendingId(null);
     }, 1000);
-  }, [selectedPost?.id, currentUser]);
+  }, [currentUser, selectedPost]);
 
   const notificationNewComment = useCallback(async () => {
     if (!selectedPost) return;
@@ -167,14 +145,80 @@ const CommentBottomSheet = forwardRef<
     }
   }, [currentUser?.displayName, currentUser?.id, selectedPost]);
 
+  const handleOptimisticUpdateFailed = useCallback(
+    (commentId: string) => {
+      if (!selectedPost?.id) return;
+      setComments((prevComments) =>
+        prevComments.filter((comment) => comment.id !== commentId)
+      );
+      dispatch(
+        postUpdated({
+          id: selectedPost.id,
+          changes: {
+            commentsCount: selectedPost?.commentsCount,
+          },
+        })
+      );
+    },
+    [dispatch, selectedPost]
+  );
+
+  const handleOptimisticUpdateSuccess = useCallback(
+    (commentId: string) => {
+      if (
+        commentText.current.trim() === "" ||
+        !selectedPost?.id ||
+        !currentUser?.id
+      )
+        return;
+      const now = dayjs();
+      const newCommentData: Comment = {
+        id: commentId,
+        userId: currentUser.id,
+        content: commentText.current,
+        createdAt: Math.floor(now.valueOf() / 1000),
+        avatarURL: currentUser.avatarURL,
+        displayName: currentUser.displayName,
+        postId: selectedPost.id,
+      };
+
+      setSendingId(newCommentData.id);
+      setComments((prevComments) => [newCommentData, ...prevComments]);
+      listRef.current?.scrollToOffset({ animated: true, offset: 0 });
+      dispatch(
+        postUpdated({
+          id: selectedPost.id,
+          changes: {
+            commentsCount: (selectedPost?.commentsCount || 0) + 1,
+          },
+        })
+      );
+    },
+    [currentUser, dispatch, selectedPost]
+  );
+
   const onSendMessagePress = useCallback(() => {
     (async () => {
+      if (!selectedPost?.id || !currentUser?.id) return;
+      const optimisticCommentId = Date.now().toString();
+      handleOptimisticUpdateSuccess(optimisticCommentId);
       try {
         await sendCommentToServer();
+      } catch {
+        handleOptimisticUpdateFailed(optimisticCommentId);
+      }
+      try {
         await notificationNewComment();
       } catch {}
     })();
-  }, [notificationNewComment, sendCommentToServer]);
+  }, [
+    currentUser?.id,
+    handleOptimisticUpdateFailed,
+    handleOptimisticUpdateSuccess,
+    notificationNewComment,
+    selectedPost?.id,
+    sendCommentToServer,
+  ]);
 
   const handleSheetChanges = useCallback((index: number) => {
     if (index !== -1 && !isBottomSheetOpen.current) {

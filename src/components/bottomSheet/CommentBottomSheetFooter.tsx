@@ -43,6 +43,11 @@ const CommentBottomSheetFooter = memo(
       onChangeText(text);
     };
 
+    const handleSendPress = () => {
+      onSendPress();
+      setCommentText("");
+    };
+
     const onEmojiPress = (emoji: string) => {
       setCommentText((pre) => pre.concat(emoji));
       onChangeText(commentText.concat(emoji));
@@ -102,7 +107,7 @@ const CommentBottomSheetFooter = memo(
                   <IconButton
                     icon={"arrow-up"}
                     size={22}
-                    onPress={onSendPress}
+                    onPress={handleSendPress}
                     mode="contained"
                   />
                 </Animated.View>
