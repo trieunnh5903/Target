@@ -9,7 +9,6 @@ import Animated, {
   runOnJS,
   SharedValue,
   useAnimatedStyle,
-  useDerivedValue,
   useSharedValue,
   withDelay,
   withSpring,

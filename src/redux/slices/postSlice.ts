@@ -5,6 +5,7 @@ import {
   createAsyncThunk,
   createEntityAdapter,
   createSlice,
+  PayloadAction,
 } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 
@@ -56,10 +57,14 @@ const initialState = postsAdapter.getInitialState<PostState>({
   reloadStatus: "idle",
 });
 
-const postSlice = createSlice({
+const postsSlice = createSlice({
   name: "post",
   initialState,
-  reducers: {},
+  reducers: {
+    postAdded: postsAdapter.addOne,
+    postUpdated: postsAdapter.updateOne,
+    postRemoved: postsAdapter.removeOne,
+  },
   extraReducers(builder) {
     builder.addCase(fetchMorePosts.pending, (state) => {
       state.loadMoreStatus = "loading";
@@ -101,7 +106,7 @@ const postSlice = createSlice({
     });
   },
 });
-export default postSlice;
-export const { selectAll: selectAllPosts } = postsAdapter.getSelectors(
-  (state: RootState) => state.posts
-);
+export default postsSlice;
+export const { postAdded, postUpdated, postRemoved } = postsSlice.actions;
+export const { selectAll: selectAllPosts, selectById: selectPostById } =
+  postsAdapter.getSelectors((state: RootState) => state.posts);

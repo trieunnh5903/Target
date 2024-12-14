@@ -15,10 +15,13 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { notificationAPI } from "@/api";
 import {
   fetchMorePosts,
+  postUpdated,
   refetchInitialPosts,
   selectAllPosts,
+  selectPostById,
 } from "@/redux/slices/postSlice";
 import { FlashList } from "@shopify/flash-list";
+import { store } from "@/redux/store";
 
 const HomeScreen = () => {
   const posts = useAppSelector(selectAllPosts);
@@ -35,8 +38,6 @@ const HomeScreen = () => {
   }, [dispatch]);
 
   const handleLoadMore = async () => {
-    console.log("load");
-
     if (!lastPost) return;
     dispatch(fetchMorePosts(lastPost));
   };
@@ -47,32 +48,59 @@ const HomeScreen = () => {
   }, []);
 
   const onToggleLikePress = useCallback(
-    async (
-      postId: string,
-      postAuthorId: string,
-      alreadyLiked: boolean,
-      shouldNotification: boolean
-    ) => {
+    async (postId: string) => {
+      if (!currentUser?.id) return;
+      const post = selectPostById(store.getState(), postId);
+      const isLiked = !!post?.likes?.[currentUser?.id ?? ""];
+      const likeCountChange = isLiked ? -1 : 1;
+      dispatch(
+        postUpdated({
+          id: postId,
+          changes: {
+            likes: {
+              ...post?.likes,
+              [currentUser?.id]: !isLiked,
+            },
+            likesCount: (post?.likesCount || 0) + likeCountChange,
+          },
+        })
+      );
+
+      const { isSuccess } = await postAPI.likePost(
+        postId,
+        currentUser?.id!,
+        isLiked ? "dislike" : "like"
+      );
+
       try {
-        const { isSuccess } = await postAPI.likePost(
-          postId,
-          currentUser?.id!,
-          alreadyLiked ? "dislike" : "like"
-        );
-        if (!isSuccess) return { isLikeSuccess: isSuccess };
-        if (shouldNotification) {
-          await notificationAPI.notificationPostLiked(
-            postAuthorId,
-            currentUser?.displayName ?? "Someone",
-            postId
+        if (isSuccess) {
+          const isInteracted = post.likes?.hasOwnProperty(currentUser.id);
+          const shouldNotification =
+            !isInteracted && post.postedBy.id !== currentUser?.id;
+          if (shouldNotification) {
+            await notificationAPI.notificationPostLiked(
+              post.postedBy.id,
+              currentUser?.displayName ?? "Someone",
+              postId
+            );
+          }
+        } else {
+          dispatch(
+            postUpdated({
+              id: postId,
+              changes: {
+                likes: {
+                  ...post?.likes,
+                  [currentUser?.id]: isLiked,
+                },
+                likesCount: post?.likesCount || 0,
+              },
+            })
           );
         }
-        return { isLikeSuccess: isSuccess };
-      } catch {
-        return { isLikeSuccess: true };
-      }
+      } catch {}
     },
-    [currentUser?.displayName, currentUser?.id]
+    [currentUser?.displayName, currentUser?.id, dispatch]
   );
 
   return (
@@ -95,6 +123,7 @@ const HomeScreen = () => {
         renderItem={({ item }) => {
           return (
             <PostItem
+              currentUser={currentUser}
               data={item}
               onCommentPress={() => handleOpenComment(item)}
               onToggleLikePress={onToggleLikePress}

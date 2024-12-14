@@ -1,11 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
-import React, { memo, useState } from "react";
-import { Post } from "@/types";
+import React, { memo } from "react";
+import { Post, User } from "@/types";
 import CustomView from "../CustomView";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 import { GLOBAL_STYLE, SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
-import { useAppSelector } from "@/hooks";
 import Header from "./Header";
 import ImageArea from "./ImageArea";
 import ActionGroups from "./ActionGroups";
@@ -13,109 +12,79 @@ import ActionGroups from "./ActionGroups";
 interface PostItemProps {
   data: Post;
   onCommentPress: () => void;
-  onToggleLikePress: (
-    postId: string,
-    postAuthorId: string,
-    alreadyLiked: boolean,
-    shouldNotification: boolean
-  ) => Promise<{
-    isLikeSuccess: boolean;
-  }>;
+  currentUser: User | null;
+  onToggleLikePress: (postId: string) => void;
 }
 
-const PostItem: React.FC<PostItemProps> = ({
-  data,
-  onCommentPress,
-  onToggleLikePress,
-}) => {
-  const currentUser = useAppSelector((state) => state.auth.currentUser);
-  const [liked, setLiked] = useState(
-    data.likes && data.likes[currentUser?.id as string] === true ? true : false
-  );
-  const [likesCount, setLikesCount] = useState(data.likesCount ?? 0);
-  const heartProgress = useSharedValue(1);
-  const isDoubleTap = useSharedValue(false);
-  const animatedIsLiked = useSharedValue(liked);
+const PostItem: React.FC<PostItemProps> = memo(
+  ({ data, onCommentPress, onToggleLikePress, currentUser }) => {
+    const liked =
+      data.likes && data.likes[currentUser?.id as string] === true
+        ? true
+        : false;
 
-  const onLikePress = async () => {
-    isDoubleTap.value = false;
-    await toggleLike();
-  };
+    // const [likesCount, setLikesCount] = useState(data.likesCount ?? 0);
 
-  let isProcessing = false;
-  const toggleLike = async () => {
-    if (isProcessing) return;
-    isProcessing = true;
-    if (!isDoubleTap.value) {
-      heartProgress.value = 0;
-      heartProgress.value = withSpring(1);
-    }
+    const heartProgress = useSharedValue(1);
+    const isDoubleTap = useSharedValue(false);
+    const animatedIsLiked = useSharedValue(liked);
 
-    setLiked(!liked);
-    setLikesCount(likesCount + (liked ? -1 : 1));
+    const onActionLikePress = async () => {
+      isDoubleTap.value = false;
+      await handeToggleLike();
+    };
 
-    const isInteracted = data.likes?.hasOwnProperty(currentUser?.id ?? "");
-    const shouldNotification =
-      !isInteracted && data.postedBy.id !== currentUser?.id;
-
-    try {
-      const { isLikeSuccess } = await onToggleLikePress(
-        data.id,
-        data.postedBy.id,
-        liked,
-        shouldNotification
-      );
-
-      if (!isLikeSuccess) {
-        setLiked(liked);
+    const handeToggleLike = async () => {
+      if (!isDoubleTap.value) {
+        heartProgress.value = 0;
+        heartProgress.value = withSpring(1);
       }
-    } catch (error) {
-      console.log("toggleLike", error);
-    } finally {
-      isProcessing = false;
-    }
-  };
+      onToggleLikePress(data.id);
+    };
 
-  return (
-    <CustomView>
-      <Header
-        displayName={data.postedBy.displayName}
-        avatarURL={data.postedBy.avatarURL}
-      />
+    return (
+      <CustomView>
+        <Header
+          displayName={data.postedBy.displayName}
+          avatarURL={data.postedBy.avatarURL}
+        />
 
-      <ImageArea
-        animatedIsLiked={animatedIsLiked}
-        heartProgress={heartProgress}
-        isDoubleTap={isDoubleTap}
-        aleadyLiked={liked}
-        onDoubleTapPress={toggleLike}
-        source={data.images}
-      />
+        <ImageArea
+          animatedIsLiked={animatedIsLiked}
+          heartProgress={heartProgress}
+          isDoubleTap={isDoubleTap}
+          aleadyLiked={liked}
+          onDoubleTapPress={handeToggleLike}
+          source={data.images}
+        />
 
-      <ActionGroups
-        alreadyLiked={liked}
-        animatedIsLiked={animatedIsLiked}
-        commentsCount={data.commentsCount ?? 0}
-        heartProgress={heartProgress}
-        isDoubleTap={isDoubleTap}
-        likesCount={likesCount}
-        onCommentPress={onCommentPress}
-        onLikePress={onLikePress}
-      />
+        <ActionGroups
+          alreadyLiked={liked}
+          animatedIsLiked={animatedIsLiked}
+          commentsCount={data.commentsCount ?? 0}
+          heartProgress={heartProgress}
+          isDoubleTap={isDoubleTap}
+          likesCount={data.likesCount ?? 0}
+          onCommentPress={onCommentPress}
+          onLikePress={onActionLikePress}
+        />
 
-      <View style={styles.description}>
-        <Text>
-          <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
-          {"  "}
-          {data.caption}
-        </Text>
-        <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
-      </View>
-    </CustomView>
-  );
-};
+        <View style={styles.description}>
+          <Text>
+            <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
+            {"  "}
+            {data.caption}
+          </Text>
+          <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
+        </View>
+      </CustomView>
+    );
+  }
+);
 
-export default memo(PostItem);
+PostItem.displayName = "PostItem";
+
+export default PostItem;
 
 const styles = StyleSheet.create({
   bigHeartContainer: {

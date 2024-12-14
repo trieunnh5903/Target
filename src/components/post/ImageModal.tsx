@@ -5,7 +5,6 @@ import { Image } from "expo-image";
 import Animated, {
   runOnJS,
   SharedValue,
-  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -21,7 +20,6 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
-import { useBackHandler } from "@react-native-community/hooks";
 
 interface ImageModalProps {
   source: string;

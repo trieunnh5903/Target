@@ -1,13 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import notificationReducer from "./slices/notificationSlice";
-import postSlice from "./slices/postSlice";
+import postsSlice from "./slices/postSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     notification: notificationReducer,
-    posts: postSlice.reducer,
+    posts: postsSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
