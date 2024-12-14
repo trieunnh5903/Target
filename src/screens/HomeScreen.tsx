@@ -4,69 +4,41 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import Animated from "react-native-reanimated";
+import React, { useCallback, useRef, useState } from "react";
 import { PostItem, CustomView } from "@/components";
 import { Post } from "@/types";
 import { postAPI } from "@/api/postApi";
-import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { GLOBAL_STYLE } from "@/constants";
+import { GLOBAL_STYLE, SCREEN_HEIGHT, SCREEN_WIDTH } from "@/constants";
 import { CommentBottomSheet } from "@/components/bottomSheet";
-import { useAppSelector } from "@/hooks";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { notificationAPI } from "@/api";
+import {
+  fetchMorePosts,
+  refetchInitialPosts,
+  selectAllPosts,
+} from "@/redux/slices/postSlice";
+import { FlashList } from "@shopify/flash-list";
 
 const HomeScreen = () => {
-  const currentUser = useAppSelector((state) => state.auth.currentUser);
-  const [loading, setLoading] = useState(false);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [refreshing, setRefreshing] = React.useState(false);
-  const currentToken = useAppSelector(
-    (state) => state.notification.expoPushToken
+  const posts = useAppSelector(selectAllPosts);
+  const dispatch = useAppDispatch();
+  const { lastPost, loadMoreStatus, reloadStatus } = useAppSelector(
+    (state) => state.posts
   );
-  console.log("currentToken", currentToken);
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [bottomSheetPost, setBottomSheetPost] = useState<Post | null>(null);
   const commentBottomSheetRef = useRef<BottomSheetModal>(null);
-  const [lastPost, setLastPost] =
-    useState<FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null>(
-      null
-    );
 
   const onRefresh = React.useCallback(async () => {
-    try {
-      const data = await postAPI.getPosts({ limit: 10 });
-      setPosts(data.posts);
-      setLastPost(data.lastPost);
-      setRefreshing(false);
-    } catch (error) {
-      console.log("onRefresh", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await postAPI.getPosts({ limit: 10 });
-        setPosts(data.posts);
-        setLastPost(data.lastPost);
-      } catch (error) {
-        console.log("getPosts", error);
-      }
-    })();
-  }, []);
+    dispatch(refetchInitialPosts());
+  }, [dispatch]);
 
   const handleLoadMore = async () => {
-    if (!lastPost || loading) return;
-    try {
-      setLoading(true);
-      const data = await postAPI.getPosts({ limit: 10, lastPost });
-      setPosts([...posts, ...data.posts]);
-      setLastPost(data.lastPost);
-    } catch (error) {
-      console.log("handleLoadMore", error);
-    } finally {
-      setLoading(false);
-    }
+    console.log("load");
+
+    if (!lastPost) return;
+    dispatch(fetchMorePosts(lastPost));
   };
 
   const handleOpenComment = useCallback((post: Post) => {
@@ -96,18 +68,27 @@ const HomeScreen = () => {
           );
         }
         return { isLikeSuccess: isSuccess };
-      } catch (error) {
+      } catch {
         return { isLikeSuccess: true };
       }
     },
     [currentUser?.displayName, currentUser?.id]
   );
+
   return (
     <CustomView style={styles.container}>
-      <Animated.FlatList
+      <FlashList
+        estimatedItemSize={700}
+        estimatedListSize={{
+          width: SCREEN_WIDTH,
+          height: SCREEN_HEIGHT - 49 - 80,
+        }}
         overScrollMode="never"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={reloadStatus === "loading"}
+            onRefresh={onRefresh}
+          />
         }
         scrollEventThrottle={16}
         data={posts}
@@ -120,18 +101,16 @@ const HomeScreen = () => {
             />
           );
         }}
-        pinchGestureEnabled={false}
-        keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
-        ListEmptyComponent={<ActivityIndicator size="small" />}
         ListFooterComponent={
           <View style={styles.loadingContainer}>
-            {loading && <ActivityIndicator size="small" />}
+            {loadMoreStatus === "loading" && <ActivityIndicator size="small" />}
           </View>
         }
       />
+
       <CommentBottomSheet
         ref={commentBottomSheetRef}
         selectedPost={bottomSheetPost}

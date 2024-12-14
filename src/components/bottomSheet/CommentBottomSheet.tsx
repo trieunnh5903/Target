@@ -19,7 +19,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppSelector } from "@/hooks";
-import Animated, { useSharedValue } from "react-native-reanimated";
+import { useSharedValue } from "react-native-reanimated";
 import { useBackHandler } from "@react-native-community/hooks";
 import firestore from "@react-native-firebase/firestore";
 import CommentBottomSheetFooter from "./CommentBottomSheetFooter";
@@ -35,7 +35,21 @@ import CustomView from "../CustomView";
 interface CommentBottomSheetProps {
   selectedPost: Post | null;
 }
-
+const FOOTER_HEIGHT = 102;
+const unicodeArray = [
+  "\u2764", // ❤
+  "\u{1F64C}", // 🙌
+  "\u{1F60E}", // 😎
+  "\u{1F600}", // 😀
+  "\u{1F601}", // 😁
+  "\u{1F602}", // 😂
+  "\u{1F923}", // 🤣
+  "\u{1F60A}", // 😊
+  "\u{1F60D}", // 😍
+  "\u{1F914}", // 🤔
+  "\u{1F44D}", // 👍
+  "\u{1F44C}", // 👌
+];
 const CommentBottomSheet = forwardRef<
   BottomSheetModal,
   CommentBottomSheetProps
@@ -51,25 +65,6 @@ const CommentBottomSheet = forwardRef<
   const isBottomSheetOpen = useRef(false);
   const snapPoints = useMemo(() => ["100%"], []);
   const { dismissAll } = useBottomSheetModal();
-  const FOOTER_HEIGHT = 102;
-
-  const unicodeArray = useMemo(
-    () => [
-      "\u2764", // ❤
-      "\u{1F64C}", // 🙌
-      "\u{1F60E}", // 😎
-      "\u{1F600}", // 😀
-      "\u{1F601}", // 😁
-      "\u{1F602}", // 😂
-      "\u{1F923}", // 🤣
-      "\u{1F60A}", // 😊
-      "\u{1F60D}", // 😍
-      "\u{1F914}", // 🤔
-      "\u{1F44D}", // 👍
-      "\u{1F44C}", // 👌
-    ],
-    []
-  );
 
   console.log("CommentBottomSheetComponent");
 
@@ -114,10 +109,7 @@ const CommentBottomSheet = forwardRef<
       id: Date.now().toString(),
       userId: currentUser.id,
       content: commentText.current,
-      createdAt: {
-        seconds: Math.floor(now.valueOf() / 1000),
-        nanoseconds: now.valueOf(),
-      },
+      createdAt: Math.floor(now.valueOf() / 1000),
       avatarURL: currentUser.avatarURL,
       displayName: currentUser.displayName,
       postId: selectedPost.id,
@@ -200,17 +192,20 @@ const CommentBottomSheet = forwardRef<
     []
   );
 
-  const renderFooter = (props: BottomSheetFooterProps) => {
-    return (
-      <CommentBottomSheetFooter
-        height={FOOTER_HEIGHT}
-        emojis={unicodeArray}
-        onChangeText={onCommentTextChange}
-        onSendPress={onSendMessagePress}
-        {...props}
-      />
-    );
-  };
+  const renderFooter = useCallback(
+    (props: BottomSheetFooterProps) => {
+      return (
+        <CommentBottomSheetFooter
+          height={FOOTER_HEIGHT}
+          emojis={unicodeArray}
+          onChangeText={onCommentTextChange}
+          onSendPress={onSendMessagePress}
+          {...props}
+        />
+      );
+    },
+    [onCommentTextChange, onSendMessagePress]
+  );
 
   const renderEmptyComponent = useCallback(() => {
     if (!isFetching) return;

@@ -3,7 +3,7 @@ export type Post = {
   postedBy: User;
   caption: string;
   images: string;
-  createdAt: { nanoseconds: number; seconds: number };
+  createdAt: number;
   likes?: { [userId: string]: boolean };
   comments?: { [userId: string]: boolean };
   likesCount?: number;
@@ -25,6 +25,6 @@ export type Comment = Pick<User, "avatarURL" | "displayName"> & {
   id: string;
   userId: User["id"];
   content: string;
-  createdAt: { nanoseconds: number; seconds: number };
+  createdAt: number;
   postId: Post["id"];
 };

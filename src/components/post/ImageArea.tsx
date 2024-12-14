@@ -1,5 +1,5 @@
 import { Image, StyleSheet, View } from "react-native";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import CustomView from "../CustomView";
 import { GLOBAL_STYLE, SCREEN_WIDTH } from "@/constants";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -19,7 +19,6 @@ import { Octicons } from "@expo/vector-icons";
 import { Image as ExpoImage } from "expo-image";
 import ImageModal from "./ImageModal";
 import { useOriginImageLayout } from "@/hooks";
-import { useBackHandler } from "@react-native-community/hooks";
 
 interface ImageAreaProps {
   source: string;

@@ -20,6 +20,7 @@ Notifications.setNotificationHandler({
 GoogleSignin.configure({
   webClientId: "1098310179471-mv3lrl6o7akn8gb0b259kud7kvsgea8n.apps.googleusercontent.com",
 });
+
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

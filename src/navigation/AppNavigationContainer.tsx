@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   createNativeStackNavigator,
   NativeStackNavigationOptions,
@@ -14,28 +14,47 @@ import {
   SignInScreen,
   SignUpScreen,
 } from "@/screens";
-import { useAppDispatch } from "@/hooks";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { fetchCurrentUser } from "@/redux/slices/authSlice";
+import * as SplashScreen from "expo-splash-screen";
+import { fetchInitialPosts } from "@/redux/slices/postSlice";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+SplashScreen.preventAutoHideAsync();
 
 const AppNavigationContainer = () => {
+  const dispatch = useAppDispatch();
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const dispatch = useAppDispatch();
+  const [isAppReady, setIsAppReady] = useState(false);
+  const { initialStatus } = useAppSelector((state) => state.posts);
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged((user) => {
       setUser(user);
-      if (user) {
-        dispatch(fetchCurrentUser(user.uid));
-      }
       if (initializing) setInitializing(false);
     });
     return subscriber;
   }, [dispatch, initializing]);
 
-  if (initializing) {
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchCurrentUser(user.uid));
+    }
+    dispatch(fetchInitialPosts());
+  }, [dispatch, user]);
+
+  useEffect(() => {
+    setIsAppReady(!initializing && initialStatus === "succeeded");
+  }, [initialStatus, initializing]);
+
+  const onLayoutRootView = useCallback(async () => {
+    if (isAppReady) {
+      await SplashScreen.hideAsync();
+    }
+  }, [isAppReady]);
+
+  if (!isAppReady) {
     return null;
   }
 
@@ -46,7 +65,7 @@ const AppNavigationContainer = () => {
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer onReady={onLayoutRootView}>
       <Stack.Navigator>
         {user ? (
           <Stack.Group screenOptions={{ headerShadowVisible: false }}>

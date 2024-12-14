@@ -109,7 +109,7 @@ const PostItem: React.FC<PostItemProps> = ({
           {"  "}
           {data.caption}
         </Text>
-        <Text>{dayJs.getTimeFromNow(data.createdAt.seconds)}</Text>
+        <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
       </View>
     </CustomView>
   );

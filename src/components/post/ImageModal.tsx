@@ -21,6 +21,7 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
+import { useBackHandler } from "@react-native-community/hooks";
 
 interface ImageModalProps {
   source: string;
@@ -51,12 +52,6 @@ const ImageModal: React.FC<ImageModalProps> = ({
   const CENTER_SCREEN_OFFSET_Y =
     (SCREEN_HEIGHT - origin.height) / 2 + STATUS_BAR_HEIGHT;
   const animatedBacground = useSharedValue(0);
-  useAnimatedReaction(
-    () => offset.value,
-    (v) => {
-      console.log(v.y);
-    }
-  );
 
   useLayoutEffect(() => {
     offset.value = { x: 0, y: INITIAL_OFFSET_Y };
@@ -141,7 +136,12 @@ const ImageModal: React.FC<ImageModalProps> = ({
     };
   });
   return (
-    <Modal transparent visible={isOpen} statusBarTranslucent>
+    <Modal
+      transparent
+      visible={isOpen}
+      statusBarTranslucent
+      onRequestClose={handleClose}
+    >
       <GestureHandlerRootView style={GLOBAL_STYLE.flex_1}>
         <Background animatedBackground={animatedBacground} />
 

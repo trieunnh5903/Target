@@ -11,11 +11,12 @@ import {
   postsCollection,
   usersCollection,
 } from "./collections";
-const getPosts = async ({
+
+const fetchAll = async ({
   lastPost,
   limit,
 }: {
-  lastPost?: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>;
+  lastPost?: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null;
   limit: number;
 }) => {
   try {
@@ -36,6 +37,7 @@ const getPosts = async ({
         return {
           id: doc.id,
           ...postData,
+          createdAt: postData.createdAt.seconds,
           postedBy: userDoc.data(),
         };
       })
@@ -152,6 +154,7 @@ const fetchComments = async (postId: string) => {
     const comments = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
+      createdAt: doc.data().createdAt.seconds,
     })) as Omit<Comment, "avatarURL" | "displayName">[];
 
     const enrichedComments = await Promise.all(
@@ -189,7 +192,7 @@ const addComment = async (
 };
 export const postAPI = {
   createPost,
-  getPosts,
+  fetchAll,
   uploadImage,
   addComment,
   fetchComments,

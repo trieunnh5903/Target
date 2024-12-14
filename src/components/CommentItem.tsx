@@ -25,7 +25,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           </Text>
           <CustomView paddingLeft={8}>
             <Text style={{ fontSize: 12 }}>
-              {dayJs.getTimeFromNow(comment.createdAt.seconds)}
+              {dayJs.getTimeFromNow(comment.createdAt)}
             </Text>
           </CustomView>
         </CustomView>
