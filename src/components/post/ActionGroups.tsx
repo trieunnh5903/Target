@@ -1,15 +1,13 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import React from "react";
 import CustomView from "../CustomView";
 import Animated, {
   SharedValue,
-  useAnimatedReaction,
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { Octicons } from "@expo/vector-icons";
 import ThemedText from "../ThemedText";
 import { GLOBAL_STYLE, SPACING } from "@/constants";
-import { debounce } from "lodash";
 
 interface ActionGroupsProps {
   isDoubleTap: SharedValue<boolean>;

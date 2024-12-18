@@ -46,7 +46,7 @@ const AppBottomTab = () => {
     tabBarInactiveTintColor: "black",
     headerShadowVisible: false,
     tabBarIcon: ({ focused, color }) => {
-      const size = 32
+      const size = 32;
       let icon = (
         <CustomAvatar
           size={size}
@@ -85,7 +85,7 @@ const AppBottomTab = () => {
   });
 
   return (
-    <Tab.Navigator initialRouteName="Home" screenOptions={screenOptions}>
+    <Tab.Navigator initialRouteName="Create" screenOptions={screenOptions}>
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen
         name="Create"
