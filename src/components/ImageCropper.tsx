@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Animated, {
   SharedValue,
   useAnimatedStyle,
@@ -11,38 +11,101 @@ import {
 } from "react-native-gesture-handler";
 import { CROP_SIZE, GLOBAL_STYLE } from "@/constants";
 import { IconButton } from "react-native-paper";
+import * as MediaLibrary from "expo-media-library";
+import { useCropDimensions, useCropsGesture } from "@/hooks";
 interface ImageCropperProps {
-  onResizePress: () => void;
-  gridHeight: number;
-  gridWidth: number;
-  uri: string;
-  gesture: ComposedGesture | GestureType;
-  displayWidth: number;
-  displayHeight: number;
-  translationX: SharedValue<number>;
-  translationY: SharedValue<number>;
-  gridOpacity: SharedValue<number>;
-  gridTranslateX?: SharedValue<number>;
-  gridTranslateY?: SharedValue<number>;
+  // onResizePress: () => void;
+  // gridHeight: number;
+  // gridWidth: number;
+  // uri: string;
+  // gesture: ComposedGesture | GestureType;
+  // displayWidth: number;
+  // displayHeight: number;
+  // translationX: SharedValue<number>;
+  // translationY: SharedValue<number>;
+  // gridOpacity: SharedValue<number>;
+  // gridTranslateX?: SharedValue<number>;
+  // gridTranslateY?: SharedValue<number>;
   animatedGrid?: boolean;
   borderRadius?: number;
+  asset: MediaLibrary.Asset;
+  onDimensionChange: (
+    displayHeight: number,
+    displayWidth: number,
+    boundaryX: number,
+    boundaryY: number
+  ) => void;
 }
 const ImageCropper: React.FC<ImageCropperProps> = ({
-  onResizePress,
-  gridHeight,
-  gridWidth,
-  uri,
-  displayHeight,
-  displayWidth,
-  gesture,
+  // onResizePress,
+  // gridHeight,
+  // gridWidth,
+  // uri,
+  // displayHeight,
+  // displayWidth,
+  // gesture,
   animatedGrid,
   borderRadius,
-  gridOpacity,
-  translationX,
-  translationY,
-  gridTranslateX,
-  gridTranslateY,
+  asset,
+  onDimensionChange,
+  // gridOpacity,
+  // translationX,
+  // translationY,
+  // gridTranslateX,
+  // gridTranslateY,
 }) => {
+  const [resizeFull, setResizeFull] = useState(true);
+
+  const {
+    displayHeight,
+    displayWidth,
+    gridHeight,
+    gridWidth,
+    boundaryTranslateX,
+    boundaryTranslateY,
+  } = useCropDimensions({
+    resizeFull,
+    originalHeight: asset.height,
+    originalWidth: asset.width,
+  });
+
+  const {
+    gesture,
+    gridOpacity,
+    gridTranslateX,
+    gridTranslateY,
+    resetGesture,
+    translationX,
+    translationY,
+  } = useCropsGesture({
+    displayHeight,
+    boundaryTranslateX,
+    boundaryTranslateY,
+    resizeFull,
+  });
+
+  useEffect(() => {
+    if (onDimensionChange) {
+      onDimensionChange(
+        displayHeight,
+        displayWidth,
+        boundaryTranslateX,
+        boundaryTranslateY
+      );
+    }
+  }, [
+    boundaryTranslateX,
+    boundaryTranslateY,
+    displayHeight,
+    displayWidth,
+    onDimensionChange,
+  ]);
+
+  const handleResize = () => {
+    setResizeFull(!resizeFull);
+    resetGesture();
+  };
+
   const spacingLineHorizontal = gridHeight / 3;
   const spacingLineVertical = gridWidth / 3;
 
@@ -53,6 +116,14 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     ],
   }));
 
+  console.log(
+    "image croppper",
+    displayHeight,
+    displayWidth,
+    boundaryTranslateX,
+    boundaryTranslateY
+  );
+
   const gridAnimatedStyle = useAnimatedStyle(() => ({
     opacity: gridOpacity.value,
     transform: [
@@ -61,15 +132,13 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     ],
   }));
 
-  if (!uri) return null;
-
   return (
     <View style={styles.imageArea}>
       {/*image */}
       <View style={[{ borderRadius }, styles.imageContainer]}>
         <GestureDetector gesture={gesture}>
           <Animated.Image
-            source={{ uri }}
+            source={{ uri: asset.uri }}
             style={[
               {
                 width: displayWidth,
@@ -118,7 +187,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         containerColor="black"
         iconColor="white"
         style={styles.resize}
-        onPress={onResizePress}
+        onPress={handleResize}
       />
     </View>
   );

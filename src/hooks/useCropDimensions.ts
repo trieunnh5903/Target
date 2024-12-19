@@ -1,5 +1,5 @@
 import { CROP_SIZE } from "@/constants";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface CropDimensionConfig {
   resizeFull: boolean;
@@ -11,22 +11,33 @@ export const useCropDimensions = ({
   originalHeight,
   originalWidth,
 }: CropDimensionConfig) => {
-  const [imageOrientation, setImgeOrientation] = useState<
-    // 4:5 | 1.91:1 | 1:1
-    "Portrait" | "Landscape" | "Square"
-  >();
+  // const [imageOrientation, setImgeOrientation] = useState<
+  //   // 4:5 | 1.91:1 | 1:1
+  //   "Portrait" | "Landscape" | "Square"
+  // >();
 
-  useEffect(() => {
-    const imageType =
+  const imageOrientation = useMemo(
+    () =>
       originalHeight === originalWidth
         ? "Square"
         : originalHeight > originalWidth
         ? "Portrait"
         : originalWidth > originalHeight
         ? "Landscape"
-        : "Square";
-    setImgeOrientation(imageType);
-  }, [originalHeight, originalWidth, resizeFull]);
+        : "Square",
+    [originalHeight, originalWidth]
+  );
+  // useEffect(() => {
+  //   const imageType =
+  //     originalHeight === originalWidth
+  //       ? "Square"
+  //       : originalHeight > originalWidth
+  //       ? "Portrait"
+  //       : originalWidth > originalHeight
+  //       ? "Landscape"
+  //       : "Square";
+  //   setImgeOrientation(imageType);
+  // }, [originalHeight, originalWidth, resizeFull]);
 
   const originalRatio = originalWidth / originalHeight;
 

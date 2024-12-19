@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  InteractionManager,
   ListRenderItem,
   StyleSheet,
   Text,
@@ -14,6 +13,7 @@ import React, {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import * as MediaLibrary from "expo-media-library";
@@ -22,7 +22,6 @@ import { Button, IconButton } from "react-native-paper";
 import { RootTabScreenProps } from "@/types/navigation";
 import Animated, {
   scrollTo,
-  useAnimatedReaction,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -37,7 +36,7 @@ import {
   SCREEN_WIDTH,
 } from "@/constants";
 import { useIsFocused } from "@react-navigation/native";
-import { CustomView } from "@/components";
+import { CustomView, ImageCropper } from "@/components";
 interface ImageItemProps {
   uri: string;
   size: number;
@@ -127,13 +126,18 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   }, [media, selectedAsset]);
 
   useLayoutEffect(() => {
-    const onCameraPress = async () => {
-      navigation.navigate("CameraScreen", { newestImage: media[0] });
+    const onNextPress = async () => {
+      console.log(
+        boundaryImagePreviewX.current,
+        boundaryImagePreviewY.current,
+        displayImagePreviewHeight.current,
+        displayImagePreviewWidth.current
+      );
     };
 
     navigation.setOptions({
       headerRight: () => {
-        return <Button>Next</Button>;
+        return <Button onPress={onNextPress}>Next</Button>;
       },
       headerShown: true,
     });
@@ -186,6 +190,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   const lastOffsetY = useSharedValue(0);
   const isBeginDrag = useSharedValue(false);
   const lastTranslateY = useSharedValue(0);
+
   const onScroll = useAnimatedScrollHandler({
     onBeginDrag: ({ contentOffset: { y } }) => {
       isBeginDrag.value = true;
@@ -254,6 +259,27 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
       transform: [{ translateY: translateY.value }],
     };
   });
+
+  const boundaryImagePreviewX = useRef<number>();
+  const boundaryImagePreviewY = useRef<number>();
+  const displayImagePreviewWidth = useRef<number>();
+  const displayImagePreviewHeight = useRef<number>();
+
+  const handleDimesionChange = useCallback(
+    (
+      displayHeight: number,
+      displayWidth: number,
+      boundaryX: number,
+      boundaryY: number
+    ) => {
+      boundaryImagePreviewX.current = boundaryX;
+      boundaryImagePreviewY.current = boundaryY;
+      displayImagePreviewWidth.current = displayWidth;
+      displayImagePreviewHeight.current = displayHeight;
+    },
+    []
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -308,10 +334,14 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
             },
           ]}
         >
-          <Image
-            source={{ uri: selectedAsset.uri }}
-            style={GLOBAL_STYLE.fullSize}
-          />
+          {selectedAsset && (
+            <ImageCropper
+              asset={selectedAsset}
+              animatedGrid
+              onDimensionChange={handleDimesionChange}
+              // onDimensionChange={handleDimesionChange}
+            />
+          )}
         </View>
         <CustomView style={styles.listHeader}>
           <IconButton icon={"camera"} mode="contained-tonal" size={18} />
