@@ -18,11 +18,9 @@ import React, {
 } from "react";
 import * as MediaLibrary from "expo-media-library";
 import { Image } from "expo-image";
-import { IconButton } from "react-native-paper";
+import { Button, IconButton } from "react-native-paper";
 import { RootTabScreenProps } from "@/types/navigation";
 import Animated, {
-  Extrapolation,
-  interpolate,
   scrollTo,
   useAnimatedReaction,
   useAnimatedRef,
@@ -38,6 +36,8 @@ import {
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
 } from "@/constants";
+import { useIsFocused } from "@react-navigation/native";
+import { CustomView } from "@/components";
 interface ImageItemProps {
   uri: string;
   size: number;
@@ -61,6 +61,7 @@ const ImageItem: React.FC<ImageItemProps> = memo(function ImageItem({
   );
 });
 
+const HEADER_LIST_HEIGHT = 50;
 const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   navigation,
 }) => {
@@ -81,7 +82,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   const [selectedAsset, setSelectedAsset] = useState<MediaLibrary.Asset>(
     media[0]
   );
-
+  const isFocused = useIsFocused();
   const loadImages = useCallback(
     async (after: MediaLibrary.AssetRef | undefined = undefined) => {
       try {
@@ -132,9 +133,9 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 
     navigation.setOptions({
       headerRight: () => {
-        return <IconButton icon={"camera"} onPress={onCameraPress} />;
+        return <Button>Next</Button>;
       },
-      headerShown: false,
+      headerShown: true,
     });
     return () => {};
   }, [media, navigation]);
@@ -185,7 +186,6 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   const lastOffsetY = useSharedValue(0);
   const isBeginDrag = useSharedValue(false);
   const lastTranslateY = useSharedValue(0);
-
   const onScroll = useAnimatedScrollHandler({
     onBeginDrag: ({ contentOffset: { y } }) => {
       isBeginDrag.value = true;
@@ -241,8 +241,8 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
             // translateY.value = withTiming(0);
             scrollTo(animatedRef, 0, 0, true);
           } else if (y < CROP_SIZE) {
-            // translateY.value = withTiming(-CROP_SIZE);
             scrollTo(animatedRef, 0, CROP_SIZE, true);
+            translateY.value = withTiming(-CROP_SIZE);
           }
         }
       }
@@ -284,56 +284,63 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   };
 
   return (
-    <>
-      <View style={styles.container}>
-        <StatusBar style="auto" animated />
-        <Animated.View
+    <View style={styles.container}>
+      {isFocused ? (
+        <StatusBar style="inverted" animated hidden />
+      ) : (
+        <StatusBar style="auto" animated hidden={false} />
+      )}
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 0,
+            zIndex: 1,
+          },
+          imagePreviewAnimatedStyle,
+        ]}
+      >
+        <View
           style={[
             {
               width: CROP_SIZE,
               height: CROP_SIZE,
-              position: "absolute",
-              top: 0,
-              zIndex: 1,
             },
-            imagePreviewAnimatedStyle,
           ]}
         >
           <Image
             source={{ uri: selectedAsset.uri }}
             style={GLOBAL_STYLE.fullSize}
           />
-        </Animated.View>
-        <Animated.FlatList
-          onScroll={onScroll}
-          ref={animatedRef}
-          overScrollMode={"never"}
-          data={media}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={true}
-          keyExtractor={(item) => item.filename}
-          ListHeaderComponent={
-            <>
-              <Animated.View style={{ height: CROP_SIZE }} />
-              {/* <View style={styles.listHeader}>
-                <IconButton icon={"camera"} mode="contained-tonal" size={18} />
-              </View> */}
-            </>
-          }
-          numColumns={4}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={renderFooter}
-        />
-      </View>
-    </>
+        </View>
+        <CustomView style={styles.listHeader}>
+          <IconButton icon={"camera"} mode="contained-tonal" size={18} />
+        </CustomView>
+      </Animated.View>
+      <Animated.FlatList
+        onScroll={onScroll}
+        ref={animatedRef}
+        overScrollMode={"never"}
+        data={media}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={true}
+        keyExtractor={(item) => item.filename}
+        ListHeaderComponent={
+          <Animated.View style={{ height: CROP_SIZE + HEADER_LIST_HEIGHT }} />
+        }
+        numColumns={4}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
+      />
+    </View>
   );
 };
 
 export default CreatePostScreen;
 
 const styles = StyleSheet.create({
-  listHeader: { height: 46, ...GLOBAL_STYLE.rowCenter },
+  listHeader: { height: HEADER_LIST_HEIGHT, ...GLOBAL_STYLE.rowCenter },
   scrollBarContainer: {
     width: 6,
     backgroundColor: "transparent",

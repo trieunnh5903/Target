@@ -13,9 +13,12 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { CustomAvatar } from "@/components";
 import { RouteProp } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { STATUS_BAR_HEIGHT } from "@/constants";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const AppBottomTab = () => {
+  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const handleLogout = async () => {
@@ -86,13 +89,20 @@ const AppBottomTab = () => {
 
   return (
     <Tab.Navigator initialRouteName="Create" screenOptions={screenOptions}>
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          headerStatusBarHeight: insets.top || STATUS_BAR_HEIGHT,
+        }}
+      />
       <Tab.Screen
         name="Create"
         component={CreatePostScreen}
         options={({ navigation }) => ({
           title: "New post",
           tabBarStyle: { display: "none" },
+          headerStatusBarHeight: 0,
           headerLeft() {
             return (
               <Pressable
@@ -100,7 +110,7 @@ const AppBottomTab = () => {
                 onPress={() => navigation.goBack()}
                 style={{ paddingLeft: 16 }}
               >
-                <MaterialIcons name="arrow-back" size={24} color="black" />
+                <MaterialIcons name="close" size={24} color="black" />
               </Pressable>
             );
           },
@@ -110,6 +120,7 @@ const AppBottomTab = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
+          headerStatusBarHeight: insets.top || STATUS_BAR_HEIGHT,
           headerRight() {
             return <IconButton onPress={handleLogout} icon={"logout"} />;
           },

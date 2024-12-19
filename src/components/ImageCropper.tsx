@@ -11,7 +11,6 @@ import {
 } from "react-native-gesture-handler";
 import { CROP_SIZE, GLOBAL_STYLE } from "@/constants";
 import { IconButton } from "react-native-paper";
-
 interface ImageCropperProps {
   onResizePress: () => void;
   gridHeight: number;
@@ -26,6 +25,7 @@ interface ImageCropperProps {
   gridTranslateX?: SharedValue<number>;
   gridTranslateY?: SharedValue<number>;
   animatedGrid?: boolean;
+  borderRadius?: number;
 }
 const ImageCropper: React.FC<ImageCropperProps> = ({
   onResizePress,
@@ -36,14 +36,16 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   displayWidth,
   gesture,
   animatedGrid,
+  borderRadius,
+  gridOpacity,
   translationX,
   translationY,
-  gridOpacity,
   gridTranslateX,
   gridTranslateY,
 }) => {
   const spacingLineHorizontal = gridHeight / 3;
   const spacingLineVertical = gridWidth / 3;
+
   const animatedImageStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translationX.value },
@@ -64,12 +66,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   return (
     <View style={styles.imageArea}>
       {/*image */}
-      <View
-        style={[
-          { width: gridWidth, height: gridHeight },
-          styles.imageContainer,
-        ]}
-      >
+      <View style={[{ borderRadius }, styles.imageContainer]}>
         <GestureDetector gesture={gesture}>
           <Animated.Image
             source={{ uri }}
@@ -87,7 +84,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       <Animated.View
         style={[
           styles.cropBox,
-          { width: CROP_SIZE, height: CROP_SIZE },
+          { width: gridWidth, height: gridHeight },
           gridAnimatedStyle,
         ]}
         pointerEvents="none"
@@ -133,7 +130,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     overflow: "hidden",
     ...GLOBAL_STYLE.center,
-    borderRadius: 10,
+    ...GLOBAL_STYLE.fullSize,
   },
 
   cropBox: {
@@ -163,7 +160,8 @@ const styles = StyleSheet.create({
   imageArea: {
     width: CROP_SIZE,
     height: CROP_SIZE,
+    backgroundColor: "white",
     ...GLOBAL_STYLE.center,
-    // overflow: "hidden",
+    overflow: "hidden",
   },
 });
