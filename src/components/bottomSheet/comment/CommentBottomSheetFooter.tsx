@@ -8,8 +8,6 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Divider, IconButton, Text } from "react-native-paper";
 import { GLOBAL_STYLE, SCREEN_WIDTH } from "@/constants";
-import CustomView from "../CustomView";
-import CustomAvatar from "../CustomAvatar";
 import Animated, {
   FadeInDown,
   runOnJS,
@@ -18,6 +16,8 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInput } from "react-native-gesture-handler";
 import { useAppSelector } from "@/hooks";
+import CustomAvatar from "@/components/CustomAvatar";
+import CustomView from "@/components/CustomView";
 
 interface CommentBottomSheetFooterProps extends BottomSheetFooterProps {
   emojis: string[];

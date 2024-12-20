@@ -37,20 +37,22 @@ import {
 } from "@/constants";
 import { useIsFocused } from "@react-navigation/native";
 import { CustomView, ImageCropper } from "@/components";
-interface ImageItemProps {
+import { AlbumBottomSheet } from "@/components/bottomSheet";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+interface ImageEntryProps {
   uri: string;
   size: number;
   onPress: () => void;
 }
 
-const ImageItem: React.FC<ImageItemProps> = memo(function ImageItem({
+const ImageEntry: React.FC<ImageEntryProps> = memo(function ImageEntry({
   uri,
   size,
   onPress,
 }) {
   return (
     <TouchableOpacity onPress={onPress}>
-      <View style={[styles.imageWrapper]}>
+      <View>
         <Image
           source={{ uri: uri }}
           style={[styles.image, { width: size, height: size }]}
@@ -64,6 +66,7 @@ const HEADER_LIST_HEIGHT = 50;
 const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   navigation,
 }) => {
+  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   const [media, setMedia] = useState<MediaLibrary.Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -78,36 +81,34 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     []
   );
   const scrollY = useSharedValue(0);
-  const [selectedAsset, setSelectedAsset] = useState<MediaLibrary.Asset>(
-    media[0]
-  );
+  const [selectedAsset, setSelectedAsset] = useState<MediaLibrary.Asset>();
   const isFocused = useIsFocused();
+  const [selectedAlbum, setSelectedAlbum] = useState<MediaLibrary.Album>();
+
   const loadImages = useCallback(
     async (after: MediaLibrary.AssetRef | undefined = undefined) => {
       try {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-
-        if (status === "granted") {
-          const {
-            assets,
-            endCursor: newEndCursor,
-            hasNextPage,
-          } = await MediaLibrary.getAssetsAsync({
-            mediaType: "photo",
-            sortBy: ["creationTime"],
-            first: ITEMS_PER_PAGE,
-            after: after,
-          });
-
-          if (after) {
-            setMedia((prevMedia) => [...prevMedia, ...assets]);
-          } else {
-            setMedia(assets);
-          }
-
-          setEndCursor(newEndCursor);
-          setHasMore(hasNextPage);
+        if (permissionResponse?.status !== "granted") {
+          await requestPermission();
         }
+        const {
+          assets,
+          endCursor: newEndCursor,
+          hasNextPage,
+        } = await MediaLibrary.getAssetsAsync({
+          album: selectedAlbum?.id === "all" ? undefined : selectedAlbum,
+          mediaType: "photo",
+          sortBy: ["creationTime"],
+          first: ITEMS_PER_PAGE,
+          after: after,
+        });
+        if (after) {
+          setMedia((prevMedia) => [...prevMedia, ...assets]);
+        } else {
+          setMedia(assets);
+        }
+        setEndCursor(newEndCursor);
+        setHasMore(hasNextPage);
       } catch (error) {
         console.error("Error loading images:", error);
       } finally {
@@ -115,15 +116,20 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
         setLoadingMore(false);
       }
     },
-    [ITEMS_PER_PAGE]
+    [
+      ITEMS_PER_PAGE,
+      permissionResponse?.status,
+      requestPermission,
+      selectedAlbum,
+    ]
   );
 
   useEffect(() => {
-    if (media.length > 0 && !selectedAsset) {
+    if (media.length > 0) {
       setSelectedAsset(media[0]);
     }
     return () => {};
-  }, [media, selectedAsset]);
+  }, [media, selectedAlbum]);
 
   useLayoutEffect(() => {
     const onNextPress = async () => {
@@ -154,6 +160,9 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
       await loadImages(endCursor);
     }
   };
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
 
   const handleImagePress = (image: MediaLibrary.Asset, index: number) => {
     setSelectedAsset({ ...image });
@@ -184,6 +193,18 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     return;
   };
 
+  const handleSelectedAlbum = (album: MediaLibrary.Album) => {
+    animatedRef.current?.scrollToOffset({ offset: 0, animated: false });
+    translateY.value = 0;
+    setEndCursor(undefined);
+    setSelectedAlbum(album);
+    setMedia([]);
+    setSelectedAsset(undefined);
+    setLoading(true);
+    bottomSheetModalRef.current?.dismiss();
+  };
+
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const translateY = useSharedValue(0);
   const animatedRef = useAnimatedRef<Animated.FlatList<any>>();
   const contentHeight = useSharedValue(0);
@@ -280,17 +301,9 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     []
   );
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
-
   const renderItem: ListRenderItem<MediaLibrary.Asset> = ({ item, index }) => {
     return (
-      <ImageItem
+      <ImageEntry
         uri={item.uri}
         size={imageSize}
         onPress={() => handleImagePress(item, index)}
@@ -299,7 +312,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   };
 
   const renderFooter = () => {
-    if (!loadingMore) return null;
+    if (!loadingMore || media.length === 0) return null;
 
     return (
       <View style={styles.footerLoader}>
@@ -316,16 +329,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
       ) : (
         <StatusBar style="auto" animated hidden={false} />
       )}
-      <Animated.View
-        style={[
-          {
-            position: "absolute",
-            top: 0,
-            zIndex: 1,
-          },
-          imagePreviewAnimatedStyle,
-        ]}
-      >
+      <Animated.View style={[styles.imageWrapper, imagePreviewAnimatedStyle]}>
         <View
           style={[
             {
@@ -334,6 +338,11 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
             },
           ]}
         >
+          {loading && (
+            <View
+              style={{ ...GLOBAL_STYLE.fullSize, backgroundColor: "lightgray" }}
+            />
+          )}
           {selectedAsset && (
             <ImageCropper
               asset={selectedAsset}
@@ -344,7 +353,15 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
           )}
         </View>
         <CustomView style={styles.listHeader}>
-          <IconButton icon={"camera"} mode="contained-tonal" size={18} />
+          <Button icon={"chevron-down"} onPress={handlePresentModalPress}>
+            {selectedAlbum?.title ?? "Photo"}
+          </Button>
+          <IconButton
+            icon={"camera"}
+            mode="contained-tonal"
+            size={18}
+            onPress={handlePresentModalPress}
+          />
         </CustomView>
       </Animated.View>
       <Animated.FlatList
@@ -352,16 +369,39 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
         ref={animatedRef}
         overScrollMode={"never"}
         data={media}
+        scrollEnabled={!loading}
         renderItem={renderItem}
         showsVerticalScrollIndicator={true}
         keyExtractor={(item) => item.filename}
         ListHeaderComponent={
           <Animated.View style={{ height: CROP_SIZE + HEADER_LIST_HEIGHT }} />
         }
+        ListEmptyComponent={
+          <View style={styles.loadingContainer}>
+            {Array.from({
+              length: Math.ceil((SCREEN_HEIGHT - CROP_SIZE) / imageSize) * 4,
+            }).map((_, index) => (
+              <View
+                key={index}
+                style={{
+                  width: imageSize,
+                  height: imageSize,
+                  borderWidth: 0.2,
+                  borderColor: "gray",
+                  backgroundColor: "lightgray",
+                }}
+              />
+            ))}
+          </View>
+        }
         numColumns={4}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
+      />
+      <AlbumBottomSheet
+        ref={bottomSheetModalRef}
+        onAlbumSelected={handleSelectedAlbum}
       />
     </View>
   );
@@ -370,7 +410,23 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 export default CreatePostScreen;
 
 const styles = StyleSheet.create({
-  listHeader: { height: HEADER_LIST_HEIGHT, ...GLOBAL_STYLE.rowCenter },
+  loadingContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT - CROP_SIZE,
+  },
+  imageWrapper: {
+    position: "absolute",
+    top: 0,
+    zIndex: 1,
+  },
+  listHeader: {
+    height: HEADER_LIST_HEIGHT,
+    ...GLOBAL_STYLE.row,
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   scrollBarContainer: {
     width: 6,
     backgroundColor: "transparent",
@@ -389,13 +445,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+
   list: {},
-  imageWrapper: {},
   image: {},
   footerLoader: {
     padding: 10,

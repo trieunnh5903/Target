@@ -19,19 +19,18 @@ import {
 } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { useSharedValue } from "react-native-reanimated";
 import { useBackHandler } from "@react-native-community/hooks";
 import firestore from "@react-native-firebase/firestore";
-import CommentBottomSheetFooter from "./CommentBottomSheetFooter";
 import { notificationAPI, postAPI } from "@/api";
 import { Comment, Post } from "@/types";
-import CommentItem from "../CommentItem";
+import CommentItem from "../../CommentItem";
 import dayjs from "dayjs";
 import { postsCollection } from "@/api/collections";
 import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from "@/constants";
-import { CommentSkeleton } from "../skeleton";
-import CustomView from "../CustomView";
+import { CommentSkeleton } from "../../skeleton";
+import CustomView from "../../CustomView";
 import { postUpdated } from "@/redux/slices/postSlice";
+import CommentBottomSheetFooter from "./CommentBottomSheetFooter";
 
 interface CommentBottomSheetProps {
   selectedPost: Post | null;
@@ -60,7 +59,6 @@ const CommentBottomSheet = forwardRef<
   const listRef = useRef<BottomSheetFlatListMethods>(null);
   const [isFetching, setIsFetching] = useState(true);
   const [sendingId, setSendingId] = useState<string | null>(null);
-  const animatedPosition = useSharedValue(0);
   const commentText = useRef("");
   const { bottom: bottomSafeArea, top: topSafeArea } = useSafeAreaInsets();
   const isBottomSheetOpen = useRef(false);
@@ -278,7 +276,6 @@ const CommentBottomSheet = forwardRef<
       topInset={topSafeArea}
       backdropComponent={renderBackdrop}
       footerComponent={renderFooter}
-      animatedPosition={animatedPosition}
       bottomInset={bottomSafeArea}
     >
       <BottomSheetFlatList

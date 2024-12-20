@@ -116,14 +116,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     ],
   }));
 
-  console.log(
-    "image croppper",
-    displayHeight,
-    displayWidth,
-    boundaryTranslateX,
-    boundaryTranslateY
-  );
-
   const gridAnimatedStyle = useAnimatedStyle(() => ({
     opacity: gridOpacity.value,
     transform: [
