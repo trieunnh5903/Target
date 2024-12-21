@@ -85,6 +85,19 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   const isFocused = useIsFocused();
   const [selectedAlbum, setSelectedAlbum] = useState<MediaLibrary.Album>();
 
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const translateY = useSharedValue(0);
+  const listRef = useAnimatedRef<Animated.FlatList<any>>();
+  const contentHeight = useSharedValue(0);
+  const lastOffsetY = useSharedValue(0);
+  const isBeginDrag = useSharedValue(false);
+  const lastTranslateY = useSharedValue(0);
+
+  const boundaryImagePreviewX = useRef<number>();
+  const boundaryImagePreviewY = useRef<number>();
+  const displayImagePreviewWidth = useRef<number>();
+  const displayImagePreviewHeight = useRef<number>();
+
   const loadImages = useCallback(
     async (after: MediaLibrary.AssetRef | undefined = undefined) => {
       try {
@@ -174,7 +187,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
       translateY.value = withTiming(0, {}, (finished) => {
         if (finished) {
           scrollTo(
-            animatedRef,
+            listRef,
             0,
             contentHeight.value - SCREEN_HEIGHT - CROP_SIZE,
             true
@@ -186,7 +199,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 
     translateY.value = withTiming(0, {}, (finished) => {
       if (finished) {
-        scrollTo(animatedRef, 0, Math.floor(index / 4) * imageSize, true);
+        scrollTo(listRef, 0, Math.floor(index / 4) * imageSize, true);
       }
     });
     lastTranslateY.value = 0;
@@ -194,7 +207,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   };
 
   const handleSelectedAlbum = (album: MediaLibrary.Album) => {
-    animatedRef.current?.scrollToOffset({ offset: 0, animated: false });
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
     translateY.value = 0;
     setEndCursor(undefined);
     setSelectedAlbum(album);
@@ -203,14 +216,6 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     setLoading(true);
     bottomSheetModalRef.current?.dismiss();
   };
-
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const translateY = useSharedValue(0);
-  const animatedRef = useAnimatedRef<Animated.FlatList<any>>();
-  const contentHeight = useSharedValue(0);
-  const lastOffsetY = useSharedValue(0);
-  const isBeginDrag = useSharedValue(false);
-  const lastTranslateY = useSharedValue(0);
 
   const onScroll = useAnimatedScrollHandler({
     onBeginDrag: ({ contentOffset: { y } }) => {
@@ -250,11 +255,11 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
         isBeginDrag.value = false;
         if (CROP_SIZE - Math.abs(lastTranslateY.value) > CROP_SIZE / 2) {
           translateY.value = withTiming(0, {}, () => {
-            scrollTo(animatedRef, 0, lastOffsetY.value, true);
+            scrollTo(listRef, 0, lastOffsetY.value, true);
           });
         } else if (CROP_SIZE - Math.abs(lastTranslateY.value) < CROP_SIZE / 2) {
           scrollTo(
-            animatedRef,
+            listRef,
             0,
             y + (CROP_SIZE - Math.abs(lastTranslateY.value)),
             true
@@ -265,9 +270,9 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
         if (y < CROP_SIZE) {
           if (y < CROP_SIZE / 2) {
             // translateY.value = withTiming(0);
-            scrollTo(animatedRef, 0, 0, true);
+            scrollTo(listRef, 0, 0, true);
           } else if (y < CROP_SIZE) {
-            scrollTo(animatedRef, 0, CROP_SIZE, true);
+            scrollTo(listRef, 0, CROP_SIZE, true);
             translateY.value = withTiming(-CROP_SIZE);
           }
         }
@@ -280,11 +285,6 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
       transform: [{ translateY: translateY.value }],
     };
   });
-
-  const boundaryImagePreviewX = useRef<number>();
-  const boundaryImagePreviewY = useRef<number>();
-  const displayImagePreviewWidth = useRef<number>();
-  const displayImagePreviewHeight = useRef<number>();
 
   const handleDimesionChange = useCallback(
     (
@@ -366,7 +366,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
       </Animated.View>
       <Animated.FlatList
         onScroll={onScroll}
-        ref={animatedRef}
+        ref={listRef}
         overScrollMode={"never"}
         data={media}
         scrollEnabled={!loading}
