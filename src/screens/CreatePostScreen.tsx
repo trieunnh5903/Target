@@ -12,7 +12,6 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -39,19 +38,18 @@ import { useIsFocused } from "@react-navigation/native";
 import { CustomView, ImageCropper } from "@/components";
 import { AlbumBottomSheet } from "@/components/bottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-interface ImageEntryProps {
+
+const ImageEntry: React.FC<{
   uri: string;
   size: number;
   onPress: () => void;
-}
-
-const ImageEntry: React.FC<ImageEntryProps> = memo(function ImageEntry({
-  uri,
-  size,
-  onPress,
-}) {
+  isSelected: boolean;
+}> = memo(function ImageEntry({ uri, size, onPress, isSelected }) {
   return (
-    <TouchableOpacity onPress={onPress}>
+    <TouchableOpacity
+      style={{ opacity: isSelected ? 0.2 : 1 }}
+      onPress={onPress}
+    >
       <View>
         <Image
           source={{ uri: uri }}
@@ -75,11 +73,11 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     MediaLibrary.AssetRef | undefined
   >();
   const dimension = useWindowDimensions();
-  const imageSize = dimension.width / 4;
-  const ITEMS_PER_PAGE = useMemo(
-    () => Math.floor((SCREEN_HEIGHT / (SCREEN_WIDTH / 4)) * 4 * 2),
-    []
-  );
+  const SPACING = 1;
+  const NUM_COLUMNS = 4;
+  const ITEM_SIZE =
+    (dimension.width - (NUM_COLUMNS - 1) * SPACING) / NUM_COLUMNS;
+  const ITEMS_PER_PAGE = 200;
   const scrollY = useSharedValue(0);
   const [selectedAsset, setSelectedAsset] = useState<MediaLibrary.Asset>();
   const isFocused = useIsFocused();
@@ -199,7 +197,12 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 
     translateY.value = withTiming(0, {}, (finished) => {
       if (finished) {
-        scrollTo(listRef, 0, Math.floor(index / 4) * imageSize, true);
+        scrollTo(
+          listRef,
+          0,
+          Math.floor(index / 4) * ITEM_SIZE + Math.floor(index / 4),
+          true
+        );
       }
     });
     lastTranslateY.value = 0;
@@ -302,10 +305,12 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   );
 
   const renderItem: ListRenderItem<MediaLibrary.Asset> = ({ item, index }) => {
+    const isSelected = item.id === selectedAsset?.id;
     return (
       <ImageEntry
+        isSelected={isSelected}
         uri={item.uri}
-        size={imageSize}
+        size={ITEM_SIZE}
         onPress={() => handleImagePress(item, index)}
       />
     );
@@ -373,19 +378,26 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
         renderItem={renderItem}
         showsVerticalScrollIndicator={true}
         keyExtractor={(item) => item.filename}
+        columnWrapperStyle={{ gap: SPACING }}
+        getItemLayout={(data, index) => ({
+          length: ITEM_SIZE + SPACING,
+          offset: Math.floor(index / NUM_COLUMNS) * (ITEM_SIZE + SPACING),
+          index,
+        })}
+        ItemSeparatorComponent={() => <View style={{ height: SPACING }} />}
         ListHeaderComponent={
           <Animated.View style={{ height: CROP_SIZE + HEADER_LIST_HEIGHT }} />
         }
         ListEmptyComponent={
           <View style={styles.loadingContainer}>
             {Array.from({
-              length: Math.ceil((SCREEN_HEIGHT - CROP_SIZE) / imageSize) * 4,
+              length: Math.ceil((SCREEN_HEIGHT - CROP_SIZE) / ITEM_SIZE) * 4,
             }).map((_, index) => (
               <View
                 key={index}
                 style={{
-                  width: imageSize,
-                  height: imageSize,
+                  width: ITEM_SIZE,
+                  height: ITEM_SIZE,
                   borderWidth: 0.2,
                   borderColor: "gray",
                   backgroundColor: "lightgray",
@@ -394,7 +406,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
             ))}
           </View>
         }
-        numColumns={4}
+        numColumns={NUM_COLUMNS}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
