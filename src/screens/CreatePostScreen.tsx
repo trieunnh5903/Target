@@ -43,19 +43,35 @@ const ImageEntry: React.FC<{
   uri: string;
   size: number;
   onPress: () => void;
-  isSelected: boolean;
-}> = memo(function ImageEntry({ uri, size, onPress, isSelected }) {
+  isPreviewed: boolean;
+  selectedIndex: number;
+  multipleSelect: boolean;
+}> = memo(function ImageEntry({
+  uri,
+  size,
+  onPress,
+  isPreviewed,
+  selectedIndex,
+  multipleSelect,
+}) {
   return (
-    <TouchableOpacity
-      style={{ opacity: isSelected ? 0.2 : 1 }}
-      onPress={onPress}
-    >
-      <View>
+    <TouchableOpacity onPress={onPress}>
+      <View style={{ opacity: isPreviewed ? 0.2 : 1 }}>
         <Image
           source={{ uri: uri }}
           style={[styles.image, { width: size, height: size }]}
         />
       </View>
+
+      {multipleSelect && (
+        <View
+          style={[styles.circle, selectedIndex >= 0 && styles.selectedCircle]}
+        >
+          {selectedIndex >= 0 && (
+            <Text style={{ fontWeight: "bold" }}>{selectedIndex + 1}</Text>
+          )}
+        </View>
+      )}
     </TouchableOpacity>
   );
 });
@@ -79,7 +95,8 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     (dimension.width - (NUM_COLUMNS - 1) * SPACING) / NUM_COLUMNS;
   const ITEMS_PER_PAGE = 200;
   const scrollY = useSharedValue(0);
-  const [selectedAsset, setSelectedAsset] = useState<MediaLibrary.Asset>();
+  const [selectedAsset, setSelectedAsset] = useState<MediaLibrary.Asset[]>();
+  const [previewAsset, setPreviewAsset] = useState<MediaLibrary.Asset>();
   const isFocused = useIsFocused();
   const [selectedAlbum, setSelectedAlbum] = useState<MediaLibrary.Album>();
 
@@ -96,6 +113,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   const displayImagePreviewWidth = useRef<number>();
   const displayImagePreviewHeight = useRef<number>();
 
+  const [multipleSelect, setMultipleSelect] = useState(false);
   const loadImages = useCallback(
     async (after: MediaLibrary.AssetRef | undefined = undefined) => {
       try {
@@ -137,7 +155,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 
   useEffect(() => {
     if (media.length > 0) {
-      setSelectedAsset(media[0]);
+      setPreviewAsset(media[0]);
     }
     return () => {};
   }, [media, selectedAlbum]);
@@ -176,7 +194,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   }, []);
 
   const handleImagePress = (image: MediaLibrary.Asset, index: number) => {
-    setSelectedAsset({ ...image });
+    setPreviewAsset({ ...image });
     const remainingOffset = contentHeight.value - scrollY.value;
     isBeginDrag.value = false;
 
@@ -206,7 +224,26 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
       }
     });
     lastTranslateY.value = 0;
-    return;
+
+    const isExsit = selectedAsset?.some((asset) => asset.id === image?.id);
+
+    if (previewAsset?.id !== image.id && isExsit) return;
+
+    if (isExsit) {
+      setSelectedAsset((prev) =>
+        prev?.filter((asset) => asset.id !== image?.id)
+      );
+    } else {
+      setSelectedAsset((prev) => [...(prev ?? []), image]);
+    }
+  };
+
+  const handleMultipleSelectPress = () => {
+    setMultipleSelect((prev) => !prev);
+    if (!previewAsset) return;
+    if (!selectedAsset || selectedAsset.length === 0) {
+      setSelectedAsset([previewAsset]);
+    }
   };
 
   const handleSelectedAlbum = (album: MediaLibrary.Album) => {
@@ -215,7 +252,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     setEndCursor(undefined);
     setSelectedAlbum(album);
     setMedia([]);
-    setSelectedAsset(undefined);
+    setPreviewAsset(undefined);
     setLoading(true);
     bottomSheetModalRef.current?.dismiss();
   };
@@ -305,10 +342,15 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   );
 
   const renderItem: ListRenderItem<MediaLibrary.Asset> = ({ item, index }) => {
-    const isSelected = item.id === selectedAsset?.id;
+    const isPreviewed = item.id === previewAsset?.id;
+    const selectedAssetIndex = (selectedAsset ?? []).findIndex(
+      (asset) => asset?.id === item.id
+    );
     return (
       <ImageEntry
-        isSelected={isSelected}
+        multipleSelect={multipleSelect}
+        isPreviewed={isPreviewed}
+        selectedIndex={selectedAssetIndex}
         uri={item.uri}
         size={ITEM_SIZE}
         onPress={() => handleImagePress(item, index)}
@@ -348,9 +390,9 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
               style={{ ...GLOBAL_STYLE.fullSize, backgroundColor: "lightgray" }}
             />
           )}
-          {selectedAsset && (
+          {previewAsset && (
             <ImageCropper
-              asset={selectedAsset}
+              asset={previewAsset}
               animatedGrid
               onDimensionChange={handleDimesionChange}
               // onDimensionChange={handleDimesionChange}
@@ -361,12 +403,21 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
           <Button icon={"chevron-down"} onPress={handlePresentModalPress}>
             {selectedAlbum?.title ?? "Photo"}
           </Button>
-          <IconButton
-            icon={"camera"}
-            mode="contained-tonal"
-            size={18}
-            onPress={handlePresentModalPress}
-          />
+
+          <View style={GLOBAL_STYLE.rowCenter}>
+            <IconButton
+              icon={"checkbox-multiple-blank-outline"}
+              mode="contained-tonal"
+              size={18}
+              onPress={handleMultipleSelectPress}
+            />
+            <IconButton
+              icon={"camera"}
+              mode="contained-tonal"
+              size={18}
+              onPress={handlePresentModalPress}
+            />
+          </View>
         </CustomView>
       </Animated.View>
       <Animated.FlatList
@@ -422,6 +473,22 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 export default CreatePostScreen;
 
 const styles = StyleSheet.create({
+  selectedCircle: {
+    flex: 1,
+    ...GLOBAL_STYLE.center,
+    backgroundColor: "lightblue",
+  },
+  circle: {
+    width: 24,
+    height: 24,
+    borderRadius: 15,
+    position: "absolute",
+    right: 5,
+    top: 5,
+    backgroundColor: "rgba(255,255,2555,0.5)",
+    borderColor: "white",
+    borderWidth: 1,
+  },
   loadingContainer: {
     flexDirection: "row",
     flexWrap: "wrap",

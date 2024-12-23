@@ -29,10 +29,10 @@ export const useCropsGesture = ({
 
   const pan = Gesture.Pan()
     .onTouchesDown(() => {
-      gridOpacity.value = withTiming(1);
+      gridOpacity.value = 1;
     })
     .onTouchesUp(() => {
-      gridOpacity.value = withTiming(0);
+      gridOpacity.value = 0;
     })
     .onStart((e) => {
       prevTranslationY.value = translationY.value;

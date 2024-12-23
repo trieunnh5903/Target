@@ -1,14 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import React, { useEffect, useState } from "react";
-import Animated, {
-  SharedValue,
-  useAnimatedStyle,
-} from "react-native-reanimated";
-import {
-  ComposedGesture,
-  GestureDetector,
-  GestureType,
-} from "react-native-gesture-handler";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { GestureDetector } from "react-native-gesture-handler";
 import { CROP_SIZE, GLOBAL_STYLE } from "@/constants";
 import { IconButton } from "react-native-paper";
 import * as MediaLibrary from "expo-media-library";
@@ -100,6 +93,11 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     displayWidth,
     onDimensionChange,
   ]);
+
+  useEffect(() => {
+    resetGesture();
+    return () => {};
+  }, [resetGesture]);
 
   const handleResize = () => {
     setResizeFull(!resizeFull);
