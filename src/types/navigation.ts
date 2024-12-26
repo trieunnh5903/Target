@@ -12,10 +12,11 @@ export type RootStackParamList = {
   SignUp: undefined;
   EditProfile: undefined;
   EditImage: {
-    asset: {
-      width: number;
-      height: number;
-      uri: string;
+    assets: MediaLibrary.Asset[];
+    imageOption?: {
+      resizeFull: boolean;
+      translateX: number;
+      translateY: number;
     };
   };
   CameraScreen: {

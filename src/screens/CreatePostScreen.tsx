@@ -20,6 +20,8 @@ import { Image } from "expo-image";
 import { Button, IconButton } from "react-native-paper";
 import { RootTabScreenProps } from "@/types/navigation";
 import Animated, {
+  Extrapolation,
+  interpolate,
   scrollTo,
   useAnimatedRef,
   useAnimatedScrollHandler,
@@ -33,11 +35,13 @@ import {
   GLOBAL_STYLE,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
+  STATUS_BAR_HEIGHT,
 } from "@/constants";
 import { useIsFocused } from "@react-navigation/native";
 import { CustomView, ImageCropper } from "@/components";
 import { AlbumBottomSheet } from "@/components/bottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { useCropDimensions, useCropsGesture } from "@/hooks";
 
 const ImageEntry: React.FC<{
   uri: string;
@@ -77,6 +81,9 @@ const ImageEntry: React.FC<{
 });
 
 const HEADER_LIST_HEIGHT = 50;
+const SPACING = 1;
+const NUM_COLUMNS = 4;
+const ITEMS_PER_PAGE = 200;
 const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   navigation,
 }) => {
@@ -89,15 +96,14 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     MediaLibrary.AssetRef | undefined
   >();
   const dimension = useWindowDimensions();
-  const SPACING = 1;
-  const NUM_COLUMNS = 4;
   const ITEM_SIZE =
     (dimension.width - (NUM_COLUMNS - 1) * SPACING) / NUM_COLUMNS;
-  const ITEMS_PER_PAGE = 200;
   const scrollY = useSharedValue(0);
-  const [selectedAsset, setSelectedAsset] = useState<MediaLibrary.Asset[]>();
+  const [selectedAsset, setSelectedAsset] =
+    useState<
+      (MediaLibrary.Asset & { translateX?: number; translateY?: number })[]
+    >();
   const [previewAsset, setPreviewAsset] = useState<MediaLibrary.Asset>();
-  const isFocused = useIsFocused();
   const [selectedAlbum, setSelectedAlbum] = useState<MediaLibrary.Album>();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -107,19 +113,36 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
   const lastOffsetY = useSharedValue(0);
   const isBeginDrag = useSharedValue(false);
   const lastTranslateY = useSharedValue(0);
-
-  const boundaryImagePreviewX = useRef<number>();
-  const boundaryImagePreviewY = useRef<number>();
-  const displayImagePreviewWidth = useRef<number>();
-  const displayImagePreviewHeight = useRef<number>();
-
   const [multipleSelect, setMultipleSelect] = useState(false);
+
+  const {
+    displayHeight,
+    displayWidth,
+    gridHeight,
+    gridWidth,
+    boundaryTranslateX,
+    boundaryTranslateY,
+  } = useCropDimensions({
+    originalHeight: previewAsset?.height,
+    originalWidth: previewAsset?.width,
+  });
+  const {
+    gesture,
+    gridOpacity,
+    gridTranslateX,
+    gridTranslateY,
+    resetGesture,
+    translationX,
+    translationY,
+  } = useCropsGesture({
+    displayHeight,
+    boundaryTranslateX,
+    boundaryTranslateY,
+  });
+
   const loadImages = useCallback(
     async (after: MediaLibrary.AssetRef | undefined = undefined) => {
       try {
-        if (permissionResponse?.status !== "granted") {
-          await requestPermission();
-        }
         const {
           assets,
           endCursor: newEndCursor,
@@ -145,12 +168,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
         setLoadingMore(false);
       }
     },
-    [
-      ITEMS_PER_PAGE,
-      permissionResponse?.status,
-      requestPermission,
-      selectedAlbum,
-    ]
+    [selectedAlbum]
   );
 
   useEffect(() => {
@@ -162,42 +180,73 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 
   useLayoutEffect(() => {
     const onNextPress = async () => {
-      console.log(
-        boundaryImagePreviewX.current,
-        boundaryImagePreviewY.current,
-        displayImagePreviewHeight.current,
-        displayImagePreviewWidth.current
-      );
+      if (multipleSelect && selectedAsset) {
+        console.log(selectedAsset);
+
+        // navigation.navigate("EditImage", {
+        //   assets: selectedAsset,
+        // });
+      } else if (!multipleSelect && previewAsset) {
+        console.log(translationX.value, translationY.value);
+
+        // navigation.navigate("EditImage", {
+        //   assets: [previewAsset],
+        //   imageOption: {
+        //     resizeFull: false,
+        //     translateX: translationX.value,
+        //     translateY: translationY.value,
+        //   },
+        // });
+      }
     };
 
     navigation.setOptions({
       headerRight: () => {
         return <Button onPress={onNextPress}>Next</Button>;
       },
-      headerShown: true,
     });
     return () => {};
-  }, [media, navigation]);
+  }, [
+    media,
+    multipleSelect,
+    navigation,
+    previewAsset,
+    selectedAsset,
+    translationX,
+    translationX.value,
+    translationY,
+    translationY.value,
+  ]);
 
   useEffect(() => {
-    loadImages();
-  }, [loadImages]);
+    const checkPermission = async () => {
+      if (!permissionResponse) {
+        await requestPermission();
+      }
+    };
+    checkPermission();
+  }, [permissionResponse, requestPermission]);
 
-  const handleLoadMore = async () => {
+  useEffect(() => {
+    if (permissionResponse?.status === "granted") {
+      loadImages();
+    }
+  }, [loadImages, permissionResponse?.status]);
+
+  const handleLoadMore = useCallback(async () => {
     if (!loadingMore && hasMore) {
       setLoadingMore(true);
       await loadImages(endCursor);
     }
-  };
+  }, [endCursor, hasMore, loadImages, loadingMore]);
+
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
 
-  const handleImagePress = (image: MediaLibrary.Asset, index: number) => {
-    setPreviewAsset({ ...image });
+  const handleScrollToSelectedImage = (index: number) => {
     const remainingOffset = contentHeight.value - scrollY.value;
     isBeginDrag.value = false;
-
     // last page
     if (remainingOffset <= SCREEN_HEIGHT + CROP_SIZE) {
       translateY.value = withTiming(0, {}, (finished) => {
@@ -205,14 +254,15 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
           scrollTo(
             listRef,
             0,
-            contentHeight.value - SCREEN_HEIGHT - CROP_SIZE,
+            contentHeight.value -
+              (SCREEN_HEIGHT - (STATUS_BAR_HEIGHT + 60) + SCREEN_WIDTH) -
+              4,
             true
           );
         }
       });
       return;
     }
-
     translateY.value = withTiming(0, {}, (finished) => {
       if (finished) {
         scrollTo(
@@ -223,26 +273,59 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
         );
       }
     });
-    lastTranslateY.value = 0;
+  };
 
-    const isExsit = selectedAsset?.some((asset) => asset.id === image?.id);
+  const saveAsset = (image: MediaLibrary.Asset) => {
+    // save translate
+    let updatedAsset =
+      selectedAsset?.map((item) => {
+        return item.id === previewAsset?.id
+          ? {
+              ...item,
+              translateX: translationX.value,
+              translateY: translationY.value,
+            }
+          : item;
+      }) ?? [];
 
-    if (previewAsset?.id !== image.id && isExsit) return;
+    // update asset and get translation next image
+    const assetIndex = updatedAsset?.findIndex(
+      (asset) => asset.id === image?.id
+    );
 
-    if (isExsit) {
-      setSelectedAsset((prev) =>
-        prev?.filter((asset) => asset.id !== image?.id)
-      );
+    if (assetIndex >= 0) {
+      if (previewAsset?.id === image.id) {
+        updatedAsset = updatedAsset.filter((asset) => asset.id !== image?.id);
+      } else {
+        const asset = updatedAsset[assetIndex];
+        translationX.value = withTiming(asset?.translateX ?? 0);
+        translationY.value = withTiming(asset?.translateY ?? 0);
+      }
     } else {
-      setSelectedAsset((prev) => [...(prev ?? []), image]);
+      updatedAsset.push(image);
+      resetGesture();
+    }
+    setSelectedAsset(updatedAsset);
+  };
+
+  const onImagePress = (image: MediaLibrary.Asset, index: number) => {
+    lastTranslateY.value = 0;
+    handleScrollToSelectedImage(index);
+    setPreviewAsset(image);
+    if (!multipleSelect) {
+      resetGesture();
+    } else {
+      saveAsset(image);
     }
   };
 
   const handleMultipleSelectPress = () => {
     setMultipleSelect((prev) => !prev);
     if (!previewAsset) return;
-    if (!selectedAsset || selectedAsset.length === 0) {
-      setSelectedAsset([previewAsset]);
+    if (!multipleSelect) {
+      if (selectedAsset?.[0].id !== previewAsset.id) {
+        setSelectedAsset([previewAsset]);
+      }
     }
   };
 
@@ -277,12 +360,10 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
             -CROP_SIZE
           );
         } else {
-          if (y < CROP_SIZE) {
-            translateY.value = Math.min(
-              translateY.value + (scrollY.value - y),
-              0
-            );
-          }
+          translateY.value = Math.min(
+            translateY.value + (scrollY.value - y),
+            0
+          );
         }
       }
       scrollY.value = y;
@@ -290,31 +371,20 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
     onMomentumEnd: ({ contentOffset: { y }, contentSize: { height } }) => {
       contentHeight.value = height;
       lastTranslateY.value = translateY.value;
-
-      if (y > lastOffsetY.value) {
-        isBeginDrag.value = false;
-        if (CROP_SIZE - Math.abs(lastTranslateY.value) > CROP_SIZE / 2) {
-          translateY.value = withTiming(0, {}, () => {
-            scrollTo(listRef, 0, lastOffsetY.value, true);
-          });
-        } else if (CROP_SIZE - Math.abs(lastTranslateY.value) < CROP_SIZE / 2) {
+      if (y < CROP_SIZE / 2) {
+        scrollTo(listRef, 0, 0, true);
+      } else if (y < CROP_SIZE) {
+        scrollTo(listRef, 0, CROP_SIZE, true);
+      } else if (translateY.value !== 0 && translateY.value !== -CROP_SIZE) {
+        if (Math.abs(translateY.value) >= SCREEN_WIDTH / 2) {
           scrollTo(
             listRef,
             0,
-            y + (CROP_SIZE - Math.abs(lastTranslateY.value)),
+            y + (SCREEN_WIDTH - Math.abs(lastTranslateY.value)),
             true
           );
-          translateY.value = withTiming(-CROP_SIZE);
-        }
-      } else if (y < lastOffsetY.value) {
-        if (y < CROP_SIZE) {
-          if (y < CROP_SIZE / 2) {
-            // translateY.value = withTiming(0);
-            scrollTo(listRef, 0, 0, true);
-          } else if (y < CROP_SIZE) {
-            scrollTo(listRef, 0, CROP_SIZE, true);
-            translateY.value = withTiming(-CROP_SIZE);
-          }
+        } else {
+          scrollTo(listRef, 0, y - Math.abs(lastTranslateY.value), true);
         }
       }
     },
@@ -325,21 +395,6 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
       transform: [{ translateY: translateY.value }],
     };
   });
-
-  const handleDimesionChange = useCallback(
-    (
-      displayHeight: number,
-      displayWidth: number,
-      boundaryX: number,
-      boundaryY: number
-    ) => {
-      boundaryImagePreviewX.current = boundaryX;
-      boundaryImagePreviewY.current = boundaryY;
-      displayImagePreviewWidth.current = displayWidth;
-      displayImagePreviewHeight.current = displayHeight;
-    },
-    []
-  );
 
   const renderItem: ListRenderItem<MediaLibrary.Asset> = ({ item, index }) => {
     const isPreviewed = item.id === previewAsset?.id;
@@ -353,7 +408,7 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
         selectedIndex={selectedAssetIndex}
         uri={item.uri}
         size={ITEM_SIZE}
-        onPress={() => handleImagePress(item, index)}
+        onPress={() => onImagePress(item, index)}
       />
     );
   };
@@ -371,31 +426,25 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 
   return (
     <View style={styles.container}>
-      {isFocused ? (
-        <StatusBar style="inverted" animated hidden />
-      ) : (
-        <StatusBar style="auto" animated hidden={false} />
-      )}
-      <Animated.View style={[styles.imageWrapper, imagePreviewAnimatedStyle]}>
-        <View
-          style={[
-            {
-              width: CROP_SIZE,
-              height: CROP_SIZE,
-            },
-          ]}
-        >
-          {loading && (
-            <View
-              style={{ ...GLOBAL_STYLE.fullSize, backgroundColor: "lightgray" }}
-            />
-          )}
+      <Animated.View
+        style={[styles.transitionWrapper, imagePreviewAnimatedStyle]}
+      >
+        <View style={[styles.imageWrapper]}>
+          {loading && <View style={styles.imagePreviewSkeleton} />}
           {previewAsset && (
             <ImageCropper
-              asset={previewAsset}
               animatedGrid
-              onDimensionChange={handleDimesionChange}
-              // onDimensionChange={handleDimesionChange}
+              displayHeight={displayHeight}
+              displayWidth={displayWidth}
+              gesture={gesture}
+              gridHeight={gridHeight}
+              gridOpacity={gridOpacity}
+              gridWidth={gridWidth}
+              translationX={translationX}
+              translationY={translationY}
+              uri={previewAsset.uri}
+              gridTranslateX={gridTranslateX}
+              gridTranslateY={gridTranslateY}
             />
           )}
         </View>
@@ -421,6 +470,10 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
         </CustomView>
       </Animated.View>
       <Animated.FlatList
+        initialNumToRender={20}
+        maxToRenderPerBatch={NUM_COLUMNS * 3}
+        windowSize={NUM_COLUMNS * 5}
+        removeClippedSubviews
         onScroll={onScroll}
         ref={listRef}
         overScrollMode={"never"}
@@ -446,13 +499,10 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
             }).map((_, index) => (
               <View
                 key={index}
-                style={{
-                  width: ITEM_SIZE,
-                  height: ITEM_SIZE,
-                  borderWidth: 0.2,
-                  borderColor: "gray",
-                  backgroundColor: "lightgray",
-                }}
+                style={[
+                  styles.imageSkeleton,
+                  { width: ITEM_SIZE, height: ITEM_SIZE },
+                ]}
               />
             ))}
           </View>
@@ -473,6 +523,15 @@ const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
 export default CreatePostScreen;
 
 const styles = StyleSheet.create({
+  imageSkeleton: {
+    borderWidth: 0.2,
+    borderColor: "gray",
+    backgroundColor: "lightgray",
+  },
+  imagePreviewSkeleton: {
+    ...GLOBAL_STYLE.fullSize,
+    backgroundColor: "lightgray",
+  },
   selectedCircle: {
     flex: 1,
     ...GLOBAL_STYLE.center,
@@ -496,6 +555,10 @@ const styles = StyleSheet.create({
     height: SCREEN_HEIGHT - CROP_SIZE,
   },
   imageWrapper: {
+    width: CROP_SIZE,
+    height: CROP_SIZE,
+  },
+  transitionWrapper: {
     position: "absolute",
     top: 0,
     zIndex: 1,

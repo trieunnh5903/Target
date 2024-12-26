@@ -89,20 +89,13 @@ const AppBottomTab = () => {
 
   return (
     <Tab.Navigator initialRouteName="Create" screenOptions={screenOptions}>
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          headerStatusBarHeight: insets.top || STATUS_BAR_HEIGHT,
-        }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen
         name="Create"
         component={CreatePostScreen}
         options={({ navigation }) => ({
           title: "New post",
           tabBarStyle: { display: "none" },
-          headerStatusBarHeight: 0,
           headerLeft() {
             return (
               <Pressable
@@ -120,7 +113,6 @@ const AppBottomTab = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
-          headerStatusBarHeight: insets.top || STATUS_BAR_HEIGHT,
           headerRight() {
             return <IconButton onPress={handleLogout} icon={"logout"} />;
           },
