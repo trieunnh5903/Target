@@ -1,5 +1,5 @@
 import { Image, StyleSheet, View } from "react-native";
-import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import CustomView from "../CustomView";
 import { GLOBAL_STYLE, SCREEN_WIDTH } from "@/constants";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -16,8 +16,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { Octicons } from "@expo/vector-icons";
 import { Image as ExpoImage } from "expo-image";
-import ImageModal from "./ImageModal";
 import { useOriginImageLayout } from "@/hooks";
+import ImageModal from "./ImageModal";
 
 interface ImageAreaProps {
   source: string;
@@ -42,20 +42,6 @@ const ImageArea: React.FC<ImageAreaProps> = ({
   const { originImageLayout, updateOriginImageLayout } = useOriginImageLayout({
     imageRef,
   });
-
-  useEffect(() => {
-    if (source) {
-      Image.getSize(
-        source,
-        (width, height) => {
-          setAspectRatio(width / height);
-        },
-        (error) => {
-          console.error("Lỗi khi lấy kích thước ảnh:", error);
-        }
-      );
-    }
-  }, [source]);
 
   const hideModal = () => {
     setIsModalOpen(false);
@@ -123,7 +109,7 @@ const ImageArea: React.FC<ImageAreaProps> = ({
             aspectRatio: aspectRatio,
           }}
         >
-          <ExpoImage source={{ uri: source }} style={GLOBAL_STYLE.fullSize} />
+          <ExpoImage source={{ uri: source }} style={GLOBAL_STYLE.flex_1} />
         </View>
       </GestureDetector>
 

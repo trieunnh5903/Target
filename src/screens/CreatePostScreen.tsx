@@ -1,604 +1,101 @@
-import {
-  ActivityIndicator,
-  ListRenderItem,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from "react-native";
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import * as MediaLibrary from "expo-media-library";
+import { ListRenderItem, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { RootStackScreenProps } from "@/types/navigation";
+import Animated, { LinearTransition } from "react-native-reanimated";
+import { Asset } from "expo-media-library";
+import { CustomView } from "@/components";
 import { Image } from "expo-image";
-import { Button, IconButton } from "react-native-paper";
-import { RootTabScreenProps } from "@/types/navigation";
-import Animated, {
-  Extrapolation,
-  interpolate,
-  scrollTo,
-  useAnimatedRef,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
-import { StatusBar } from "expo-status-bar";
 import {
-  CROP_SIZE,
   GLOBAL_STYLE,
-  SCREEN_HEIGHT,
+  POST_IMAGE_SIZE,
   SCREEN_WIDTH,
-  STATUS_BAR_HEIGHT,
+  SPACING,
 } from "@/constants";
-import { useIsFocused } from "@react-navigation/native";
-import { CustomView, ImageCropper } from "@/components";
-import { AlbumBottomSheet } from "@/components/bottomSheet";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { useCropDimensions, useCropsGesture } from "@/hooks";
 
-const ImageEntry: React.FC<{
-  uri: string;
-  size: number;
-  onPress: () => void;
-  isPreviewed: boolean;
-  selectedIndex: number;
-  multipleSelect: boolean;
-}> = memo(function ImageEntry({
-  uri,
-  size,
-  onPress,
-  isPreviewed,
-  selectedIndex,
-  multipleSelect,
-}) {
+interface ImageEntryProps {
+  asset: Asset;
+  translateOption:
+    | {
+        x: number;
+        y: number;
+      }
+    | undefined;
+}
+
+const ImageEntry: React.FC<ImageEntryProps> = ({ asset, translateOption }) => {
+  const aspectRatio = asset.width / asset.height;
+  const displayWidth =
+    asset.width < asset.height ? POST_IMAGE_SIZE : aspectRatio * POST_IMAGE_SIZE;
+  const displayHeight = displayWidth / aspectRatio;
+
+  const scaleFactor = SCREEN_WIDTH / POST_IMAGE_SIZE;
+  const translateX = (translateOption?.x ?? 0) / scaleFactor;
+  const translateY = (translateOption?.y ?? 0) / scaleFactor;
   return (
-    <TouchableOpacity onPress={onPress}>
-      <View style={{ opacity: isPreviewed ? 0.2 : 1 }}>
-        <Image
-          source={{ uri: uri }}
-          style={[styles.image, { width: size, height: size }]}
+    <CustomView
+      style={{
+        width: POST_IMAGE_SIZE,
+        height: POST_IMAGE_SIZE,
+        borderRadius: 12,
+        overflow: "hidden",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Image
+        source={asset.uri}
+        style={{
+          width: displayWidth,
+          height: displayHeight,
+          transform: [{ translateX }, { translateY }],
+        }}
+      />
+    </CustomView>
+  );
+};
+
+const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
+  navigation,
+  route,
+}) => {
+  const { assets: assetsParam, translateAssets } = route.params;
+  const [assets, setAssets] = useState(assetsParam);
+  console.log("CreatePostScreen", assets);
+
+  const renderItem: ListRenderItem<Asset> = ({ index, item }) => {
+    return (
+      <ImageEntry asset={item} translateOption={translateAssets[item.id]} />
+    );
+  };
+  return (
+    <CustomView style={GLOBAL_STYLE.flex_1}>
+      <View>
+        <Animated.FlatList
+          data={assets}
+          horizontal
+          contentContainerStyle={{
+            padding: SPACING.medium,
+            gap: SPACING.medium,
+          }}
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          renderItem={renderItem}
+          getItemLayout={(data, index) => ({
+            length: POST_IMAGE_SIZE + SPACING.medium,
+            offset: (POST_IMAGE_SIZE + SPACING.medium) * index,
+            index,
+          })}
+          itemLayoutAnimation={LinearTransition}
+          snapToInterval={POST_IMAGE_SIZE + SPACING.medium}
+          snapToAlignment={"center"}
+          decelerationRate={"fast"}
         />
       </View>
-
-      {multipleSelect && (
-        <View
-          style={[styles.circle, selectedIndex >= 0 && styles.selectedCircle]}
-        >
-          {selectedIndex >= 0 && (
-            <Text style={{ fontWeight: "bold" }}>{selectedIndex + 1}</Text>
-          )}
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-});
-
-const HEADER_LIST_HEIGHT = 50;
-const SPACING = 1;
-const NUM_COLUMNS = 4;
-const ITEMS_PER_PAGE = 200;
-const CreatePostScreen: React.FC<RootTabScreenProps<"Create">> = ({
-  navigation,
-}) => {
-  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
-  const [media, setMedia] = useState<MediaLibrary.Asset[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [endCursor, setEndCursor] = useState<
-    MediaLibrary.AssetRef | undefined
-  >();
-  const dimension = useWindowDimensions();
-  const ITEM_SIZE =
-    (dimension.width - (NUM_COLUMNS - 1) * SPACING) / NUM_COLUMNS;
-  const scrollY = useSharedValue(0);
-  const [selectedAsset, setSelectedAsset] =
-    useState<
-      (MediaLibrary.Asset & { translateX?: number; translateY?: number })[]
-    >();
-  const [previewAsset, setPreviewAsset] = useState<MediaLibrary.Asset>();
-  const [selectedAlbum, setSelectedAlbum] = useState<MediaLibrary.Album>();
-
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const translateY = useSharedValue(0);
-  const listRef = useAnimatedRef<Animated.FlatList<any>>();
-  const contentHeight = useSharedValue(0);
-  const lastOffsetY = useSharedValue(0);
-  const isBeginDrag = useSharedValue(false);
-  const lastTranslateY = useSharedValue(0);
-  const [multipleSelect, setMultipleSelect] = useState(false);
-
-  const {
-    displayHeight,
-    displayWidth,
-    gridHeight,
-    gridWidth,
-    boundaryTranslateX,
-    boundaryTranslateY,
-  } = useCropDimensions({
-    originalHeight: previewAsset?.height,
-    originalWidth: previewAsset?.width,
-  });
-  const {
-    gesture,
-    gridOpacity,
-    gridTranslateX,
-    gridTranslateY,
-    resetGesture,
-    translationX,
-    translationY,
-  } = useCropsGesture({
-    displayHeight,
-    boundaryTranslateX,
-    boundaryTranslateY,
-  });
-
-  const loadImages = useCallback(
-    async (after: MediaLibrary.AssetRef | undefined = undefined) => {
-      try {
-        const {
-          assets,
-          endCursor: newEndCursor,
-          hasNextPage,
-        } = await MediaLibrary.getAssetsAsync({
-          album: selectedAlbum?.id === "all" ? undefined : selectedAlbum,
-          mediaType: "photo",
-          sortBy: ["creationTime"],
-          first: ITEMS_PER_PAGE,
-          after: after,
-        });
-        if (after) {
-          setMedia((prevMedia) => [...prevMedia, ...assets]);
-        } else {
-          setMedia(assets);
-        }
-        setEndCursor(newEndCursor);
-        setHasMore(hasNextPage);
-      } catch (error) {
-        console.error("Error loading images:", error);
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    },
-    [selectedAlbum]
-  );
-
-  useEffect(() => {
-    if (media.length > 0) {
-      setPreviewAsset(media[0]);
-    }
-    return () => {};
-  }, [media, selectedAlbum]);
-
-  useLayoutEffect(() => {
-    const onNextPress = async () => {
-      if (multipleSelect && selectedAsset) {
-        console.log(selectedAsset);
-
-        // navigation.navigate("EditImage", {
-        //   assets: selectedAsset,
-        // });
-      } else if (!multipleSelect && previewAsset) {
-        console.log(translationX.value, translationY.value);
-
-        // navigation.navigate("EditImage", {
-        //   assets: [previewAsset],
-        //   imageOption: {
-        //     resizeFull: false,
-        //     translateX: translationX.value,
-        //     translateY: translationY.value,
-        //   },
-        // });
-      }
-    };
-
-    navigation.setOptions({
-      headerRight: () => {
-        return <Button onPress={onNextPress}>Next</Button>;
-      },
-    });
-    return () => {};
-  }, [
-    media,
-    multipleSelect,
-    navigation,
-    previewAsset,
-    selectedAsset,
-    translationX,
-    translationX.value,
-    translationY,
-    translationY.value,
-  ]);
-
-  useEffect(() => {
-    const checkPermission = async () => {
-      if (!permissionResponse) {
-        await requestPermission();
-      }
-    };
-    checkPermission();
-  }, [permissionResponse, requestPermission]);
-
-  useEffect(() => {
-    if (permissionResponse?.status === "granted") {
-      loadImages();
-    }
-  }, [loadImages, permissionResponse?.status]);
-
-  const handleLoadMore = useCallback(async () => {
-    if (!loadingMore && hasMore) {
-      setLoadingMore(true);
-      await loadImages(endCursor);
-    }
-  }, [endCursor, hasMore, loadImages, loadingMore]);
-
-  const handlePresentModalPress = useCallback(() => {
-    bottomSheetModalRef.current?.present();
-  }, []);
-
-  const handleScrollToSelectedImage = (index: number) => {
-    const remainingOffset = contentHeight.value - scrollY.value;
-    isBeginDrag.value = false;
-    // last page
-    if (remainingOffset <= SCREEN_HEIGHT + CROP_SIZE) {
-      translateY.value = withTiming(0, {}, (finished) => {
-        if (finished) {
-          scrollTo(
-            listRef,
-            0,
-            contentHeight.value -
-              (SCREEN_HEIGHT - (STATUS_BAR_HEIGHT + 60) + SCREEN_WIDTH) -
-              4,
-            true
-          );
-        }
-      });
-      return;
-    }
-    translateY.value = withTiming(0, {}, (finished) => {
-      if (finished) {
-        scrollTo(
-          listRef,
-          0,
-          Math.floor(index / 4) * ITEM_SIZE + Math.floor(index / 4),
-          true
-        );
-      }
-    });
-  };
-
-  const saveAsset = (image: MediaLibrary.Asset) => {
-    // save translate
-    let updatedAsset =
-      selectedAsset?.map((item) => {
-        return item.id === previewAsset?.id
-          ? {
-              ...item,
-              translateX: translationX.value,
-              translateY: translationY.value,
-            }
-          : item;
-      }) ?? [];
-
-    // update asset and get translation next image
-    const assetIndex = updatedAsset?.findIndex(
-      (asset) => asset.id === image?.id
-    );
-
-    if (assetIndex >= 0) {
-      if (previewAsset?.id === image.id) {
-        updatedAsset = updatedAsset.filter((asset) => asset.id !== image?.id);
-      } else {
-        const asset = updatedAsset[assetIndex];
-        translationX.value = withTiming(asset?.translateX ?? 0);
-        translationY.value = withTiming(asset?.translateY ?? 0);
-      }
-    } else {
-      updatedAsset.push(image);
-      resetGesture();
-    }
-    setSelectedAsset(updatedAsset);
-  };
-
-  const onImagePress = (image: MediaLibrary.Asset, index: number) => {
-    lastTranslateY.value = 0;
-    handleScrollToSelectedImage(index);
-    setPreviewAsset(image);
-    if (!multipleSelect) {
-      resetGesture();
-    } else {
-      saveAsset(image);
-    }
-  };
-
-  const handleMultipleSelectPress = () => {
-    setMultipleSelect((prev) => !prev);
-    if (!previewAsset) return;
-    if (!multipleSelect) {
-      if (selectedAsset?.[0].id !== previewAsset.id) {
-        setSelectedAsset([previewAsset]);
-      }
-    }
-  };
-
-  const handleSelectedAlbum = (album: MediaLibrary.Album) => {
-    listRef.current?.scrollToOffset({ offset: 0, animated: false });
-    translateY.value = 0;
-    setEndCursor(undefined);
-    setSelectedAlbum(album);
-    setMedia([]);
-    setPreviewAsset(undefined);
-    setLoading(true);
-    bottomSheetModalRef.current?.dismiss();
-  };
-
-  const onScroll = useAnimatedScrollHandler({
-    onBeginDrag: ({ contentOffset: { y } }) => {
-      isBeginDrag.value = true;
-      lastOffsetY.value = y;
-    },
-    onScroll: (event) => {
-      const y = event.contentOffset.y;
-      const velocityY = event.velocity?.y;
-      if (!velocityY) {
-        scrollY.value = y;
-        return;
-      }
-
-      if (isBeginDrag.value) {
-        if (velocityY > 0) {
-          translateY.value = Math.max(
-            translateY.value + (scrollY.value - y),
-            -CROP_SIZE
-          );
-        } else {
-          translateY.value = Math.min(
-            translateY.value + (scrollY.value - y),
-            0
-          );
-        }
-      }
-      scrollY.value = y;
-    },
-    onMomentumEnd: ({ contentOffset: { y }, contentSize: { height } }) => {
-      contentHeight.value = height;
-      lastTranslateY.value = translateY.value;
-      if (y < CROP_SIZE / 2) {
-        scrollTo(listRef, 0, 0, true);
-      } else if (y < CROP_SIZE) {
-        scrollTo(listRef, 0, CROP_SIZE, true);
-      } else if (translateY.value !== 0 && translateY.value !== -CROP_SIZE) {
-        if (Math.abs(translateY.value) >= SCREEN_WIDTH / 2) {
-          scrollTo(
-            listRef,
-            0,
-            y + (SCREEN_WIDTH - Math.abs(lastTranslateY.value)),
-            true
-          );
-        } else {
-          scrollTo(listRef, 0, y - Math.abs(lastTranslateY.value), true);
-        }
-      }
-    },
-  });
-
-  const imagePreviewAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: translateY.value }],
-    };
-  });
-
-  const renderItem: ListRenderItem<MediaLibrary.Asset> = ({ item, index }) => {
-    const isPreviewed = item.id === previewAsset?.id;
-    const selectedAssetIndex = (selectedAsset ?? []).findIndex(
-      (asset) => asset?.id === item.id
-    );
-    return (
-      <ImageEntry
-        multipleSelect={multipleSelect}
-        isPreviewed={isPreviewed}
-        selectedIndex={selectedAssetIndex}
-        uri={item.uri}
-        size={ITEM_SIZE}
-        onPress={() => onImagePress(item, index)}
-      />
-    );
-  };
-
-  const renderFooter = () => {
-    if (!loadingMore || media.length === 0) return null;
-
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#0000ff" />
-        <Text style={styles.loadingText}>Đang tải thêm...</Text>
-      </View>
-    );
-  };
-
-  return (
-    <View style={styles.container}>
-      <Animated.View
-        style={[styles.transitionWrapper, imagePreviewAnimatedStyle]}
-      >
-        <View style={[styles.imageWrapper]}>
-          {loading && <View style={styles.imagePreviewSkeleton} />}
-          {previewAsset && (
-            <ImageCropper
-              animatedGrid
-              displayHeight={displayHeight}
-              displayWidth={displayWidth}
-              gesture={gesture}
-              gridHeight={gridHeight}
-              gridOpacity={gridOpacity}
-              gridWidth={gridWidth}
-              translationX={translationX}
-              translationY={translationY}
-              uri={previewAsset.uri}
-              gridTranslateX={gridTranslateX}
-              gridTranslateY={gridTranslateY}
-            />
-          )}
-        </View>
-        <CustomView style={styles.listHeader}>
-          <Button icon={"chevron-down"} onPress={handlePresentModalPress}>
-            {selectedAlbum?.title ?? "Photo"}
-          </Button>
-
-          <View style={GLOBAL_STYLE.rowCenter}>
-            <IconButton
-              icon={"checkbox-multiple-blank-outline"}
-              mode="contained-tonal"
-              size={18}
-              onPress={handleMultipleSelectPress}
-            />
-            <IconButton
-              icon={"camera"}
-              mode="contained-tonal"
-              size={18}
-              onPress={handlePresentModalPress}
-            />
-          </View>
-        </CustomView>
-      </Animated.View>
-      <Animated.FlatList
-        initialNumToRender={20}
-        maxToRenderPerBatch={NUM_COLUMNS * 3}
-        windowSize={NUM_COLUMNS * 5}
-        removeClippedSubviews
-        onScroll={onScroll}
-        ref={listRef}
-        overScrollMode={"never"}
-        data={media}
-        scrollEnabled={!loading}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={true}
-        keyExtractor={(item) => item.filename}
-        columnWrapperStyle={{ gap: SPACING }}
-        getItemLayout={(data, index) => ({
-          length: ITEM_SIZE + SPACING,
-          offset: Math.floor(index / NUM_COLUMNS) * (ITEM_SIZE + SPACING),
-          index,
-        })}
-        ItemSeparatorComponent={() => <View style={{ height: SPACING }} />}
-        ListHeaderComponent={
-          <Animated.View style={{ height: CROP_SIZE + HEADER_LIST_HEIGHT }} />
-        }
-        ListEmptyComponent={
-          <View style={styles.loadingContainer}>
-            {Array.from({
-              length: Math.ceil((SCREEN_HEIGHT - CROP_SIZE) / ITEM_SIZE) * 4,
-            }).map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.imageSkeleton,
-                  { width: ITEM_SIZE, height: ITEM_SIZE },
-                ]}
-              />
-            ))}
-          </View>
-        }
-        numColumns={NUM_COLUMNS}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
-      />
-      <AlbumBottomSheet
-        ref={bottomSheetModalRef}
-        onAlbumSelected={handleSelectedAlbum}
-      />
-    </View>
+      <Text>CreatePostScreen</Text>
+    </CustomView>
   );
 };
 
 export default CreatePostScreen;
 
-const styles = StyleSheet.create({
-  imageSkeleton: {
-    borderWidth: 0.2,
-    borderColor: "gray",
-    backgroundColor: "lightgray",
-  },
-  imagePreviewSkeleton: {
-    ...GLOBAL_STYLE.fullSize,
-    backgroundColor: "lightgray",
-  },
-  selectedCircle: {
-    flex: 1,
-    ...GLOBAL_STYLE.center,
-    backgroundColor: "lightblue",
-  },
-  circle: {
-    width: 24,
-    height: 24,
-    borderRadius: 15,
-    position: "absolute",
-    right: 5,
-    top: 5,
-    backgroundColor: "rgba(255,255,2555,0.5)",
-    borderColor: "white",
-    borderWidth: 1,
-  },
-  loadingContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT - CROP_SIZE,
-  },
-  imageWrapper: {
-    width: CROP_SIZE,
-    height: CROP_SIZE,
-  },
-  transitionWrapper: {
-    position: "absolute",
-    top: 0,
-    zIndex: 1,
-  },
-  listHeader: {
-    height: HEADER_LIST_HEIGHT,
-    ...GLOBAL_STYLE.row,
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  scrollBarContainer: {
-    width: 6,
-    backgroundColor: "transparent",
-    borderRadius: 3,
-    marginRight: 2,
-    position: "absolute",
-    right: 0,
-  },
-  scrollIndicator: {
-    width: 6,
-    borderRadius: 3,
-    backgroundColor: "red",
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-
-  list: {},
-  image: {},
-  footerLoader: {
-    padding: 10,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  loadingText: {
-    marginLeft: 10,
-    fontSize: 14,
-    color: "#666",
-  },
-});
+const styles = StyleSheet.create({});

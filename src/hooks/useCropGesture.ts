@@ -1,26 +1,27 @@
 import { CROP_SIZE } from "@/constants";
 import { Gesture } from "react-native-gesture-handler";
-import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import {
+  runOnJS,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 
 interface CropGestureConfig {
-  // resizeFull: boolean;
   boundaryTranslateX: number;
   boundaryTranslateY: number;
   displayHeight: number;
-  initTranslateX?: number | undefined;
-  initTranslateY?: number | undefined;
+  onTranslateFinished?: (x: number, y: number) => void;
 }
 
 export const useCropsGesture = ({
-  // resizeFull,
   displayHeight,
   boundaryTranslateX,
   boundaryTranslateY,
-  initTranslateX,
-  initTranslateY,
+  onTranslateFinished,
 }: CropGestureConfig) => {
-  const translationX = useSharedValue(initTranslateX ?? 0);
-  const translationY = useSharedValue(initTranslateY ?? 0);
+  const translationX = useSharedValue(0);
+  const translationY = useSharedValue(0);
   const prevTranslationY = useSharedValue(0);
   const prevTranslationX = useSharedValue(0);
   const gridOpacity = useSharedValue(1);
@@ -103,59 +104,80 @@ export const useCropsGesture = ({
       } else {
         gridTranslateX.value = 0;
       }
-      // if (resizeFull) {
-      //   if (Math.abs(translationX.value) > boundaryTranslateX) {
-      //     gridTranslateX.value =
-      //       translationX.value > 0
-      //         ? translationX.value - boundaryTranslateX
-      //         : translationX.value + boundaryTranslateX;
-      //   } else {
-      //     gridTranslateX.value = 0;
-      //   }
-      // } else {
-      //   gridTranslateX.value = translationX.value;
-      // }
     })
     .onEnd(() => {
+      let finalX = translationX.value;
+      let finalY = translationY.value;
+
       if (translationY.value > boundaryTranslateY) {
-        translationY.value = withTiming(boundaryTranslateY);
+        translationY.value = withTiming(
+          boundaryTranslateY,
+          {},
+          (isFinished) => {
+            if (isFinished) {
+              finalY = boundaryTranslateY;
+              if (onTranslateFinished) {
+                runOnJS(onTranslateFinished)(finalX, finalY);
+              }
+            }
+          }
+        );
       } else if (translationY.value < -boundaryTranslateY) {
-        translationY.value = withTiming(-boundaryTranslateY);
+        translationY.value = withTiming(
+          -boundaryTranslateY,
+          {},
+          (isFinished) => {
+            if (isFinished) {
+              finalY = -boundaryTranslateY;
+              if (onTranslateFinished) {
+                runOnJS(onTranslateFinished)(finalX, finalY);
+              }
+            }
+          }
+        );
       }
 
       if (translationX.value > boundaryTranslateX) {
-        translationX.value = withTiming(boundaryTranslateX);
+        translationX.value = withTiming(
+          boundaryTranslateX,
+          {},
+          (isFinished) => {
+            if (isFinished) {
+              finalX = boundaryTranslateX;
+              if (onTranslateFinished) {
+                runOnJS(onTranslateFinished)(finalX, finalY);
+              }
+            }
+          }
+        );
       } else if (translationX.value < -boundaryTranslateX) {
-        translationX.value = withTiming(-boundaryTranslateX);
+        translationX.value = withTiming(
+          -boundaryTranslateX,
+          {},
+          (isFinished) => {
+            if (isFinished) {
+              finalX = -boundaryTranslateX;
+              if (onTranslateFinished) {
+                runOnJS(onTranslateFinished)(finalX, finalY);
+              }
+            }
+          }
+        );
       }
-
-      // if (resizeFull) {
-      //   if (translationY.value > boundaryTranslateY) {
-      //     translationY.value = withTiming(boundaryTranslateY);
-      //   } else if (translationY.value < -boundaryTranslateY) {
-      //     translationY.value = withTiming(-boundaryTranslateY);
-      //   }
-
-      //   if (translationX.value > boundaryTranslateX) {
-      //     translationX.value = withTiming(boundaryTranslateX);
-      //   } else if (translationX.value < -boundaryTranslateX) {
-      //     translationX.value = withTiming(-boundaryTranslateX);
-      //   }
-      // } else {
-      //   translationX.value = withTiming(0);
-      //   if (CROP_SIZE < displayHeight) {
-      //     if (translationY.value > boundaryTranslateY) {
-      //       translationY.value = withTiming(boundaryTranslateY);
-      //     } else if (translationY.value < -boundaryTranslateY) {
-      //       translationY.value = withTiming(-boundaryTranslateY);
-      //     }
-      //   } else {
-      //     translationY.value = withTiming(0);
-      //   }
-      // }
 
       gridTranslateY.value = withTiming(0);
       gridTranslateX.value = withTiming(0);
+
+      if (
+        translationX.value >= -boundaryTranslateX &&
+        translationX.value <= boundaryTranslateX &&
+        translationY.value >= -boundaryTranslateY &&
+        translationY.value <= boundaryTranslateY
+      ) {
+        if (onTranslateFinished) {
+          runOnJS(onTranslateFinished)(finalX, finalY);
+        }
+      }
     });
 
   const resetGesture = () => {

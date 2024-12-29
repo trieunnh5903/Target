@@ -13,7 +13,7 @@ export const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
 export const STATUS_BAR_HEIGHT = StatusBar.currentHeight ?? 0;
 
 export const CROP_SIZE = SCREEN_WIDTH;
-export const POST_WIDTH = SCREEN_WIDTH;
+export const POST_IMAGE_SIZE = SCREEN_WIDTH * 0.6;
 
 export const GLOBAL_STYLE = StyleSheet.create({
   flex_1: {

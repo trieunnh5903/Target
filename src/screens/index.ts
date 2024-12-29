@@ -1,5 +1,6 @@
 export { default as HomeScreen } from "./HomeScreen";
 export { default as ProfileScreen } from "./ProfileScreen";
+export { default as ImagePickerScreen } from "./ImagePickerScreen";
 export { default as CreatePostScreen } from "./CreatePostScreen";
 export { default as SignInScreen } from "./SignInScreen";
 export { default as SignUpScreen } from "./SignUpScreen";

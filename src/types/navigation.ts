@@ -11,6 +11,15 @@ export type RootStackParamList = {
   SignIn: undefined;
   SignUp: undefined;
   EditProfile: undefined;
+  CreatePost: {
+    assets: MediaLibrary.Asset[];
+    translateAssets: {
+      [id: string]: {
+        x: number;
+        y: number;
+      };
+    };
+  };
   EditImage: {
     assets: MediaLibrary.Asset[];
     imageOption?: {
@@ -31,7 +40,7 @@ export type AuthStackParamList = {
 
 export type RootTabParamList = {
   Home: undefined;
-  Create: undefined;
+  ImagePicker: undefined;
   Profile: undefined;
 };
 

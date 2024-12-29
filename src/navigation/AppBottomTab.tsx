@@ -6,7 +6,7 @@ import {
 } from "@react-navigation/bottom-tabs";
 import { RootTabParamList } from "@/types/navigation";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import { CreatePostScreen, HomeScreen, ProfileScreen } from "@/screens";
+import { HomeScreen, ImagePickerScreen, ProfileScreen } from "@/screens";
 import { IconButton } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -14,11 +14,9 @@ import { logout } from "@/redux/slices/authSlice";
 import { CustomAvatar } from "@/components";
 import { RouteProp } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { STATUS_BAR_HEIGHT } from "@/constants";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const AppBottomTab = () => {
-  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const handleLogout = async () => {
@@ -70,7 +68,7 @@ const AppBottomTab = () => {
           );
           break;
 
-        case "Create":
+        case "ImagePicker":
           icon = (
             <MaterialCommunityIcons
               name="plus-box-outline"
@@ -88,13 +86,13 @@ const AppBottomTab = () => {
   });
 
   return (
-    <Tab.Navigator initialRouteName="Create" screenOptions={screenOptions}>
+    <Tab.Navigator screenOptions={screenOptions}>
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen
-        name="Create"
-        component={CreatePostScreen}
+        name="ImagePicker"
+        component={ImagePickerScreen}
         options={({ navigation }) => ({
-          title: "New post",
+          title: "Image picker",
           tabBarStyle: { display: "none" },
           headerLeft() {
             return (

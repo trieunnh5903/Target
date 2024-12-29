@@ -27,6 +27,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface AlbumSheetProps {
   onAlbumSelected: (album: AlbumCover) => void;
@@ -39,7 +40,7 @@ const AlbumSheet = forwardRef<BottomSheetModal, AlbumSheetProps>(
     const [permissionResponse, requestPermission] = usePermissions();
     const isBottomSheetOpen = useRef(false);
     const { dismissAll } = useBottomSheetModal();
-
+    const insets = useSafeAreaInsets();
     useEffect(() => {
       async function getAlbums() {
         if (permissionResponse?.status !== "granted") {
@@ -105,7 +106,7 @@ const AlbumSheet = forwardRef<BottomSheetModal, AlbumSheetProps>(
     }, []);
 
     return (
-      <BottomSheetModal onChange={handleSheetChanges} ref={ref}>
+      <BottomSheetModal topInset={insets.top} onChange={handleSheetChanges} ref={ref}>
         <BottomSheetFlatList
           stickyHeaderIndices={[0]}
           ListHeaderComponent={

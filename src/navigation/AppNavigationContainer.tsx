@@ -9,6 +9,7 @@ import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import AppBottomTab from "./AppBottomTab";
 import {
   CameraScreen,
+  CreatePostScreen,
   EditImage,
   EditProfile,
   SignInScreen,
@@ -73,6 +74,12 @@ const AppNavigationContainer = () => {
               <Stack.Screen name="Tabs" component={AppBottomTab} />
               <Stack.Screen name="CameraScreen" component={CameraScreen} />
             </Stack.Group>
+
+            <Stack.Screen
+              name="CreatePost"
+              options={{ headerTitle: "Create post" }}
+              component={CreatePostScreen}
+            />
 
             <Stack.Screen
               name="EditProfile"

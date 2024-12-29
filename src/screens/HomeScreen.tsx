@@ -22,6 +22,7 @@ import {
 } from "@/redux/slices/postSlice";
 import { FlashList } from "@shopify/flash-list";
 import { store } from "@/redux/store";
+import { StatusBar } from "expo-status-bar";
 
 const HomeScreen = () => {
   const posts = useAppSelector(selectAllPosts);
@@ -105,6 +106,7 @@ const HomeScreen = () => {
 
   return (
     <CustomView style={styles.container}>
+      <StatusBar style="auto"/>
       <FlashList
         estimatedItemSize={700}
         estimatedListSize={{
