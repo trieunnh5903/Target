@@ -403,10 +403,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
       lastTranslateY.value = translateY.value;
       if (y < CROP_SIZE / 2) {
         scrollTo(listRef, 0, 0, true);
-        console.log("onMomentumEnd");
       } else if (y < CROP_SIZE) {
-        console.log("onMomentumEnd2");
-
         scrollTo(listRef, 0, CROP_SIZE, true);
       } else if (translateY.value !== 0 && translateY.value !== -CROP_SIZE) {
         if (Math.abs(translateY.value) >= SCREEN_WIDTH / 2) {

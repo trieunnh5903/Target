@@ -1,47 +1,75 @@
-import { CROP_SIZE } from "@/constants";
-import { SharedValue } from "react-native-reanimated";
+import { CROP_SIZE, POST_IMAGE_SIZE } from "@/constants";
 
 interface Props {
-  displayWidth: number;
-  translationX: SharedValue<number>;
-  displayHeight: number;
+  translationX: number;
   originalHeight: number;
   originalWidth: number;
-  translationY: SharedValue<number>;
-  displayCropSize: number;
+  translationY: number;
 }
 
-export const generateImageCropOptions = ({
-  displayWidth,
-  displayHeight,
+const mimeTypes = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  mp4: "video/mp4",
+  pdf: "application/pdf",
+};
+
+const getMimeType = (uri: string) => {
+  // Lấy phần mở rộng từ URI
+  const extension = uri
+    .split(".")
+    .pop()
+    ?.toLocaleLowerCase() as keyof typeof mimeTypes;
+  if (!extension) return;
+  console.log("getMimeType", extension);
+  return mimeTypes[extension];
+};
+
+const generateImageCropOptions = ({
   originalHeight,
   originalWidth,
   translationX,
   translationY,
-  displayCropSize,
 }: Props) => {
-  const boundaryTranslateX = Math.abs(displayWidth / 2 - CROP_SIZE / 2);
-  const boundaryTranslateY = Math.abs(displayHeight / 2 - CROP_SIZE / 2);
+  const aspectRatio = originalWidth / originalHeight;
+  const displayWidth =
+    originalWidth < originalHeight
+      ? POST_IMAGE_SIZE
+      : aspectRatio * POST_IMAGE_SIZE;
+  const displayHeight =
+    originalWidth > originalHeight
+      ? POST_IMAGE_SIZE
+      : POST_IMAGE_SIZE / aspectRatio;
+
+  const boundaryTranslateX = Math.abs((displayWidth - POST_IMAGE_SIZE) / 2);
+  const boundaryTranslateY = Math.abs((displayHeight - POST_IMAGE_SIZE) / 2);
+
+  const translateX = translationX * (POST_IMAGE_SIZE / CROP_SIZE);
+  const translateY = translationY * (POST_IMAGE_SIZE / CROP_SIZE);
+
   const displayX =
-    displayWidth > displayCropSize
-      ? boundaryTranslateX - translationX.value
-      : 0;
-
+    displayWidth > POST_IMAGE_SIZE ? boundaryTranslateX - translateX : 0;
   const displayY =
-    displayHeight > displayCropSize
-      ? boundaryTranslateY - translationY.value
-      : 0;
+    displayHeight > POST_IMAGE_SIZE ? boundaryTranslateY - translateY : 0;
 
-  const scale = originalWidth / displayWidth;
-  const cropXOriginal = displayX * scale;
-  const cropYOriginal = displayY * scale;
-  const cropWidthOriginal = Math.min(displayWidth, CROP_SIZE) * scale;
-  const cropHeightOriginal = Math.min(displayHeight, CROP_SIZE) * scale;
+  const scaleFactor = originalWidth / displayWidth;
+  const originX = displayX * scaleFactor;
+  const originY = displayY * scaleFactor;
 
+  const adjustedCropWidth =
+    Math.min(displayWidth, POST_IMAGE_SIZE) * scaleFactor;
+  const adjustedCropHeight =
+    Math.min(displayHeight, POST_IMAGE_SIZE) * scaleFactor;
   return {
-    height: Math.min(cropHeightOriginal, originalHeight),
-    originX: cropXOriginal,
-    originY: cropYOriginal,
-    width: Math.min(cropWidthOriginal, originalWidth),
+    height: Math.min(adjustedCropWidth, originalHeight),
+    originX: originX,
+    originY: originY,
+    width: Math.min(adjustedCropHeight, originalWidth),
   };
 };
+
+const Utils = { getMimeType, generateImageCropOptions };
+
+export default Utils;

@@ -11,6 +11,7 @@ import {
   postsCollection,
   usersCollection,
 } from "./collections";
+import Utils from "@/utils";
 
 const fetchAll = async ({
   lastPost,
@@ -53,7 +54,7 @@ const fetchAll = async ({
   }
 };
 
-const uploadImage = async (assets: ImagePickerAsset) => {
+const uploadImage = async (uri: string) => {
   console.log("uploadImage");
 
   const formData = new FormData();
@@ -62,13 +63,11 @@ const uploadImage = async (assets: ImagePickerAsset) => {
     process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
   );
 
-  if (assets) {
-    formData.append("file", {
-      uri: assets.uri,
-      name: assets.fileName,
-      type: assets.mimeType,
-    } as any);
-  }
+  formData.append("file", {
+    uri: uri,
+    name: new Date().getTime().toString() + Math.random(),
+    type: Utils.getMimeType(uri) ?? "image/jpeg",
+  } as any);
 
   try {
     const response = await axios.post(
@@ -83,6 +82,7 @@ const uploadImage = async (assets: ImagePickerAsset) => {
     return response.data.secure_url as string;
   } catch (error) {
     console.error("uploadImage:", error);
+    throw error;
   }
 };
 
@@ -121,7 +121,11 @@ const createPost = async ({
 }: {
   userId: string;
   content: string;
-  images: string;
+  images: {
+    id: string;
+    thumbnailUrl: string;
+    baseUrl: string;
+  }[];
 }) => {
   try {
     console.log("createPost");
