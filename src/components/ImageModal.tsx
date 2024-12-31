@@ -69,6 +69,11 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
           x: 0,
           y: e.translationY,
         };
+      } else {
+        offset.value = {
+          x: e.translationX,
+          y: e.translationY,
+        };
       }
     })
     .onEnd(({ translationY, velocityY }) => {
@@ -76,7 +81,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
         Math.abs(translationY) > DRAG_DISMISS_THRESHOLD_Y ||
         Math.abs(velocityY) > DRAG_DISMISS_VELOCITY
       ) {
-        const direction = velocityY > 1 ? 1 : -1;
+        const direction = translationY > 0 ? 1 : -1;
         offset.value = withTiming(
           { x: 0, y: direction * SCREEN_HEIGHT },
           {},
@@ -94,16 +99,17 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
     .onStart((event) => {
       isZooming.value = true;
       preScale.value = scale.value;
-      focal.value = { x: event.focalX, y: event.focalY };
+      focal.value = {
+        x: event.focalX,
+        y: event.focalY,
+      };
     })
     .onUpdate((event) => {
       scale.value = Math.max(event.scale * preScale.value, 0.5);
     })
     .onEnd(() => {
       scale.value = withTiming(1);
-      // if (scale.value < 1) {
-      //   scale.value = withTiming(1);
-      // }
+
       isZooming.value = false;
     });
 
@@ -125,6 +131,11 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
     };
   });
 
+  const focalAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: focal.value.x }, { translateY: focal.value.y }],
+    };
+  });
   return (
     <Modal
       transparent
@@ -156,6 +167,20 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
                   width: SCREEN_WIDTH,
                   aspectRatio: aspectRatio,
                 },
+              ]}
+            />
+            <Animated.View
+              style={[
+                {
+                  position: "absolute",
+                  width: 20,
+                  height: 20,
+                  backgroundColor: "red",
+                  zIndex: 3,
+                  // top: 0,
+                  // left: 0,
+                },
+                focalAnimatedStyle,
               ]}
             />
           </Animated.View>

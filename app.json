@@ -30,6 +30,16 @@
       "@react-native-firebase/app",
       "@react-native-google-signin/google-signin",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "dark": {
+            "image": "./assets/splash.png",
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends."
