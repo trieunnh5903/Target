@@ -1,15 +1,21 @@
 import { StyleSheet, Text, View } from "react-native";
-import React, { memo } from "react";
-import { Post, User } from "@/types";
+import React, { memo, useCallback, useState } from "react";
+import { Post, PostImage, User } from "@/types";
 import CustomView from "../CustomView";
 import { useSharedValue, withSpring } from "react-native-reanimated";
-import { GLOBAL_STYLE, POST_IMAGE_SIZE, SPACING } from "@/constants";
+import {
+  GLOBAL_STYLE,
+  POST_IMAGE_SIZE,
+  SCREEN_WIDTH,
+  SPACING,
+} from "@/constants";
 import { dayJs } from "@/utils/dayJs";
 import Header from "./Header";
-import ImageArea from "./ImageArea";
 import ActionGroups from "./ActionGroups";
-import { FlatList } from "react-native-gesture-handler";
+import { FlatList, ScrollView } from "react-native-gesture-handler";
 import { Image } from "expo-image";
+import ImageArea from "./ImageArea";
+import { FlashList, ListRenderItem } from "@shopify/flash-list";
 
 interface PostItemProps {
   data: Post;
@@ -34,14 +40,30 @@ const PostItem: React.FC<PostItemProps> = memo(
       await handeToggleLike();
     };
 
-    const handeToggleLike = async () => {
+    const handeToggleLike = useCallback(async () => {
       if (!isDoubleTap.value) {
         heartProgress.value = 0;
         heartProgress.value = withSpring(1);
       }
       onToggleLikePress(data.id);
-    };
+    }, [data.id, heartProgress, isDoubleTap.value, onToggleLikePress]);
 
+    const renderItem: ListRenderItem<PostImage> = useCallback(
+      ({ item }) => {
+        return (
+          <ImageArea
+            key={item.baseUrl.source}
+            animatedIsLiked={animatedIsLiked}
+            heartProgress={heartProgress}
+            isDoubleTap={isDoubleTap}
+            aleadyLiked={liked}
+            onDoubleTapPress={handeToggleLike}
+            source={item}
+          />
+        );
+      },
+      [animatedIsLiked, handeToggleLike, heartProgress, isDoubleTap, liked]
+    );
     return (
       <CustomView>
         <Header
@@ -50,42 +72,36 @@ const PostItem: React.FC<PostItemProps> = memo(
         />
 
         <View>
-          <FlatList
+          <FlashList
+            // keyExtractor={(item) => item.baseUrl.source}
+            estimatedListSize={{
+              height: POST_IMAGE_SIZE,
+              width: SCREEN_WIDTH,
+            }}
+            estimatedItemSize={POST_IMAGE_SIZE}
             data={data.images}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
               paddingHorizontal: SPACING.medium,
-              gap: SPACING.medium,
             }}
-            snapToAlignment="center"
-            snapToInterval={POST_IMAGE_SIZE + SPACING.medium}
+            ItemSeparatorComponent={() => (
+              <View style={{ width: SPACING.medium }} />
+            )}
             horizontal
-            renderItem={({ item }) => {
-              return (
-                <View
-                  style={{
-                    width: POST_IMAGE_SIZE,
-                    aspectRatio: 1,
-                    borderRadius: 12,
-                    overflow: "hidden",
-                  }}
-                >
-                  <Image
-                    source={item.thumbnailUrl.source}
-                    style={GLOBAL_STYLE.fullSize}
-                  />
-                </View>
-                // <ImageArea
-                //   animatedIsLiked={animatedIsLiked}
-                //   heartProgress={heartProgress}
-                //   isDoubleTap={isDoubleTap}
-                //   aleadyLiked={liked}
-                //   onDoubleTapPress={handeToggleLike}
-                //   source={item}
-                // />
-              );
-            }}
-          />
+            renderItem={renderItem}
+          >
+            {/* {data.images.map((item) => (
+              <ImageArea
+                key={item.baseUrl.source}
+                animatedIsLiked={animatedIsLiked}
+                heartProgress={heartProgress}
+                isDoubleTap={isDoubleTap}
+                aleadyLiked={liked}
+                onDoubleTapPress={handeToggleLike}
+                source={item}
+              />
+            ))} */}
+          </FlashList>
         </View>
 
         <ActionGroups

@@ -106,9 +106,9 @@ const HomeScreen = () => {
 
   return (
     <CustomView style={styles.container}>
-      <StatusBar style="auto"/>
+      <StatusBar style="auto" />
       <FlashList
-        estimatedItemSize={700}
+        estimatedItemSize={366.5}
         estimatedListSize={{
           width: SCREEN_WIDTH,
           height: SCREEN_HEIGHT - 49 - 80,

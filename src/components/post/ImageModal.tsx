@@ -1,8 +1,10 @@
 import { Modal, StyleSheet } from "react-native";
-import React, { useLayoutEffect } from "react";
+import React, { useEffect } from "react";
 import { IconButton } from "react-native-paper";
 import { Image } from "expo-image";
 import Animated, {
+  Extrapolation,
+  interpolate,
   runOnJS,
   SharedValue,
   useAnimatedStyle,
@@ -14,7 +16,6 @@ import {
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
   SPACING,
-  STATUS_BAR_HEIGHT,
 } from "@/constants";
 import {
   Gesture,
@@ -27,55 +28,34 @@ interface ImageModalProps {
   source: PostImage["baseUrl"];
   isOpen: boolean;
   onClose: () => void;
-  origin: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
 }
-const ImageModal: React.FC<ImageModalProps> = ({
-  isOpen,
-  onClose,
-  origin,
-  source,
-}) => {
-  const { width: originImageWidth, height: originImageHeight } = origin;
+const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
+  const preScale = useSharedValue(1);
   const scale = useSharedValue(1);
   const focal = useSharedValue({ x: 0, y: 0 });
+  const aspectRatio = source.width / source.height;
   const offset = useSharedValue({ x: 0, y: 0 });
+  const isZooming = useSharedValue(false);
   const isDraging = useSharedValue(false);
-  const INITIAL_OFFSET_Y = origin.y + STATUS_BAR_HEIGHT;
-  const DRAG_DISMISS_THRESHOLD_Y = origin.height * 0.3;
-  const DRAG_DISMISS_THRESHOLD_X = origin.width * 0.2;
+  const imageHeight = SCREEN_WIDTH / aspectRatio;
+  const DRAG_DISMISS_THRESHOLD_Y = imageHeight * 0.3;
   const DRAG_DISMISS_VELOCITY = 800;
-  const CENTER_SCREEN_OFFSET_Y =
-    (SCREEN_HEIGHT - origin.height) / 2 + STATUS_BAR_HEIGHT;
-  const animatedBacground = useSharedValue(0);
 
-  useLayoutEffect(() => {
-    offset.value = { x: 0, y: INITIAL_OFFSET_Y };
-    animatedBacground.value = withTiming(1);
-    offset.value = withTiming({
-      x: 0,
-      y: CENTER_SCREEN_OFFSET_Y,
-    });
-  }, [CENTER_SCREEN_OFFSET_Y, INITIAL_OFFSET_Y, animatedBacground, offset]);
+  useEffect(() => {
+    if (isOpen) {
+      offset.value = { x: 0, y: 0 };
+      isDraging.value = false;
+    }
+
+    return () => {};
+  }, [isDraging, isOpen, offset]);
 
   const handleClose = () => {
-    animatedBacground.value = withTiming(0);
-    offset.value = withTiming({ x: 0, y: INITIAL_OFFSET_Y }, {}, () => {
-      runOnJS(onClose)();
-    });
+    onClose();
   };
 
   const closeAnimatedStyle = useAnimatedStyle(() => ({
-    opacity:
-      isDraging.value === false && offset.value.y < CENTER_SCREEN_OFFSET_Y
-        ? 0
-        : scale.value === 1
-        ? 1
-        : 0,
+    opacity: isZooming.value || isDraging.value ? 0 : 1,
   }));
 
   const dragGesture = Gesture.Pan()
@@ -84,57 +64,67 @@ const ImageModal: React.FC<ImageModalProps> = ({
     })
     .averageTouches(true)
     .onUpdate((e) => {
-      offset.value = {
-        x: e.translationX,
-        y: CENTER_SCREEN_OFFSET_Y + e.translationY,
-      };
-    })
-
-    .onEnd(({ translationY, velocityY, velocityX, translationX }) => {
-      isDraging.value = false;
-      if (
-        scale.value === 1 &&
-        (Math.abs(translationY) > DRAG_DISMISS_THRESHOLD_Y ||
-          Math.abs(velocityY) > DRAG_DISMISS_VELOCITY ||
-          Math.abs(velocityX) > DRAG_DISMISS_VELOCITY ||
-          Math.abs(translationX) > DRAG_DISMISS_THRESHOLD_X)
-      ) {
-        runOnJS(handleClose)();
-      } else {
-        offset.value = withTiming({ x: 0, y: CENTER_SCREEN_OFFSET_Y });
+      if (isZooming.value === false) {
+        offset.value = {
+          x: 0,
+          y: e.translationY,
+        };
       }
     })
-    .runOnJS(true);
+    .onEnd(({ translationY, velocityY }) => {
+      if (
+        Math.abs(translationY) > DRAG_DISMISS_THRESHOLD_Y ||
+        Math.abs(velocityY) > DRAG_DISMISS_VELOCITY
+      ) {
+        const direction = velocityY > 1 ? 1 : -1;
+        offset.value = withTiming(
+          { x: 0, y: direction * SCREEN_HEIGHT },
+          {},
+          () => {
+            runOnJS(handleClose)();
+          }
+        );
+      } else {
+        isDraging.value = false;
+        offset.value = withTiming({ x: 0, y: 0 });
+      }
+    });
 
   const pingGesture = Gesture.Pinch()
     .onStart((event) => {
+      isZooming.value = true;
+      preScale.value = scale.value;
       focal.value = { x: event.focalX, y: event.focalY };
     })
     .onUpdate((event) => {
-      scale.value = Math.max(event.scale, 0.5);
+      scale.value = Math.max(event.scale * preScale.value, 0.5);
     })
     .onEnd(() => {
       scale.value = withTiming(1);
-    })
-    .runOnJS(true);
+      // if (scale.value < 1) {
+      //   scale.value = withTiming(1);
+      // }
+      isZooming.value = false;
+    });
 
-  const frameAimatedStyle = useAnimatedStyle(() => {
+  const imageAimatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
-        // { translateX: offset.value.x },
-        // { translateY: offset.value.y },
+        { translateX: offset.value.x },
+        { translateY: offset.value.y },
         { translateX: focal.value.x },
         { translateY: focal.value.y },
-        { translateX: -origin.width / 2 },
-        { translateY: -origin.height / 2 },
+        { translateX: -SCREEN_WIDTH / 2 },
+        { translateY: -(SCREEN_WIDTH / aspectRatio) / 2 },
         { scale: scale.value },
-        { translateX: origin.width / 2 },
-        { translateY: origin.height / 2 },
+        { translateX: SCREEN_WIDTH / 2 },
+        { translateY: SCREEN_WIDTH / aspectRatio / 2 },
         { translateX: -focal.value.x },
         { translateY: -focal.value.y },
       ],
     };
   });
+
   return (
     <Modal
       transparent
@@ -142,11 +132,10 @@ const ImageModal: React.FC<ImageModalProps> = ({
       statusBarTranslucent
       onRequestClose={handleClose}
     >
+      <Background offset={offset} imageHeight={imageHeight} />
       <GestureHandlerRootView
-        style={[GLOBAL_STYLE.flex_1, { backgroundColor: "black" }]}
+        style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}
       >
-        {/* <Background animatedBackground={animatedBacground} /> */}
-
         <Animated.View style={[styles.close, closeAnimatedStyle]}>
           <IconButton
             icon={"close"}
@@ -156,15 +145,17 @@ const ImageModal: React.FC<ImageModalProps> = ({
           />
         </Animated.View>
 
-        <GestureDetector gesture={Gesture.Simultaneous(pingGesture)}>
-          <Animated.View
-            style={[frameAimatedStyle, { backgroundColor: "red" }]}
-          >
+        <GestureDetector
+          gesture={Gesture.Simultaneous(pingGesture, dragGesture)}
+        >
+          <Animated.View style={[imageAimatedStyle]}>
             <Image
-              source={source.url}
-              contentFit="contain"
+              source={source.source}
               style={[
-                { width: SCREEN_WIDTH, height: source.width / source.height },
+                {
+                  width: SCREEN_WIDTH,
+                  aspectRatio: aspectRatio,
+                },
               ]}
             />
           </Animated.View>
@@ -175,18 +166,31 @@ const ImageModal: React.FC<ImageModalProps> = ({
 };
 
 interface BackgroundProps {
-  animatedBackground: SharedValue<number>;
+  offset: SharedValue<{
+    x: number;
+    y: number;
+  }>;
+  imageHeight: number;
 }
-const Background: React.FC<BackgroundProps> = ({ animatedBackground }) => {
+const Background: React.FC<BackgroundProps> = ({ offset, imageHeight }) => {
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      // opacity: animatedBackground.value,
+      opacity: interpolate(
+        Math.abs(offset.value.y),
+        [0, (SCREEN_HEIGHT - imageHeight) / 2 + imageHeight],
+        [1, 0],
+        Extrapolation.CLAMP
+      ),
       backgroundColor: "black",
     };
   });
   return (
     <Animated.View
-      style={[GLOBAL_STYLE.flex_1, { backgroundColor: "black" }, animatedStyle]}
+      style={[
+        { backgroundColor: "black" },
+        StyleSheet.absoluteFill,
+        animatedStyle,
+      ]}
     ></Animated.View>
   );
 };
@@ -195,7 +199,6 @@ export default ImageModal;
 
 const styles = StyleSheet.create({
   image: {
-    // height: SCREEN_HEIGHT,
     height: "auto",
     width: SCREEN_WIDTH,
   },

@@ -42,15 +42,14 @@ const cropImage = async (
           translationX: translateAssets[item.id]?.x ?? 0,
           translationY: translateAssets[item.id]?.y ?? 0,
         });
-        const context = ImageManipulator.manipulate(item.uri);
         const [thumbnailUri, baseUri] = await Promise.all([
-          context
+          ImageManipulator.manipulate(item.uri)
             .crop(rect)
             .resize({ width: Math.min(1080, item.width) })
             .renderAsync()
             .then((rendered) => rendered.saveAsync({ compress: 1 })),
 
-          context
+          ImageManipulator.manipulate(item.uri)
             .resize({ width: Math.min(1920, item.width) })
             .renderAsync()
             .then((rendered) => rendered.saveAsync({ compress: 1 })),
