@@ -1,3 +1,4 @@
+export { default as ImageModal } from "./ImageModal";
 export { default as ThemedText } from "./ThemedText";
 export { default as Container } from "./Container";
 export { default as CustomView } from "./CustomView";
@@ -5,5 +6,6 @@ export { default as CustomAvatar } from "./CustomAvatar";
 export { default as ImageCropper } from "./ImageCropper";
 export { default as GridCrop } from "./GridCrop";
 export { default as CustomKeyboardAvoidingView } from "./CustomKeyboardAvoidingView";
-export { default as PostItem } from "./post";
+export { default as PostMultipleImage } from "./post/PostMultipleImage";
+export { default as PostSingleImage } from "./post/PostSingleImage";
 export { default as CommentItem } from "./CommentItem";

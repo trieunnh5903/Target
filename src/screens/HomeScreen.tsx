@@ -5,8 +5,13 @@ import {
   View,
 } from "react-native";
 import React, { useCallback, useRef, useState } from "react";
-import { PostItem, CustomView } from "@/components";
-import { Post } from "@/types";
+import {
+  CustomView,
+  ImageModal,
+  PostMultipleImage,
+  PostSingleImage,
+} from "@/components";
+import { Post, PostImage } from "@/types";
 import { postAPI } from "@/api/postApi";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { GLOBAL_STYLE, SCREEN_HEIGHT, SCREEN_WIDTH } from "@/constants";
@@ -20,7 +25,7 @@ import {
   selectAllPosts,
   selectPostById,
 } from "@/redux/slices/postSlice";
-import { FlashList } from "@shopify/flash-list";
+import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { store } from "@/redux/store";
 import { StatusBar } from "expo-status-bar";
 
@@ -33,7 +38,9 @@ const HomeScreen = () => {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [bottomSheetPost, setBottomSheetPost] = useState<Post | null>(null);
   const commentBottomSheetRef = useRef<BottomSheetModal>(null);
-
+  const [imageModalSource, setImageModalSource] = useState<
+    PostImage["baseUrl"] | null
+  >(null);
   const onRefresh = React.useCallback(async () => {
     dispatch(refetchInitialPosts());
   }, [dispatch]);
@@ -104,6 +111,33 @@ const HomeScreen = () => {
     [currentUser?.displayName, currentUser?.id, dispatch]
   );
 
+  const onImagePress = useCallback((source: PostImage["baseUrl"]) => {
+    setImageModalSource(source);
+  }, []);
+
+  const renderItem: ListRenderItem<Post> = ({ item }) => {
+    if (item.images.length === 1) {
+      return (
+        <PostSingleImage
+          onPress={onImagePress}
+          currentUser={currentUser}
+          data={item}
+          onCommentPress={() => handleOpenComment(item)}
+          onToggleLikePress={onToggleLikePress}
+        />
+      );
+    } else {
+      return (
+        <PostMultipleImage
+          onPress={onImagePress}
+          currentUser={currentUser}
+          data={item}
+          onCommentPress={() => handleOpenComment(item)}
+          onToggleLikePress={onToggleLikePress}
+        />
+      );
+    }
+  };
   return (
     <CustomView style={styles.container}>
       <StatusBar style="auto" />
@@ -112,6 +146,9 @@ const HomeScreen = () => {
         estimatedListSize={{
           width: SCREEN_WIDTH,
           height: SCREEN_HEIGHT - 49 - 80,
+        }}
+        getItemType={(item) => {
+          return item.images.length;
         }}
         overScrollMode="never"
         refreshControl={
@@ -122,16 +159,7 @@ const HomeScreen = () => {
         }
         scrollEventThrottle={16}
         data={posts}
-        renderItem={({ item }) => {
-          return (
-            <PostItem
-              currentUser={currentUser}
-              data={item}
-              onCommentPress={() => handleOpenComment(item)}
-              onToggleLikePress={onToggleLikePress}
-            />
-          );
-        }}
+        renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
@@ -146,6 +174,14 @@ const HomeScreen = () => {
         ref={commentBottomSheetRef}
         selectedPost={bottomSheetPost}
       />
+
+      {imageModalSource && (
+        <ImageModal
+          isOpen={!!imageModalSource}
+          onClose={() => setImageModalSource(null)}
+          source={imageModalSource}
+        />
+      )}
     </CustomView>
   );
 };

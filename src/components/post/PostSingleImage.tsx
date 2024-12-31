@@ -1,31 +1,24 @@
 import { StyleSheet, Text, View } from "react-native";
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useCallback } from "react";
 import { Post, PostImage, User } from "@/types";
 import CustomView from "../CustomView";
 import { useSharedValue, withSpring } from "react-native-reanimated";
-import {
-  GLOBAL_STYLE,
-  POST_IMAGE_SIZE,
-  SCREEN_WIDTH,
-  SPACING,
-} from "@/constants";
+import { GLOBAL_STYLE, SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
 import Header from "./Header";
 import ActionGroups from "./ActionGroups";
-import { FlatList, ScrollView } from "react-native-gesture-handler";
-import { Image } from "expo-image";
 import ImageArea from "./ImageArea";
-import { FlashList, ListRenderItem } from "@shopify/flash-list";
 
-interface PostItemProps {
+interface PostSingleImageProps {
   data: Post;
   onCommentPress: () => void;
   currentUser: User | null;
   onToggleLikePress: (postId: string) => void;
+  onPress: (source: PostImage["baseUrl"]) => void;
 }
 
-const PostItem: React.FC<PostItemProps> = memo(
-  ({ data, onCommentPress, onToggleLikePress, currentUser }) => {
+const PostSingleImage: React.FC<PostSingleImageProps> = memo(
+  ({ data, onCommentPress, onToggleLikePress, currentUser, onPress }) => {
     const liked =
       data.likes && data.likes[currentUser?.id as string] === true
         ? true
@@ -48,22 +41,6 @@ const PostItem: React.FC<PostItemProps> = memo(
       onToggleLikePress(data.id);
     }, [data.id, heartProgress, isDoubleTap.value, onToggleLikePress]);
 
-    const renderItem: ListRenderItem<PostImage> = useCallback(
-      ({ item }) => {
-        return (
-          <ImageArea
-            key={item.baseUrl.source}
-            animatedIsLiked={animatedIsLiked}
-            heartProgress={heartProgress}
-            isDoubleTap={isDoubleTap}
-            aleadyLiked={liked}
-            onDoubleTapPress={handeToggleLike}
-            source={item}
-          />
-        );
-      },
-      [animatedIsLiked, handeToggleLike, heartProgress, isDoubleTap, liked]
-    );
     return (
       <CustomView>
         <Header
@@ -71,38 +48,20 @@ const PostItem: React.FC<PostItemProps> = memo(
           avatarURL={data.postedBy.avatarURL}
         />
 
-        <View>
-          <FlashList
-            // keyExtractor={(item) => item.baseUrl.source}
-            estimatedListSize={{
-              height: POST_IMAGE_SIZE,
-              width: SCREEN_WIDTH,
-            }}
-            estimatedItemSize={POST_IMAGE_SIZE}
-            data={data.images}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: SPACING.medium,
-            }}
-            ItemSeparatorComponent={() => (
-              <View style={{ width: SPACING.medium }} />
-            )}
-            horizontal
-            renderItem={renderItem}
-          >
-            {/* {data.images.map((item) => (
-              <ImageArea
-                key={item.baseUrl.source}
-                animatedIsLiked={animatedIsLiked}
-                heartProgress={heartProgress}
-                isDoubleTap={isDoubleTap}
-                aleadyLiked={liked}
-                onDoubleTapPress={handeToggleLike}
-                source={item}
-              />
-            ))} */}
-          </FlashList>
-        </View>
+        <CustomView
+          paddingLeft={SPACING.medium}
+          style={{ alignItems: "flex-start" }}
+        >
+          <ImageArea
+            onPress={onPress}
+            animatedIsLiked={animatedIsLiked}
+            heartProgress={heartProgress}
+            isDoubleTap={isDoubleTap}
+            aleadyLiked={liked}
+            onDoubleTapPress={handeToggleLike}
+            source={data.images[0]}
+          />
+        </CustomView>
 
         <ActionGroups
           alreadyLiked={liked}
@@ -131,9 +90,9 @@ const PostItem: React.FC<PostItemProps> = memo(
   }
 );
 
-PostItem.displayName = "PostItem";
+PostSingleImage.displayName = "PostSingleImage";
 
-export default PostItem;
+export default PostSingleImage;
 
 const styles = StyleSheet.create({
   bigHeartContainer: {

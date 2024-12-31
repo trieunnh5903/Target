@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useMemo } from "react";
 import CustomView from "../CustomView";
 import { GLOBAL_STYLE, POST_IMAGE_SIZE, SCREEN_WIDTH } from "@/constants";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -17,7 +17,6 @@ import Animated, {
 import { Octicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { PostImage } from "@/types";
-import ImageModal from "./ImageModal";
 
 interface ImageAreaProps {
   source: PostImage;
@@ -26,6 +25,7 @@ interface ImageAreaProps {
   heartProgress: SharedValue<number>;
   isDoubleTap: SharedValue<boolean>;
   animatedIsLiked: SharedValue<boolean>;
+  onPress: (source: PostImage["baseUrl"]) => void;
 }
 const ImageArea: React.FC<ImageAreaProps> = memo(
   ({
@@ -35,31 +35,22 @@ const ImageArea: React.FC<ImageAreaProps> = memo(
     heartProgress,
     isDoubleTap,
     animatedIsLiked,
+    onPress,
   }) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const isHeartHidden = useSharedValue(-1);
     // const imageRef = useRef<View>(null);
     // const { originImageLayout, updateOriginImageLayout } = useOriginImageLayout({
     //   imageRef,
     // });
 
-    const hideModal = () => {
-      setIsModalOpen(false);
-    };
-
-    const showModal = () => {
-      // updateOriginImageLayout();
-      setIsModalOpen(true);
-    };
-
     const singleTapGesture = useMemo(
       () =>
         Gesture.Tap()
           .numberOfTaps(1)
           .onEnd(() => {
-            runOnJS(showModal)();
+            runOnJS(onPress)(source.baseUrl);
           }),
-      []
+      [onPress, source.baseUrl]
     );
 
     const doubleTapGesture = useMemo(
@@ -112,29 +103,16 @@ const ImageArea: React.FC<ImageAreaProps> = memo(
 
     return (
       <CustomView style={GLOBAL_STYLE.center}>
-        {/* <GestureDetector
+        <GestureDetector
           gesture={Gesture.Exclusive(doubleTapGesture, singleTapGesture)}
-        > */}
-        <View
-          style={{
-            width: POST_IMAGE_SIZE,
-            aspectRatio: 1,
-            borderRadius: 12,
-            overflow: "hidden",
-          }}
         >
-          <Image
-            source={source.thumbnailUrl.source}
-            style={GLOBAL_STYLE.fullSize}
-          />
-        </View>
-        {/* </GestureDetector> */}
-
-        {/* <ImageModal
-          source={source.baseUrl}
-          isOpen={isModalOpen}
-          onClose={hideModal}
-        /> */}
+          <View style={styles.imageContainer}>
+            <Image
+              source={source.thumbnailUrl.source}
+              style={GLOBAL_STYLE.fullSize}
+            />
+          </View>
+        </GestureDetector>
 
         <Animated.View
           pointerEvents={"none"}
@@ -154,6 +132,12 @@ ImageArea.displayName = "ImageArea";
 export default ImageArea;
 
 const styles = StyleSheet.create({
+  imageContainer: {
+    width: POST_IMAGE_SIZE,
+    aspectRatio: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
   bigHeartContainer: {
     position: "absolute",
     shadowColor: "#000",
