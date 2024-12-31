@@ -1,8 +1,22 @@
+export type PostImage = {
+  thumbnailUrl: {
+    source: string;
+    width: number;
+    height: number;
+  };
+  baseUrl: {
+    width: number;
+    height: number;
+    source: string;
+  };
+};
+
+export type RequestStatus = "idle" | "loading" | "succeeded" | "failed";
 export type Post = {
   id: string;
   postedBy: User;
   caption: string;
-  images: string;
+  images: PostImage[];
   createdAt: number;
   likes?: { [userId: string]: boolean };
   comments?: { [userId: string]: boolean };

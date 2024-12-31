@@ -12,6 +12,7 @@ import Animated, {
 import {
   GLOBAL_STYLE,
   SCREEN_HEIGHT,
+  SCREEN_WIDTH,
   SPACING,
   STATUS_BAR_HEIGHT,
 } from "@/constants";
@@ -20,9 +21,10 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
+import { PostImage } from "@/types";
 
 interface ImageModalProps {
-  source: string;
+  source: PostImage["baseUrl"];
   isOpen: boolean;
   onClose: () => void;
   origin: {
@@ -119,8 +121,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
   const frameAimatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
-        { translateX: offset.value.x },
-        { translateY: offset.value.y },
+        // { translateX: offset.value.x },
+        // { translateY: offset.value.y },
         { translateX: focal.value.x },
         { translateY: focal.value.y },
         { translateX: -origin.width / 2 },
@@ -140,8 +142,10 @@ const ImageModal: React.FC<ImageModalProps> = ({
       statusBarTranslucent
       onRequestClose={handleClose}
     >
-      <GestureHandlerRootView style={GLOBAL_STYLE.flex_1}>
-        <Background animatedBackground={animatedBacground} />
+      <GestureHandlerRootView
+        style={[GLOBAL_STYLE.flex_1, { backgroundColor: "black" }]}
+      >
+        {/* <Background animatedBackground={animatedBacground} /> */}
 
         <Animated.View style={[styles.close, closeAnimatedStyle]}>
           <IconButton
@@ -152,21 +156,17 @@ const ImageModal: React.FC<ImageModalProps> = ({
           />
         </Animated.View>
 
-        <GestureDetector
-          gesture={Gesture.Simultaneous(pingGesture, dragGesture)}
-        >
+        <GestureDetector gesture={Gesture.Simultaneous(pingGesture)}>
           <Animated.View
-            style={[
-              {
-                position: "absolute",
-                width: originImageWidth,
-                height: originImageHeight,
-                zIndex: 1,
-              },
-              frameAimatedStyle,
-            ]}
+            style={[frameAimatedStyle, { backgroundColor: "red" }]}
           >
-            <Image source={source} style={GLOBAL_STYLE.fullSize} />
+            <Image
+              source={source.url}
+              contentFit="contain"
+              style={[
+                { width: SCREEN_WIDTH, height: source.width / source.height },
+              ]}
+            />
           </Animated.View>
         </GestureDetector>
       </GestureHandlerRootView>
@@ -180,8 +180,8 @@ interface BackgroundProps {
 const Background: React.FC<BackgroundProps> = ({ animatedBackground }) => {
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      opacity: animatedBackground.value,
-      // backgroundColor: "black",
+      // opacity: animatedBackground.value,
+      backgroundColor: "black",
     };
   });
   return (
@@ -194,6 +194,11 @@ const Background: React.FC<BackgroundProps> = ({ animatedBackground }) => {
 export default ImageModal;
 
 const styles = StyleSheet.create({
+  image: {
+    // height: SCREEN_HEIGHT,
+    height: "auto",
+    width: SCREEN_WIDTH,
+  },
   close: {
     position: "absolute",
     zIndex: 3,

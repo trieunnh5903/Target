@@ -1,7 +1,7 @@
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import CustomView from "../CustomView";
-import { GLOBAL_STYLE, SCREEN_WIDTH } from "@/constants";
+import { GLOBAL_STYLE, POST_IMAGE_SIZE, SCREEN_WIDTH } from "@/constants";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Extrapolation,
@@ -15,12 +15,13 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Octicons } from "@expo/vector-icons";
-import { Image as ExpoImage } from "expo-image";
+import { Image } from "expo-image";
 import { useOriginImageLayout } from "@/hooks";
 import ImageModal from "./ImageModal";
+import { PostImage } from "@/types";
 
 interface ImageAreaProps {
-  source: string;
+  source: PostImage;
   onDoubleTapPress: () => void;
   aleadyLiked: boolean;
   heartProgress: SharedValue<number>;
@@ -35,7 +36,6 @@ const ImageArea: React.FC<ImageAreaProps> = ({
   isDoubleTap,
   animatedIsLiked,
 }) => {
-  const [aspectRatio, setAspectRatio] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isHeartHidden = useSharedValue(-1);
   const imageRef = useRef<View>(null);
@@ -49,7 +49,7 @@ const ImageArea: React.FC<ImageAreaProps> = ({
 
   const showModal = () => {
     updateOriginImageLayout();
-    setTimeout(() => {
+    setImmediate(() => {
       setIsModalOpen(true);
     });
   };
@@ -102,7 +102,7 @@ const ImageArea: React.FC<ImageAreaProps> = ({
       <GestureDetector
         gesture={Gesture.Exclusive(doubleTapGesture, singleTapGesture)}
       >
-        <View
+        {/* <View
           ref={imageRef}
           style={{
             width: SCREEN_WIDTH,
@@ -110,12 +110,24 @@ const ImageArea: React.FC<ImageAreaProps> = ({
           }}
         >
           <ExpoImage source={{ uri: source }} style={GLOBAL_STYLE.flex_1} />
+        </View> */}
+
+        <View
+          ref={imageRef}
+          style={{
+            width: POST_IMAGE_SIZE,
+            aspectRatio: 1,
+            borderRadius: 12,
+            overflow: "hidden",
+          }}
+        >
+          <Image source={source.thumbnailUrl} style={GLOBAL_STYLE.fullSize} />
         </View>
       </GestureDetector>
 
       {isModalOpen && (
         <ImageModal
-          source={source}
+          source={source.baseUrl}
           isOpen={isModalOpen}
           onClose={hideModal}
           origin={originImageLayout}

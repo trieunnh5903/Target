@@ -1,5 +1,5 @@
-import { ListRenderItem, StyleSheet, View } from "react-native";
-import React, { useId, useLayoutEffect, useState } from "react";
+import { Keyboard, ListRenderItem, StyleSheet, View } from "react-native";
+import React, { useLayoutEffect, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
 import Animated, { FadeOut } from "react-native-reanimated";
 import { Asset } from "expo-media-library";
@@ -20,16 +20,8 @@ import {
   Text,
 } from "react-native-paper";
 import { TextInput } from "react-native-gesture-handler";
-import { ImageManipulator } from "expo-image-manipulator";
-import { postAPI } from "@/api";
-import Utils from "@/utils";
-import { useAppSelector } from "@/hooks";
-
-interface ImagesUploadFiltered {
-  id: string;
-  baseUri: string;
-  thumbnailUri: string | undefined;
-}
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { sendPost } from "@/redux/slices/postSlice";
 
 interface ImageEntryProps {
   asset: Asset;
@@ -94,99 +86,19 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   route,
 }) => {
   const { assets: assetsParam, translateAssets } = route.params;
+  const dispatch = useAppDispatch();
   const [assets, setAssets] = useState(assetsParam);
   const [caption, setCaption] = useState("");
-  const userId = useAppSelector((state) => state.auth.currentUser?.id);
-  const [isPosting, setIsPosting] = useState(false);
+  const posting = useAppSelector((state) => state.posts.posting);
+
   useLayoutEffect(() => {
-    const cropImage = async () => {
-      try {
-        return await Promise.all(
-          assets.map(async (item) => {
-            const rect = Utils.generateImageCropOptions({
-              originalHeight: item.height,
-              originalWidth: item.width,
-              translationX: translateAssets[item.id]?.x ?? 0,
-              translationY: translateAssets[item.id]?.y ?? 0,
-            });
-
-            const result = await (
-              await ImageManipulator.manipulate(item.uri)
-                .crop(rect)
-                .resize({
-                  width: Math.min(1080, item.width),
-                })
-                .renderAsync()
-            ).saveAsync({ compress: 1 });
-
-            return { uri: result.uri, id: item.id };
-          })
-        );
-      } catch (error) {
-        throw error;
-      }
-    };
-
     const onSendPress = async () => {
-      setIsPosting(true);
-      try {
-        if (!userId) return;
-        const croppedImages = await cropImage();
-        if (croppedImages) {
-          const imagesUploadFiltered = assets.map((item) => {
-            return {
-              id: item.id,
-              baseUri: item.uri,
-              thumbnailUri: croppedImages.find(
-                (croppedItem) => item.id === croppedItem.id
-              )?.uri,
-            };
-          });
-          const sourceImages = await uploadPostImages(imagesUploadFiltered);
-          if (sourceImages) {
-            const newPost = await postAPI.createPost({
-              content: caption,
-              images: sourceImages,
-              userId: userId,
-            });
-            if (newPost) {
-              navigation.navigate("Tabs", { screen: "Home" });
-            } else {
-              //new post error
-            }
-          }
-        } else {
-          //crop image error
-        }
-      } catch (e) {
-        console.log("onSendPress", e);
-      } finally {
-        setIsPosting(false);
-      }
-    };
-
-    const uploadPostImages = async (images: ImagesUploadFiltered[]) => {
-      try {
-        return await Promise.all(
-          images.map(async (image) => {
-            try {
-              const baseUrl = await postAPI.uploadImage(image.baseUri);
-              let thumbnailUrl = baseUrl;
-              if (image.thumbnailUri) {
-                thumbnailUrl = await postAPI.uploadImage(image.thumbnailUri);
-              }
-              return {
-                id: image.id,
-                thumbnailUrl,
-                baseUrl,
-              };
-            } catch (e) {
-              throw e;
-            }
-          })
-        );
-      } catch (error) {
-        console.log(error);
+      Keyboard.dismiss();
+      const post = await dispatch(
+        sendPost({ assets, caption, translateAssets })
+      ).unwrap();
+      if (post) {
+        navigation.navigate("Tabs", { screen: "Home" });
       }
     };
 
@@ -204,7 +116,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
       },
     });
     return () => {};
-  }, [assets, caption, navigation, translateAssets, userId]);
+  }, [assets, caption, dispatch, navigation, translateAssets]);
 
   const handleDeleteAsset = (assetId: string) => {
     setAssets((pre) => pre.filter((item) => item.id !== assetId));
@@ -259,7 +171,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
         />
       </CustomView>
       <Portal>
-        <Modal dismissable={false} visible={isPosting}>
+        <Modal dismissable={false} visible={posting === "loading"}>
           <CustomView style={styles.posting}>
             <ActivityIndicator />
             <Text>Posting</Text>

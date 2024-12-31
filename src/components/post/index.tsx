@@ -3,11 +3,13 @@ import React, { memo } from "react";
 import { Post, User } from "@/types";
 import CustomView from "../CustomView";
 import { useSharedValue, withSpring } from "react-native-reanimated";
-import { GLOBAL_STYLE, SPACING } from "@/constants";
+import { GLOBAL_STYLE, POST_IMAGE_SIZE, SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
 import Header from "./Header";
 import ImageArea from "./ImageArea";
 import ActionGroups from "./ActionGroups";
+import { FlatList } from "react-native-gesture-handler";
+import { Image } from "expo-image";
 
 interface PostItemProps {
   data: Post;
@@ -47,14 +49,44 @@ const PostItem: React.FC<PostItemProps> = memo(
           avatarURL={data.postedBy.avatarURL}
         />
 
-        <ImageArea
-          animatedIsLiked={animatedIsLiked}
-          heartProgress={heartProgress}
-          isDoubleTap={isDoubleTap}
-          aleadyLiked={liked}
-          onDoubleTapPress={handeToggleLike}
-          source={data.images}
-        />
+        <View>
+          <FlatList
+            data={data.images}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: SPACING.medium,
+              gap: SPACING.medium,
+            }}
+            snapToAlignment="center"
+            snapToInterval={POST_IMAGE_SIZE + SPACING.medium}
+            horizontal
+            renderItem={({ item }) => {
+              return (
+                <View
+                  style={{
+                    width: POST_IMAGE_SIZE,
+                    aspectRatio: 1,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                  }}
+                >
+                  <Image
+                    source={item.thumbnailUrl.source}
+                    style={GLOBAL_STYLE.fullSize}
+                  />
+                </View>
+                // <ImageArea
+                //   animatedIsLiked={animatedIsLiked}
+                //   heartProgress={heartProgress}
+                //   isDoubleTap={isDoubleTap}
+                //   aleadyLiked={liked}
+                //   onDoubleTapPress={handeToggleLike}
+                //   source={item}
+                // />
+              );
+            }}
+          />
+        </View>
 
         <ActionGroups
           alreadyLiked={liked}
@@ -68,11 +100,14 @@ const PostItem: React.FC<PostItemProps> = memo(
         />
 
         <View style={styles.description}>
-          <Text>
-            <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
-            {"  "}
-            {data.caption}
-          </Text>
+          {data.caption && (
+            <Text>
+              <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
+              {"  "}
+              {data.caption}
+            </Text>
+          )}
+
           <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
         </View>
       </CustomView>

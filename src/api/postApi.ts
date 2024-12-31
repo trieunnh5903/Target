@@ -1,10 +1,9 @@
-import { Comment, Post } from "@/types";
+import { Comment, Post, PostImage } from "@/types";
 import firestore, {
   Filter,
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
 import axios from "axios";
-import { ImagePickerAsset } from "expo-image-picker";
 import { userAPI } from "./userApi";
 import {
   commentsCollection,
@@ -55,7 +54,7 @@ const fetchAll = async ({
 };
 
 const uploadImage = async (uri: string) => {
-  console.log("uploadImage");
+  console.log("uploadImage", uri);
 
   const formData = new FormData();
   formData.append(
@@ -115,35 +114,37 @@ const likePost = async (
 };
 
 const createPost = async ({
-  content,
+  caption,
   images,
   userId,
 }: {
   userId: string;
-  content: string;
-  images: {
-    id: string;
-    thumbnailUrl: string;
-    baseUrl: string;
-  }[];
+  caption: string;
+  images: PostImage[];
 }) => {
   try {
     console.log("createPost");
 
     const { id } = await postsCollection.add({
       userId,
-      content,
+      caption,
       images,
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
     const data = (await postsCollection.doc(id).get()).data();
     if (data) {
       const user = await userAPI.fetchUserById(userId);
-      const post = { ...data, id, postedBy: user };
+      const post = {
+        ...data,
+        id,
+        postedBy: user,
+        createdAt: data.createdAt.seconds,
+      };
       return post as Post;
     }
   } catch (error) {
     console.error("uploadFirestore", error);
+    throw error;
   }
 };
 

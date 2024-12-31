@@ -4,6 +4,7 @@ import CustomView from "../CustomView";
 import ThemedText from "../ThemedText";
 import CustomAvatar from "../CustomAvatar";
 import { User } from "@/types";
+import { SPACING } from "@/constants";
 
 const Header = ({
   avatarURL,
@@ -22,7 +23,7 @@ export default Header;
 const styles = StyleSheet.create({
   postHeader: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: SPACING.medium,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
