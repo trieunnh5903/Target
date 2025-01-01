@@ -2,7 +2,10 @@ import { StyleSheet, Text, View } from "react-native";
 import React, { memo, useCallback } from "react";
 import { Post, PostImage, User } from "@/types";
 import CustomView from "../CustomView";
-import { useSharedValue, withSpring } from "react-native-reanimated";
+import {
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { GLOBAL_STYLE, SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
 import Header from "./Header";
@@ -19,14 +22,10 @@ interface PostSingleImageProps {
 
 const PostSingleImage: React.FC<PostSingleImageProps> = memo(
   ({ data, onCommentPress, onToggleLikePress, currentUser, onPress }) => {
-    const liked =
-      data.likes && data.likes[currentUser?.id as string] === true
-        ? true
-        : false;
-
+    const liked = !!data.likes?.[currentUser?.id as string];
+    const animatedIsLiked = useSharedValue(liked);
     const heartProgress = useSharedValue(1);
     const isDoubleTap = useSharedValue(false);
-    const animatedIsLiked = useSharedValue(liked);
 
     const onActionLikePress = async () => {
       isDoubleTap.value = false;
@@ -39,7 +38,7 @@ const PostSingleImage: React.FC<PostSingleImageProps> = memo(
         heartProgress.value = withSpring(1);
       }
       onToggleLikePress(data.id);
-    }, [data.id, heartProgress, isDoubleTap.value, onToggleLikePress]);
+    }, [data.id, heartProgress, isDoubleTap, onToggleLikePress]);
 
     return (
       <CustomView>

@@ -1,6 +1,6 @@
 import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -13,8 +13,8 @@ import { userAPI } from "@/api";
 
 const NotificationProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const dispatch = useAppDispatch();
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  // const notificationListener = useRef<Notifications.EventSubscription>();
+  // const responseListener = useRef<Notifications.EventSubscription>();
   const userId = useAppSelector((state) => state.auth.currentUser?.id);
   const pushToken = useRef<string>();
 
@@ -41,32 +41,32 @@ const NotificationProvider: React.FC<PropsWithChildren> = ({ children }) => {
       }
     })();
 
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        console.log(
-          "addNotificationReceivedListener",
-          JSON.stringify(notification)
-        );
-        dispatch(setNotification(notification));
-      });
+    // notificationListener.current =
+    //   Notifications.addNotificationReceivedListener((notification) => {
+    //     console.log(
+    //       "addNotificationReceivedListener",
+    //       JSON.stringify(notification)
+    //     );
+    //     dispatch(setNotification(notification));
+    //   });
 
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(
-          "addNotificationResponseReceivedListener",
-          JSON.stringify(response)
-        );
-        dispatch(setNotification(response.notification));
-      });
+    // responseListener.current =
+    //   Notifications.addNotificationResponseReceivedListener((response) => {
+    //     console.log(
+    //       "addNotificationResponseReceivedListener",
+    //       JSON.stringify(response)
+    //     );
+    //     dispatch(setNotification(response.notification));
+    //   });
 
-    return () => {
-      notificationListener.current &&
-        Notifications.removeNotificationSubscription(
-          notificationListener.current
-        );
-      responseListener.current &&
-        Notifications.removeNotificationSubscription(responseListener.current);
-    };
+    // return () => {
+    //   notificationListener.current &&
+    //     Notifications.removeNotificationSubscription(
+    //       notificationListener.current
+    //     );
+    //   responseListener.current &&
+    //     Notifications.removeNotificationSubscription(responseListener.current);
+    // };
   }, [dispatch]);
 
   return children;

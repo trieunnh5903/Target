@@ -5,12 +5,17 @@ import {
 } from "@react-navigation/native";
 import { StackScreenProps } from "@react-navigation/stack";
 import * as MediaLibrary from "expo-media-library";
+import { Post } from ".";
 
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<RootTabParamList>;
   SignIn: undefined;
   SignUp: undefined;
   EditProfile: undefined;
+  Notification: undefined;
+  PostDetail: {
+    postId: Post["id"];
+  };
   CreatePost: {
     assets: MediaLibrary.Asset[];
     translateAssets: {

@@ -12,6 +12,27 @@ import {
 } from "./collections";
 import Utils from "@/utils";
 
+const fetchOne = async (postId: Post["id"]) => {
+  try {
+    const postsSnapshot = (await postsCollection.doc(postId).get()).data();
+    if (!postsSnapshot) return;
+    const userDoc = (
+      await usersCollection.doc(postsSnapshot.userId).get()
+    ).data();
+    return [
+      {
+        id: postId,
+        ...postsSnapshot,
+        createdAt: postsSnapshot.createdAt.seconds,
+        postedBy: userDoc,
+      },
+    ] as Post[];
+  } catch (error) {
+    console.log("fetchOne", error);
+    throw error;
+  }
+};
+
 const fetchAll = async ({
   lastPost,
   limit,
@@ -202,4 +223,5 @@ export const postAPI = {
   addComment,
   fetchComments,
   likePost,
+  fetchOne,
 };

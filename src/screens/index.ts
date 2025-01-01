@@ -7,3 +7,5 @@ export { default as SignUpScreen } from "./SignUpScreen";
 export { default as EditProfile } from "./EditProfile";
 export { default as CameraScreen } from "./CameraScreen";
 export { default as EditImage } from "./EditImage";
+export { default as NotificationScreen } from "./NotificationScreen";
+export { default as PostDetailScreen } from "./PostDetailScreen";

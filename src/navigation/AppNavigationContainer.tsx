@@ -4,7 +4,10 @@ import {
   NativeStackNavigationOptions,
 } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types/navigation";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  createNavigationContainerRef,
+  NavigationContainer,
+} from "@react-navigation/native";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import AppBottomTab from "./AppBottomTab";
 import {
@@ -12,6 +15,8 @@ import {
   CreatePostScreen,
   EditImage,
   EditProfile,
+  NotificationScreen,
+  PostDetailScreen,
   SignInScreen,
   SignUpScreen,
 } from "@/screens";
@@ -19,17 +24,24 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { fetchCurrentUser } from "@/redux/slices/authSlice";
 import * as SplashScreen from "expo-splash-screen";
 import { fetchInitialPosts } from "@/redux/slices/postSlice";
+import { useNotificationListener } from "@/hooks/useNotificationListener";
+import { Pressable } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+import { CustomView } from "@/components";
+import { SPACING } from "@/constants";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 SplashScreen.preventAutoHideAsync();
+export const navigationRef = createNavigationContainerRef();
 
 const AppNavigationContainer = () => {
+  const notificationPostId = useNotificationListener();
   const dispatch = useAppDispatch();
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initializing, setInitializing] = useState(true);
   const [isAppReady, setIsAppReady] = useState(false);
   const { initialStatus } = useAppSelector((state) => state.posts);
-
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged((user) => {
       setUser(user);
@@ -66,14 +78,42 @@ const AppNavigationContainer = () => {
   };
 
   return (
-    <NavigationContainer onReady={onLayoutRootView}>
-      <Stack.Navigator>
+    <NavigationContainer onReady={onLayoutRootView} ref={navigationRef}>
+      <StatusBar style="auto" />
+      <Stack.Navigator
+        initialRouteName={notificationPostId ? "PostDetail" : "Tabs"}
+      >
         {user ? (
           <Stack.Group screenOptions={{ headerShadowVisible: false }}>
             <Stack.Group screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Tabs" component={AppBottomTab} />
               <Stack.Screen name="CameraScreen" component={CameraScreen} />
             </Stack.Group>
+
+            <Stack.Screen name="Notification" component={NotificationScreen} />
+            <Stack.Screen
+              name="PostDetail"
+              component={PostDetailScreen}
+              options={({ navigation }) => ({
+                title: "Post detail",
+                headerLeft() {
+                  return (
+                    <Pressable
+                      onPress={() =>
+                        navigation.canGoBack()
+                          ? navigation.goBack()
+                          : navigation.navigate("Tabs")
+                      }
+                    >
+                      <CustomView paddingRight={SPACING.small}>
+                        <MaterialCommunityIcons name="arrow-left" size={24} />
+                      </CustomView>
+                    </Pressable>
+                  );
+                },
+              })}
+              initialParams={{ postId: notificationPostId }}
+            />
 
             <Stack.Screen
               name="CreatePost"

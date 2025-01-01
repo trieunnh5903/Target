@@ -4,7 +4,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   CustomView,
   ImageModal,
@@ -14,7 +14,12 @@ import {
 import { Post, PostImage } from "@/types";
 import { postAPI } from "@/api/postApi";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { GLOBAL_STYLE, SCREEN_HEIGHT, SCREEN_WIDTH } from "@/constants";
+import {
+  GLOBAL_STYLE,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+  SPACING,
+} from "@/constants";
 import { CommentBottomSheet } from "@/components/bottomSheet";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { notificationAPI } from "@/api";
@@ -28,19 +33,55 @@ import {
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { store } from "@/redux/store";
 import { StatusBar } from "expo-status-bar";
+import { RootTabScreenProps } from "@/types/navigation";
+import { IconButton, Text } from "react-native-paper";
+import { Image } from "expo-image";
+import { Pressable } from "react-native-gesture-handler";
+import { useNotificationListener } from "@/hooks/useNotificationListener";
 
-const HomeScreen = () => {
+const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   const posts = useAppSelector(selectAllPosts);
   const dispatch = useAppDispatch();
   const { lastPost, loadMoreStatus, reloadStatus } = useAppSelector(
     (state) => state.posts
   );
   const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const listRef = useRef<FlashList<Post>>(null);
   const [bottomSheetPost, setBottomSheetPost] = useState<Post | null>(null);
   const commentBottomSheetRef = useRef<BottomSheetModal>(null);
   const [imageModalSource, setImageModalSource] = useState<
     PostImage["baseUrl"] | null
   >(null);
+
+  useLayoutEffect(() => {
+    const scrollToTop = () =>
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+
+    navigation.setOptions({
+      headerTitle: "",
+      headerLeft: () => (
+        <CustomView paddingLeft={SPACING.medium}>
+          <Pressable style={GLOBAL_STYLE.rowCenter} onPress={scrollToTop}>
+            <CustomView paddingRight={SPACING.small}>
+              <Image
+                source={require("../../assets/icon.png")}
+                style={{ height: 40, aspectRatio: 1 }}
+              />
+            </CustomView>
+
+            <Text style={{ fontWeight: "900", fontSize: 18 }}>Target</Text>
+          </Pressable>
+        </CustomView>
+      ),
+      headerRight: () => (
+        <CustomView>
+          <IconButton icon={"bell-outline"} />
+        </CustomView>
+      ),
+    });
+    return () => {};
+  }, [navigation]);
+
   const onRefresh = React.useCallback(async () => {
     dispatch(refetchInitialPosts());
   }, [dispatch]);
@@ -142,6 +183,7 @@ const HomeScreen = () => {
     <CustomView style={styles.container}>
       <StatusBar style="auto" />
       <FlashList
+        ref={listRef}
         estimatedItemSize={366.5}
         estimatedListSize={{
           width: SCREEN_WIDTH,
