@@ -34,10 +34,9 @@ import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { store } from "@/redux/store";
 import { StatusBar } from "expo-status-bar";
 import { RootTabScreenProps } from "@/types/navigation";
-import { IconButton, Text } from "react-native-paper";
+import { Divider, IconButton, Text } from "react-native-paper";
 import { Image } from "expo-image";
 import { Pressable } from "react-native-gesture-handler";
-import { useNotificationListener } from "@/hooks/useNotificationListener";
 
 const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   const posts = useAppSelector(selectAllPosts);
@@ -184,6 +183,7 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
       <StatusBar style="auto" />
       <FlashList
         ref={listRef}
+        ItemSeparatorComponent={() => <Divider />}
         estimatedItemSize={366.5}
         estimatedListSize={{
           width: SCREEN_WIDTH,

@@ -1,10 +1,21 @@
-import { StyleSheet, View } from "react-native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { StyleSheet } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { RootStackScreenProps } from "@/types/navigation";
 import { postAPI } from "@/api";
 import { Post, PostImage } from "@/types";
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
-import { GLOBAL_STYLE, SCREEN_HEIGHT, SCREEN_WIDTH } from "@/constants";
+import {
+  GLOBAL_STYLE,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+  SPACING,
+} from "@/constants";
 import {
   CustomView,
   ImageModal,
@@ -14,11 +25,22 @@ import {
 import { useAppSelector } from "@/hooks";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { CommentBottomSheet } from "@/components/bottomSheet";
+import { Divider } from "react-native-paper";
+import { View } from "react-native";
+import { Pressable } from "react-native-gesture-handler";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
   route,
+  navigation,
 }) => {
-  const { postId } = route.params;
+  const { postId, initialScrollIndex, posts: postParam } = route.params;
+  console.log(
+    "PostDetailScreen -> postId",
+    postParam?.length,
+    initialScrollIndex
+  );
+
   const [posts, setPosts] = useState<Post[]>([]);
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [imageModalSource, setImageModalSource] = useState<
@@ -26,20 +48,37 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
   >(null);
   const [bottomSheetPost, setBottomSheetPost] = useState<Post | null>(null);
   const commentBottomSheetRef = useRef<BottomSheetModal>(null);
+  const listRef = useRef<FlashList<Post>>(null);
 
   useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const posts = await postAPI.fetchOne(postId);
-        if (posts) {
-          setPosts(posts);
-        }
-      } catch (error) {}
-    };
+    if (!postId) {
+      if (postParam) {
+        setPosts(postParam);
+      }
+    } else {
+      const fetchPost = async () => {
+        try {
+          const posts = await postAPI.fetchOne(postId);
+          if (posts) {
+            setPosts(posts);
+          }
+        } catch (error) {}
+      };
+      fetchPost();
+    }
 
-    fetchPost();
     return () => {};
-  }, [postId]);
+  }, [postId, postParam]);
+
+  useEffect(() => {
+    if (posts.length > 0 && initialScrollIndex && listRef.current) {
+      listRef.current.scrollToIndex({
+        index: initialScrollIndex,
+        animated: false,
+      });
+    }
+    return () => {};
+  }, [initialScrollIndex, posts.length]);
 
   const handleOpenComment = useCallback((post: Post) => {
     setBottomSheetPost(post);
@@ -115,7 +154,9 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
   return (
     <CustomView style={GLOBAL_STYLE.flex_1}>
       <FlashList
+        ref={listRef}
         estimatedItemSize={366.5}
+        estimatedFirstItemOffset={initialScrollIndex ?? 0 * 366.5}
         estimatedListSize={{
           width: SCREEN_WIDTH,
           height: SCREEN_HEIGHT - 80,
@@ -123,7 +164,7 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
         getItemType={(item) => {
           return item.images.length;
         }}
-        overScrollMode="never"
+        ItemSeparatorComponent={() => <Divider />}
         scrollEventThrottle={16}
         data={posts}
         renderItem={renderItem}

@@ -9,6 +9,7 @@ import { User } from "@/types";
 import { updateCurrentUser, updatePhotoURL } from "@/redux/slices/authSlice";
 import * as ImagePicker from "expo-image-picker";
 import CustomTextInput, { ValidationError } from "@/components/CustomTextInput";
+import { MediaType } from "expo-media-library";
 
 interface ProfileField {
   fieldName: string;
@@ -74,7 +75,7 @@ const EditProfile = () => {
       const updateData: Partial<User> =
         selectedField.fieldName === "displayName"
           ? {
-              displayName: selectedField.value,
+              displayName: selectedField.value.trim(),
               keywords: generateKeywords(selectedField.value),
             }
           : {
@@ -93,26 +94,29 @@ const EditProfile = () => {
   };
 
   const handleChangePhoto = async () => {
+    let oldAvatar = currentUser?.avatarURL;
     try {
       console.log("handleChangePhoto");
       if (!currentUser) return;
       let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
         quality: 1,
       });
       if (result.canceled) {
         return;
       }
       const asset = result.assets[0];
-
+      dispatch(updatePhotoURL({ avatarURL: asset.uri }));
       const avtarURL = await userAPI.uploadAvatar(asset);
-
       await userAPI.updateUser(currentUser?.id, {
         photoURL: avtarURL,
       });
-
-      dispatch(updatePhotoURL({ avatarURL: avtarURL }));
     } catch (error) {
+      if (oldAvatar) {
+        dispatch(updatePhotoURL({ avatarURL: oldAvatar }));
+      }
       console.log("handleChangePhoto", error);
     }
   };
@@ -165,7 +169,7 @@ const EditProfile = () => {
               ref={inputRef}
               helperText={error}
               onChangeText={(text) => {
-                setSelectedField({ ...selectedField, value: text.trim() });
+                setSelectedField({ ...selectedField, value: text });
                 if (error) setError(null);
               }}
               label={selectedField.label}

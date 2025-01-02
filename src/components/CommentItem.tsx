@@ -21,7 +21,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
       <CustomView>
         <CustomView style={GLOBAL_STYLE.row}>
           <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-            {comment.displayName || "No name"}
+            {comment.displayName || "User"}
           </Text>
           <CustomView paddingLeft={8}>
             <Text style={{ fontSize: 12 }}>

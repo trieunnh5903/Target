@@ -14,7 +14,9 @@ export type RootStackParamList = {
   EditProfile: undefined;
   Notification: undefined;
   PostDetail: {
-    postId: Post["id"];
+    postId?: Post["id"];
+    posts?: Post[];
+    initialScrollIndex?: number;
   };
   CreatePost: {
     assets: MediaLibrary.Asset[];

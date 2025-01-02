@@ -2,10 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import React, { memo, useCallback } from "react";
 import { Post, PostImage, User } from "@/types";
 import CustomView from "../CustomView";
-import {
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import { useSharedValue, withSpring } from "react-native-reanimated";
 import { GLOBAL_STYLE, SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
 import Header from "./Header";
@@ -41,7 +38,7 @@ const PostSingleImage: React.FC<PostSingleImageProps> = memo(
     }, [data.id, heartProgress, isDoubleTap, onToggleLikePress]);
 
     return (
-      <CustomView>
+      <View>
         <Header
           displayName={data.postedBy.displayName}
           avatarURL={data.postedBy.avatarURL}
@@ -74,17 +71,20 @@ const PostSingleImage: React.FC<PostSingleImageProps> = memo(
         />
 
         <View style={styles.description}>
-          {data.caption && (
-            <Text>
-              <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
-              {"  "}
-              {data.caption}
-            </Text>
+          {data.caption?.length > 0 ? (
+            <>
+              <Text>
+                <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
+                {"  "}
+                {data.caption}
+              </Text>
+              <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
+            </>
+          ) : (
+            <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
           )}
-
-          <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
         </View>
-      </CustomView>
+      </View>
     );
   }
 );
@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
   },
   description: {
     paddingHorizontal: SPACING.medium,
+    paddingBottom: SPACING.medium,
   },
   textBold: {
     fontWeight: "bold",

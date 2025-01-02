@@ -131,11 +131,6 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
     };
   });
 
-  const focalAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: focal.value.x }, { translateY: focal.value.y }],
-    };
-  });
   return (
     <Modal
       transparent
@@ -167,20 +162,6 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
                   width: SCREEN_WIDTH,
                   aspectRatio: aspectRatio,
                 },
-              ]}
-            />
-            <Animated.View
-              style={[
-                {
-                  position: "absolute",
-                  width: 20,
-                  height: 20,
-                  backgroundColor: "red",
-                  zIndex: 3,
-                  // top: 0,
-                  // left: 0,
-                },
-                focalAnimatedStyle,
               ]}
             />
           </Animated.View>

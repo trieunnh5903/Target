@@ -113,17 +113,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
           />
         </View>
       </Animated.View>
-
-      {/* {displayHeight !== displayWidth && resizeEnabled && (
-        <IconButton
-          icon={"resize"}
-          mode="contained"
-          containerColor="black"
-          iconColor="white"
-          style={styles.resize}
-          onPress={onResizePress}
-        />
-      )} */}
     </View>
   );
 };

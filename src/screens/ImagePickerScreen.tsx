@@ -343,6 +343,10 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
     updateTranslateAsset(image);
   };
 
+  const onCameraPress = () => {
+    navigation.navigate("CameraScreen", { newestImage: media[0] });
+  };
+
   const handleMultipleSelectPress = () => {
     setMultipleSelect((prev) => !prev);
     if (!previewAsset) return;
@@ -503,7 +507,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
               icon={"camera"}
               mode="contained-tonal"
               size={18}
-              onPress={handlePresentModalPress}
+              onPress={onCameraPress}
             />
           </View>
         </CustomView>

@@ -26,11 +26,17 @@ import { Comment, Post } from "@/types";
 import CommentItem from "../../CommentItem";
 import dayjs from "dayjs";
 import { postsCollection } from "@/api/collections";
-import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from "@/constants";
+import {
+  GLOBAL_STYLE,
+  SCREEN_HEIGHT,
+  SPACING,
+  STATUS_BAR_HEIGHT,
+} from "@/constants";
 import { CommentSkeleton } from "../../skeleton";
 import CustomView from "../../CustomView";
 import { postUpdated } from "@/redux/slices/postSlice";
 import CommentBottomSheetFooter from "./CommentBottomSheetFooter";
+import { Text } from "react-native-paper";
 
 interface CommentBottomSheetProps {
   selectedPost: Post | null;
@@ -250,8 +256,7 @@ const CommentBottomSheet = forwardRef<
   );
 
   const renderEmptyComponent = useCallback(() => {
-    if (!isFetching) return;
-    return (
+    return isFetching ? (
       <CustomView>
         {Array.from({
           length: Math.ceil(
@@ -264,6 +269,16 @@ const CommentBottomSheet = forwardRef<
             </CustomView>
           );
         })}
+      </CustomView>
+    ) : (
+      <CustomView
+        paddingTop={SPACING.large}
+        style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.alignItemsCenter]}
+      >
+        <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+          No comments yet
+        </Text>
+        <Text>Start a conversation</Text>
       </CustomView>
     );
   }, [isFetching]);

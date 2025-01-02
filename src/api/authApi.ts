@@ -1,5 +1,6 @@
 import auth from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { userAPI } from "./userApi";
 
 const signUp = async (email: string, password: string) => {
   try {
@@ -74,10 +75,10 @@ const signIn = async (email: string, password: string) => {
   }
 };
 
-const signOut = async () => {
+const signOut = async (userId: string) => {
   try {
     console.log("signOut");
-
+    await userAPI.deletePushToken(userId);
     await auth().signOut();
     return { error: null };
   } catch {

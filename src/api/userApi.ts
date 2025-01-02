@@ -51,7 +51,7 @@ const createUserProfile = async (userData: FirebaseAuthTypes.User) => {
       email: email as string,
       creationTime: metadata.creationTime as string,
       lastSignInTime: metadata.lastSignInTime as string,
-      displayName: displayName ?? "No Name",
+      displayName: displayName ?? "User",
       phoneNumber,
       avatarURL: photoURL,
       id: uid,
@@ -75,6 +75,30 @@ const updateUser = async (
     await usersCollection.doc(userId).update(value);
   } catch (error) {
     console.log("updateUser", error);
+  }
+};
+
+const fetchUsersByIds = async (userIds: string[]) => {
+  try {
+    const usersSnapshot = await usersCollection
+      .where("id", "in", userIds)
+      .get();
+
+    const usersData = {} as {
+      [key: string]: { displayName: string; avatarURL: string };
+    };
+    usersSnapshot.docs.forEach((doc) => {
+      const userData = doc.data();
+      usersData[userData.id] = {
+        displayName: userData.displayName,
+        avatarURL: userData.avatarURL,
+      };
+    });
+
+    return usersData;
+  } catch (error) {
+    console.log("fetchUsersByIds error:", error);
+    throw new Error("Failed to fetch users");
   }
 };
 
@@ -143,4 +167,5 @@ export const userAPI = {
   updateUser,
   uploadAvatar,
   deletePushToken,
+  fetchUsersByIds,
 };

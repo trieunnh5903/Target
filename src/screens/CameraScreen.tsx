@@ -8,22 +8,18 @@ import {
   View,
   Image,
 } from "react-native";
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { RootStackScreenProps } from "@/types/navigation";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { GridCrop } from "@/components";
+import { CustomView, GridCrop } from "@/components";
 import {
   CROP_SIZE,
   GLOBAL_STYLE,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
+  SPACING,
 } from "@/constants";
 import {
   CameraType,
@@ -33,6 +29,8 @@ import {
 } from "expo-camera";
 import { useIsFocused } from "@react-navigation/native";
 // import * as NavigationBar from "expo-navigation-bar";
+import * as MediaLibrary from "expo-media-library";
+import { ActivityIndicator, Modal, Portal, Text } from "react-native-paper";
 
 const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
   navigation,
@@ -46,6 +44,7 @@ const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
   const [flash, setFlash] = useState<FlashMode>("off");
   const handleGoBack = useCallback(() => navigation.goBack(), [navigation]);
   const focused = useIsFocused();
+  const [capturing, setCapturing] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -96,23 +95,25 @@ const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
 
   const onCapture = async () => {
     if (cameraRef.current && isCameraReady) {
+      setCapturing(true);
       try {
+        console.log("onCapture");
         const photo = await cameraRef.current.takePictureAsync({
           quality: 1,
         });
 
+        console.log("onCapture", photo);
+
         if (!photo) return;
-        navigation.navigate("EditImage", {
-          asset: {
-            height: photo.height,
-            width: photo.width,
-            uri: photo.uri,
-          },
+        const asset = await MediaLibrary.createAssetAsync(photo.uri);
+        navigation.navigate("CreatePost", {
+          assets: [asset],
+          translateAssets: {},
         });
-        // Lưu ảnh vào thư viện
-        // await MediaLibrary.saveToLibraryAsync(photo.uri);
       } catch (error) {
         console.log("Error taking picture:", error);
+      } finally {
+        setCapturing(false);
       }
     }
   };
@@ -131,6 +132,7 @@ const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
 
       <CameraView
         flash={flash}
+        animateShutter={false}
         onCameraReady={() => setIsCameraReady(true)}
         ref={cameraRef}
         style={styles.camera}
@@ -181,6 +183,15 @@ const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
           </Pressable>
         </View>
       </CameraView>
+
+      <Portal>
+        <Modal dismissable={false} visible={capturing}>
+          <CustomView style={styles.modalContent}>
+            <ActivityIndicator />
+            <Text>Loading</Text>
+          </CustomView>
+        </Modal>
+      </Portal>
     </View>
   );
 };
@@ -188,6 +199,16 @@ const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
 export default CameraScreen;
 
 const styles = StyleSheet.create({
+  modalContent: {
+    alignSelf: "center",
+    padding: SPACING.medium,
+    gap: SPACING.small,
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   camera: {
     flex: 1,
   },
@@ -247,7 +268,7 @@ const styles = StyleSheet.create({
   overlay: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    // backgroundColor: "rgba(0,0,0,0.5)",
     height: (SCREEN_HEIGHT - CROP_SIZE) / 2,
     width: SCREEN_WIDTH,
   },

@@ -8,26 +8,54 @@ import { RootTabParamList } from "@/types/navigation";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { HomeScreen, ImagePickerScreen, ProfileScreen } from "@/screens";
 import { IconButton } from "react-native-paper";
-import { authAPI, userAPI } from "@/api";
+import { authAPI } from "@/api";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { CustomAvatar } from "@/components";
 import { RouteProp } from "@react-navigation/native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
+
+const TAB_ICONS = {
+  Home: (props: { focused: boolean; color: string; size: number }) => (
+    <MaterialCommunityIcons
+      name={props.focused ? "home" : "home-outline"}
+      size={props.size}
+      color={props.color}
+    />
+  ),
+  ImagePicker: (props: { color: string; size: number }) => (
+    <MaterialCommunityIcons
+      name="plus-box-outline"
+      size={props.size}
+      color={props.color}
+    />
+  ),
+  Profile: (props: {
+    focused: boolean;
+    color: string;
+    size: number;
+    avatarUrl?: string | null;
+  }) => (
+    <CustomAvatar
+      size={props.size}
+      avatarUrl={props.avatarUrl}
+      focused={props.focused}
+      color={props.color}
+    />
+  ),
+};
+
 const AppBottomTab = () => {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const handleLogout = async () => {
     try {
       if (currentUser?.id) {
-        await userAPI.deletePushToken(currentUser.id);
-      }
-
-      const { error } = await authAPI.signOut();
-      if (!error) {
-        dispatch(logout());
+        const { error } = await authAPI.signOut(currentUser.id);
+        if (!error) {
+          dispatch(logout());
+        }
       }
     } catch (error) {
       console.log(error);
@@ -41,6 +69,7 @@ const AppBottomTab = () => {
     route: RouteProp<RootTabParamList, keyof RootTabParamList>;
     navigation: any;
   }) => BottomTabNavigationOptions = ({ route }) => ({
+    headerTitle: "",
     tabBarShowLabel: false,
     tabBarHideOnKeyboard: true,
     tabBarActiveTintColor: "black",
@@ -48,40 +77,13 @@ const AppBottomTab = () => {
     headerShadowVisible: false,
     tabBarIcon: ({ focused, color }) => {
       const size = 32;
-      let icon = (
-        <CustomAvatar
-          size={size}
-          avatarUrl={currentUser?.avatarURL}
-          focused={focused}
-          color={color}
-        />
-      );
-
-      switch (route.name) {
-        case "Home":
-          icon = (
-            <MaterialCommunityIcons
-              name={focused ? "home" : "home-outline"}
-              size={size}
-              color={color}
-            />
-          );
-          break;
-
-        case "ImagePicker":
-          icon = (
-            <MaterialCommunityIcons
-              name="plus-box-outline"
-              size={size}
-              color={color}
-            />
-          );
-
-        default:
-          break;
-      }
-
-      return icon;
+      const IconComponent = TAB_ICONS[route.name];
+      return IconComponent({
+        focused,
+        color,
+        size,
+        avatarUrl: currentUser?.avatarURL,
+      });
     },
   });
 
@@ -92,7 +94,7 @@ const AppBottomTab = () => {
         name="ImagePicker"
         component={ImagePickerScreen}
         options={({ navigation }) => ({
-          title: "Image picker",
+          headerTitle: "Image picker",
           tabBarStyle: { display: "none" },
           headerLeft() {
             return (

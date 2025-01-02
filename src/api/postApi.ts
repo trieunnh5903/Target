@@ -12,6 +12,55 @@ import {
 } from "./collections";
 import Utils from "@/utils";
 
+const fetchAllUserPost = async (
+  userId: string,
+  lastPost?: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null
+) => {
+  try {
+    console.log("fetchAllUserPost");
+
+    const postsSnapshot = await (lastPost
+      ? postsCollection
+          .where(Filter("userId", "==", userId))
+          .orderBy("createdAt", "desc")
+          .startAfter(lastPost)
+          .limit(50)
+          .get()
+      : postsCollection
+          .where(Filter("userId", "==", userId))
+          .orderBy("createdAt", "desc")
+          .limit(50)
+          .get());
+
+    const userIds = postsSnapshot.docs.map((doc) => doc.data().userId);
+    const userDocs = await usersCollection.where("id", "in", userIds).get();
+
+    const usersMap = userDocs.docs.reduce((acc, doc) => {
+      acc[doc.id] = doc.data();
+      return acc;
+    }, {} as Record<string, FirebaseFirestoreTypes.DocumentData>);
+
+    const posts = postsSnapshot.docs.map((doc) => {
+      const postData = doc.data();
+      const userData = usersMap[postData.userId];
+      return {
+        id: doc.id,
+        ...postData,
+        createdAt: postData.createdAt.seconds,
+        postedBy: userData || null,
+      };
+    });
+
+    return {
+      posts: posts as Post[],
+      lastPost: postsSnapshot.docs[postsSnapshot.docs.length - 1],
+    };
+  } catch (error) {
+    console.log("fetchAllUserPost", error);
+    throw error;
+  }
+};
+
 const fetchOne = async (postId: Post["id"]) => {
   try {
     const postsSnapshot = (await postsCollection.doc(postId).get()).data();
@@ -51,18 +100,24 @@ const fetchAll = async ({
           .get()
       : postsCollection.orderBy("createdAt", "desc").limit(limit).get());
 
-    const posts = await Promise.all(
-      postsSnapshot.docs.map(async (doc) => {
-        const postData = doc.data();
-        const userDoc = await usersCollection.doc(postData.userId).get();
-        return {
-          id: doc.id,
-          ...postData,
-          createdAt: postData.createdAt.seconds,
-          postedBy: userDoc.data(),
-        };
-      })
-    );
+    const userIds = postsSnapshot.docs.map((doc) => doc.data().userId);
+    const userDocs = await usersCollection.where("id", "in", userIds).get();
+
+    const usersMap = userDocs.docs.reduce((acc, doc) => {
+      acc[doc.id] = doc.data();
+      return acc;
+    }, {} as Record<string, FirebaseFirestoreTypes.DocumentData>);
+
+    const posts = postsSnapshot.docs.map((doc) => {
+      const postData = doc.data();
+      const userData = usersMap[postData.userId];
+      return {
+        id: doc.id,
+        ...postData,
+        createdAt: postData.createdAt.seconds,
+        postedBy: userData || null,
+      };
+    });
 
     return {
       posts: posts as unknown as Post[],
@@ -118,11 +173,19 @@ const likePost = async (
       if (!postDoc.exists) {
         throw new Error("Post does not exist!");
       }
-      const currentLikesCount = postDoc.data()?.likesCount ?? 0;
+
+      const postData = postDoc.data();
+      const currentLikesCount = postData?.likesCount ?? 0;
+      const currentLikeStatus = postData?.likes?.[likeById];
+
+      if (currentLikeStatus === type) {
+        throw new Error(`You have already ${type}d this post`);
+      }
+
       const plusWith = type === "dislike" ? -1 : 1;
-      const newLikesCount = currentLikesCount + plusWith;
+      const newLikesCount = Math.max(0, currentLikesCount + plusWith);
       transaction.update(postRef, {
-        likesCount: Math.max(0, newLikesCount),
+        likesCount: newLikesCount,
         [`likes.${likeById}`]: type === "like",
       });
     });
@@ -183,20 +246,20 @@ const fetchComments = async (postId: string) => {
       createdAt: doc.data().createdAt.seconds,
     })) as Omit<Comment, "avatarURL" | "displayName">[];
 
-    const enrichedComments = await Promise.all(
-      comments.map(async (comment) => {
-        const userData = await userAPI.fetchUserById(comment.userId);
-        if (userData) {
-          return {
+    const userIds = [...new Set(comments.map((comment) => comment.userId))];
+    const usersData = await userAPI.fetchUsersByIds(userIds);
+
+    const enrichedComments = comments.map((comment) => {
+      const userData = usersData[comment.userId];
+      return userData
+        ? {
             ...comment,
             displayName: userData.displayName,
             avatarURL: userData.avatarURL,
-          };
-        } else {
-          return comment;
-        }
-      })
-    );
+          }
+        : comment;
+    });
+
     return enrichedComments as Comment[];
   } catch (error) {
     console.log("fetchComments", error);
@@ -224,4 +287,5 @@ export const postAPI = {
   fetchComments,
   likePost,
   fetchOne,
+  fetchAllUserPost,
 };

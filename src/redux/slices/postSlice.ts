@@ -24,6 +24,33 @@ interface CroppedImage {
   baseUri: ImageResult;
 }
 
+const processImage = async (
+  item: Asset,
+  translate: { x: number; y: number }
+) => {
+  const rect = Utils.generateImageCropOptions({
+    originalHeight: item.height,
+    originalWidth: item.width,
+    translationX: translate.x,
+    translationY: translate.y,
+  });
+
+  const [thumbnailUri, baseUri] = await Promise.all([
+    ImageManipulator.manipulate(item.uri)
+      .crop(rect)
+      .resize({ width: Math.min(1080, item.width) })
+      .renderAsync()
+      .then((rendered) => rendered.saveAsync()),
+
+    ImageManipulator.manipulate(item.uri)
+      .resize({ width: Math.min(1920, item.width) })
+      .renderAsync()
+      .then((rendered) => rendered.saveAsync()),
+  ]);
+
+  return { thumbnailUri, baseUri };
+};
+
 const cropImage = async (
   assets: Asset[],
   translateAssets: {
@@ -36,26 +63,8 @@ const cropImage = async (
   try {
     return await Promise.all(
       assets.map(async (item) => {
-        const rect = Utils.generateImageCropOptions({
-          originalHeight: item.height,
-          originalWidth: item.width,
-          translationX: translateAssets[item.id]?.x ?? 0,
-          translationY: translateAssets[item.id]?.y ?? 0,
-        });
-        const [thumbnailUri, baseUri] = await Promise.all([
-          ImageManipulator.manipulate(item.uri)
-            .crop(rect)
-            .resize({ width: Math.min(1080, item.width) })
-            .renderAsync()
-            .then((rendered) => rendered.saveAsync({ compress: 1 })),
-
-          ImageManipulator.manipulate(item.uri)
-            .resize({ width: Math.min(1920, item.width) })
-            .renderAsync()
-            .then((rendered) => rendered.saveAsync({ compress: 1 })),
-        ]);
-
-        return { thumbnailUri, baseUri };
+        const translate = translateAssets[item.id] || { x: 0, y: 0 };
+        return await processImage(item, translate);
       })
     );
   } catch (error) {
