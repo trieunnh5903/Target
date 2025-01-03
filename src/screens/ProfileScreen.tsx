@@ -5,9 +5,7 @@ import { useAppSelector } from "@/hooks";
 import { Button, Text } from "react-native-paper";
 import { CustomAvatar, CustomView } from "@/components";
 import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
-import { postAPI } from "@/api";
 import { Post } from "@/types";
-import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { FlatList, Pressable } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -15,21 +13,22 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
   navigation,
 }) => {
-  const currentUser = useAppSelector((state) => state.auth.currentUser);
-  const [lastPost, setLastPost] =
-    useState<FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null>(
-      null
-    );
-  const [posts, setPosts] = useState<Post[]>([]);
+  const { currentUser, ownPosts } = useAppSelector((state) => state.auth);
 
-  useEffect(() => {
-    if (!currentUser?.id) return;
-    (async () => {
-      const posts = await postAPI.fetchAllUserPost(currentUser?.id, lastPost);
-      setPosts(posts.posts);
-      setLastPost(posts.lastPost);
-    })();
-  }, []);
+  // const [lastPost, setLastPost] =
+  //   useState<FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null>(
+  //     null
+  //   );
+  // const [posts, setPosts] = useState<Post[]>([]);
+
+  // useEffect(() => {
+  //   if (!currentUser?.id) return;
+  //   (async () => {
+  //     const posts = await postAPI.fetchAllUserPost(currentUser?.id, lastPost);
+  //     setPosts(posts.posts);
+  //     setLastPost(posts.lastPost);
+  //   })();
+  // }, []);
 
   const onEditPress = () => {
     navigation.navigate("EditProfile");
@@ -38,11 +37,11 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
   const onImagePress = useCallback(
     (index: number) => {
       navigation.navigate("PostDetail", {
-        posts,
+        posts: ownPosts,
         initialScrollIndex: index,
       });
     },
-    [navigation, posts]
+    [navigation, ownPosts]
   );
 
   const renderItem: ListRenderItem<Post> = ({ item, index }) => {
@@ -71,7 +70,7 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
         columnWrapperStyle={{ gap: 1 }}
         style={{ marginTop: SPACING.large }}
         ItemSeparatorComponent={() => <View style={{ height: 1 }} />}
-        data={posts}
+        data={ownPosts}
         numColumns={3}
         renderItem={renderItem}
         ListEmptyComponent={

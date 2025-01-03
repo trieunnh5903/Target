@@ -1,18 +1,47 @@
-import { userAPI } from "@/api";
-import { User } from "@/types";
+import { postAPI, userAPI } from "@/api";
+import { Post, User } from "@/types";
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState } from "../store";
 
 interface AuthState {
   currentUser: User | null;
   loading: "idle" | "pending";
   error: string | null;
+  ownPosts: Post[];
+  lastPost: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null;
 }
 
 const initialState: AuthState = {
   currentUser: null,
   loading: "idle",
   error: null,
+  ownPosts: [],
+  lastPost: null,
 };
+
+export const fetchOwnPosts = createAsyncThunk<
+  {
+    posts: Post[];
+    lastPost: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null;
+  },
+  string,
+  { state: RootState }
+>("auth/fetchOwnPosts", async (userId, thunkAPI) => {
+  try {
+    if (!userId) {
+      return { posts: [], lastPost: null };
+    }
+    const posts = await postAPI.fetchAllUserPost(
+      userId,
+      thunkAPI.getState().auth.lastPost
+    );
+
+    return posts;
+  } catch {
+    return { posts: [], lastPost: null };
+  }
+});
 
 export const fetchCurrentUser = createAsyncThunk(
   "users/fetchByIdStatus",
@@ -53,6 +82,11 @@ const authSlice = createSlice({
     builder.addCase(fetchCurrentUser.rejected, (state) => {
       state.loading = "idle";
       state.error = "fetchCurrentUser error";
+    });
+
+    builder.addCase(fetchOwnPosts.fulfilled, (state, action) => {
+      state.lastPost = action.payload.lastPost;
+      state.ownPosts = action.payload.posts;
     });
   },
 });

@@ -20,7 +20,7 @@ import {
   SignUpScreen,
 } from "@/screens";
 import { useAppDispatch, useAppSelector, useAuthState } from "@/hooks";
-import { fetchCurrentUser } from "@/redux/slices/authSlice";
+import { fetchCurrentUser, fetchOwnPosts } from "@/redux/slices/authSlice";
 import * as SplashScreen from "expo-splash-screen";
 import { fetchInitialPosts } from "@/redux/slices/postSlice";
 import { useNotificationListener } from "@/hooks/useNotificationListener";
@@ -44,6 +44,7 @@ const AppNavigationContainer = () => {
   useEffect(() => {
     if (user) {
       dispatch(fetchCurrentUser(user.uid));
+      dispatch(fetchOwnPosts(user.uid));
       dispatch(fetchInitialPosts());
     }
   }, [dispatch, user]);

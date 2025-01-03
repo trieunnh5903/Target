@@ -12,7 +12,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredPaths: ["posts.lastPost"],
+        ignoredPaths: ["posts.lastPost", "auth.lastPost"],
         ignoredActionPaths: ["payload.lastPost", "meta.arg"],
       },
     }),
