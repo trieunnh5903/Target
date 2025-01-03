@@ -6,7 +6,7 @@ import CustomView from "./CustomView";
 import { OpaqueColorValue, StyleSheet } from "react-native";
 
 interface CustomAvatarProps {
-  avatarUrl: string | null | undefined;
+  avatarUrl?: User["avatarURL"] | null;
   size: "large" | "small" | "medium" | number;
   focused?: boolean;
   color?: string | OpaqueColorValue | undefined;

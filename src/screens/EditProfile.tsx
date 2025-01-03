@@ -9,7 +9,7 @@ import { User } from "@/types";
 import { updateCurrentUser, updatePhotoURL } from "@/redux/slices/authSlice";
 import * as ImagePicker from "expo-image-picker";
 import CustomTextInput, { ValidationError } from "@/components/CustomTextInput";
-import { MediaType } from "expo-media-library";
+import { updateUserInPosts } from "@/redux/slices/postSlice";
 
 interface ProfileField {
   fieldName: string;
@@ -84,6 +84,12 @@ const EditProfile = () => {
 
       await userAPI.updateUser(currentUser.id, updateData);
       dispatch(updateCurrentUser({ data: { ...currentUser, ...updateData } }));
+      dispatch(
+        updateUserInPosts({
+          userId: currentUser.id,
+          updateData,
+        })
+      );
       handleCloseModal();
     } catch (error) {
       console.error("Failed to update field:", error);
@@ -94,10 +100,10 @@ const EditProfile = () => {
   };
 
   const handleChangePhoto = async () => {
+    if (!currentUser) return;
     let oldAvatar = currentUser?.avatarURL;
     try {
       console.log("handleChangePhoto");
-      if (!currentUser) return;
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
@@ -109,13 +115,29 @@ const EditProfile = () => {
       }
       const asset = result.assets[0];
       dispatch(updatePhotoURL({ avatarURL: asset.uri }));
+      dispatch(
+        updateUserInPosts({
+          userId: currentUser.id,
+          updateData: {
+            avatarURL: asset.uri,
+          },
+        })
+      );
       const avtarURL = await userAPI.uploadAvatar(asset);
       await userAPI.updateUser(currentUser?.id, {
-        photoURL: avtarURL,
+        ["avatarURL"]: avtarURL,
       });
     } catch (error) {
       if (oldAvatar) {
         dispatch(updatePhotoURL({ avatarURL: oldAvatar }));
+        dispatch(
+          updateUserInPosts({
+            userId: currentUser.id,
+            updateData: {
+              avatarURL: oldAvatar,
+            },
+          })
+        );
       }
       console.log("handleChangePhoto", error);
     }

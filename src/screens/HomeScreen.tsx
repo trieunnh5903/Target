@@ -156,27 +156,23 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   }, []);
 
   const renderItem: ListRenderItem<Post> = ({ item }) => {
-    if (item.images.length === 1) {
-      return (
-        <PostSingleImage
-          onPress={onImagePress}
-          currentUser={currentUser}
-          data={item}
-          onCommentPress={() => handleOpenComment(item)}
-          onToggleLikePress={onToggleLikePress}
-        />
-      );
-    } else {
-      return (
-        <PostMultipleImage
-          onPress={onImagePress}
-          currentUser={currentUser}
-          data={item}
-          onCommentPress={() => handleOpenComment(item)}
-          onToggleLikePress={onToggleLikePress}
-        />
-      );
-    }
+    return item.images.length === 1 ? (
+      <PostSingleImage
+        onPress={onImagePress}
+        currentUser={currentUser}
+        data={item}
+        onCommentPress={() => handleOpenComment(item)}
+        onToggleLikePress={onToggleLikePress}
+      />
+    ) : (
+      <PostMultipleImage
+        onPress={onImagePress}
+        currentUser={currentUser}
+        data={item}
+        onCommentPress={() => handleOpenComment(item)}
+        onToggleLikePress={onToggleLikePress}
+      />
+    );
   };
   return (
     <CustomView style={styles.container}>

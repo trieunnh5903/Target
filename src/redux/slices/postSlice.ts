@@ -1,10 +1,11 @@
 import { postAPI } from "@/api";
-import { Post, RequestStatus } from "@/types";
+import { Post, RequestStatus, User } from "@/types";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import {
   createAsyncThunk,
   createEntityAdapter,
   createSlice,
+  PayloadAction,
 } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Asset } from "expo-media-library";
@@ -186,6 +187,26 @@ const postsSlice = createSlice({
     postAdded: postsAdapter.addOne,
     postUpdated: postsAdapter.updateOne,
     postRemoved: postsAdapter.removeOne,
+    updateUserInPosts: (
+      state,
+      action: PayloadAction<{
+        userId: User["id"];
+        updateData: Partial<User>;
+      }>
+    ) => {
+      const { userId, updateData } = action.payload;
+      state.entities = Object.fromEntries(
+        Object.entries(state.entities).map(([id, post]) => {
+          if (post?.postedBy.id === userId) {
+            return [
+              id,
+              { ...post, postedBy: { ...post.postedBy, ...updateData } },
+            ];
+          }
+          return [id, post];
+        })
+      );
+    },
   },
   extraReducers(builder) {
     builder.addCase(fetchMorePosts.pending, (state) => {
@@ -242,6 +263,7 @@ const postsSlice = createSlice({
   },
 });
 export default postsSlice;
-export const { postAdded, postUpdated, postRemoved } = postsSlice.actions;
+export const { postAdded, postUpdated, postRemoved, updateUserInPosts } =
+  postsSlice.actions;
 export const { selectAll: selectAllPosts, selectById: selectPostById } =
   postsAdapter.getSelectors((state: RootState) => state.posts);

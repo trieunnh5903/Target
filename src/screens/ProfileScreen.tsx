@@ -1,14 +1,10 @@
 import { StyleSheet, View, ListRenderItem } from "react-native";
-import React, {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { RootTabScreenProps } from "@/types/navigation";
 import { useAppSelector } from "@/hooks";
 import { Button, Text } from "react-native-paper";
 import { CustomAvatar, CustomView } from "@/components";
-import { GLOBAL_STYLE, SPACING } from "@/constants";
+import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
 import { postAPI } from "@/api";
 import { Post } from "@/types";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
@@ -125,6 +121,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     aspectRatio: 1,
+    maxWidth: SCREEN_WIDTH / 3,
   },
   multipleImage: {
     position: "absolute",
