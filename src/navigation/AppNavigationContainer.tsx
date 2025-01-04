@@ -18,6 +18,7 @@ import {
   PostDetailScreen,
   SignInScreen,
   SignUpScreen,
+  UserDetailScreen,
 } from "@/screens";
 import { useAppDispatch, useAppSelector, useAuthState } from "@/hooks";
 import { fetchCurrentUser, fetchOwnPosts } from "@/redux/slices/authSlice";
@@ -88,6 +89,7 @@ const AppNavigationContainer = () => {
             </Stack.Group>
 
             <Stack.Screen name="Notification" component={NotificationScreen} />
+            <Stack.Screen name="UserDetail" component={UserDetailScreen} />
             <Stack.Screen
               name="PostDetail"
               component={PostDetailScreen}

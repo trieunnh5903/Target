@@ -18,6 +18,11 @@ export type RootStackParamList = {
     posts?: Post[];
     initialScrollIndex?: number;
   };
+  UserDetail: {
+    userId: string;
+    displayName: string;
+    avatarURL: string;
+  };
   CreatePost: {
     assets: MediaLibrary.Asset[];
     translateAssets: {
@@ -47,6 +52,7 @@ export type AuthStackParamList = {
 
 export type RootTabParamList = {
   Home: undefined;
+  Search: undefined;
   ImagePicker: undefined;
   Profile: undefined;
 };

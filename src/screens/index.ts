@@ -9,3 +9,5 @@ export { default as CameraScreen } from "./CameraScreen";
 export { default as EditImage } from "./EditImage";
 export { default as NotificationScreen } from "./NotificationScreen";
 export { default as PostDetailScreen } from "./PostDetailScreen";
+export { default as SearchScreen } from "./SearchScreen";
+export { default as UserDetailScreen } from "./UserDetailScreen";

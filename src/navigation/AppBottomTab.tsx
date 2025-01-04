@@ -5,8 +5,17 @@ import {
   createBottomTabNavigator,
 } from "@react-navigation/bottom-tabs";
 import { RootTabParamList } from "@/types/navigation";
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import { HomeScreen, ImagePickerScreen, ProfileScreen } from "@/screens";
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import {
+  HomeScreen,
+  ImagePickerScreen,
+  ProfileScreen,
+  SearchScreen,
+} from "@/screens";
 import { IconButton } from "react-native-paper";
 import { authAPI } from "@/api";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -23,6 +32,9 @@ const TAB_ICONS = {
       size={props.size}
       color={props.color}
     />
+  ),
+  Search: (props: { focused: boolean; color: string; size: number }) => (
+    <Ionicons name="search" size={props.size} color={props.color} />
   ),
   ImagePicker: (props: { color: string; size: number }) => (
     <MaterialCommunityIcons
@@ -90,6 +102,7 @@ const AppBottomTab = () => {
   return (
     <Tab.Navigator screenOptions={screenOptions}>
       <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen
         name="ImagePicker"
         component={ImagePickerScreen}

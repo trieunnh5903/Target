@@ -6,6 +6,34 @@ import { ImagePickerAsset } from "expo-image-picker";
 import axios from "axios";
 import firestore from "@react-native-firebase/firestore";
 
+const searchUsersByKeyword = async (searchText: string) => {
+  try {
+    const querySnapshot = await usersCollection
+      .where("displayName", "!=", "User")
+      .where("keywords", "array-contains", searchText.toLowerCase())
+      .get();
+
+    const usersData: {
+      displayName: string;
+      avatarURL: string;
+      id: string;
+    }[] = [];
+    querySnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      usersData.push({
+        displayName: data.displayName,
+        avatarURL: data.avatarURL,
+        id: data.id,
+      });
+    });
+
+    return usersData;
+  } catch (error) {
+    console.error("searchUsersByKeyword", error);
+    throw new Error("Failed to search users");
+  }
+};
+
 const uploadAvatar = async (assets: ImagePickerAsset) => {
   console.log("uploadAvatar");
 
@@ -168,4 +196,5 @@ export const userAPI = {
   uploadAvatar,
   deletePushToken,
   fetchUsersByIds,
+  searchUsersByKeyword,
 };
