@@ -22,6 +22,7 @@ import {
 import { TextInput } from "react-native-gesture-handler";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { sendPost } from "@/redux/slices/postSlice";
+import { addPostToOwnPost } from "@/redux/slices/authSlice";
 
 interface ImageEntryProps {
   asset: Asset;
@@ -98,6 +99,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
         sendPost({ assets, caption, translateAssets })
       ).unwrap();
       if (post) {
+        dispatch(addPostToOwnPost(post));
         navigation.navigate("Tabs", { screen: "Home" });
       }
     };

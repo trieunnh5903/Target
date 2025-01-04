@@ -67,6 +67,10 @@ const authSlice = createSlice({
     logout: (state) => {
       state.currentUser = null;
     },
+
+    addPostToOwnPost: (state, action: PayloadAction<Post>) => {
+      state.ownPosts.unshift(action.payload);
+    },
   },
   extraReducers(builder) {
     builder.addCase(fetchCurrentUser.pending, (state) => {
@@ -92,5 +96,5 @@ const authSlice = createSlice({
 });
 
 const { actions, reducer: authReducer } = authSlice;
-export const { logout, updateCurrentUser, updatePhotoURL } = actions;
+export const { logout, updateCurrentUser, updatePhotoURL, addPostToOwnPost } = actions;
 export default authReducer;

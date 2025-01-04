@@ -38,7 +38,13 @@ import {
 import { CustomView, ImageCropper } from "@/components";
 import { AlbumBottomSheet } from "@/components/bottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { useCropDimensions, useCropsGesture } from "@/hooks";
+import {
+  useAppDispatch,
+  useAppSelector,
+  useCropDimensions,
+  useCropsGesture,
+} from "@/hooks";
+import { fetchMedia, setAlbum } from "@/redux/slices/mediaSlice";
 
 const ImageEntry: React.FC<{
   uri: string;
@@ -80,7 +86,6 @@ const ImageEntry: React.FC<{
 const HEADER_LIST_HEIGHT = 50;
 const SPACING = 1;
 const NUM_COLUMNS = 4;
-const ITEMS_PER_PAGE = 200;
 const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
   navigation,
 }) => {
@@ -90,16 +95,12 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   const listRef = useAnimatedRef<Animated.FlatList<any>>();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const [media, setMedia] = useState<MediaLibrary.Asset[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [endCursor, setEndCursor] = useState<
-    MediaLibrary.AssetRef | undefined
-  >();
+  const dispatch = useAppDispatch();
+  const { media, loading, hasMore, selectedAlbum } = useAppSelector(
+    (state) => state.media
+  );
   const [selectedAsset, setSelectedAsset] = useState<MediaLibrary.Asset[]>();
   const [previewAsset, setPreviewAsset] = useState<MediaLibrary.Asset>();
-  const [selectedAlbum, setSelectedAlbum] = useState<MediaLibrary.Album>();
   const [multipleSelect, setMultipleSelect] = useState(false);
   const scrollY = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -168,37 +169,6 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
     translateSelectedAssets.value = newAssets;
   };
 
-  const loadImages = useCallback(
-    async (after: MediaLibrary.AssetRef | undefined = undefined) => {
-      try {
-        const {
-          assets,
-          endCursor: newEndCursor,
-          hasNextPage,
-        } = await MediaLibrary.getAssetsAsync({
-          album: selectedAlbum?.id === "all" ? undefined : selectedAlbum,
-          mediaType: "photo",
-          sortBy: ["creationTime"],
-          first: ITEMS_PER_PAGE,
-          after: after,
-        });
-        if (after) {
-          setMedia((prevMedia) => [...prevMedia, ...assets]);
-        } else {
-          setMedia(assets);
-        }
-        setEndCursor(newEndCursor);
-        setHasMore(hasNextPage);
-      } catch (error) {
-        console.error("Error loading images:", error);
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    },
-    [selectedAlbum]
-  );
-
   useEffect(() => {
     if (media.length > 0) {
       setPreviewAsset(media[0]);
@@ -253,16 +223,17 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
 
   useEffect(() => {
     if (permissionResponse?.status === "granted") {
-      loadImages();
+      if (media.length === 0 && !loading) {
+        dispatch(fetchMedia());
+      }
     }
-  }, [loadImages, permissionResponse?.status]);
+  }, [dispatch, loading, media.length, permissionResponse?.status]);
 
   const handleLoadMore = useCallback(async () => {
-    if (!loadingMore && hasMore) {
-      setLoadingMore(true);
-      await loadImages(endCursor);
+    if (!loading && media.length > 0 && hasMore) {
+      dispatch(fetchMedia());
     }
-  }, [endCursor, hasMore, loadImages, loadingMore]);
+  }, [dispatch, hasMore, loading, media.length]);
 
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
@@ -364,11 +335,13 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
   const handleSelectedAlbum = (album: MediaLibrary.Album) => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
     translateY.value = 0;
-    setEndCursor(undefined);
-    setSelectedAlbum(album);
-    setMedia([]);
+    // setEndCursor(undefined);
+    // setSelectedAlbum(album);
+    dispatch(setAlbum(album));
+    dispatch(fetchMedia());
+    // setMedia([]);
     setPreviewAsset(undefined);
-    setLoading(true);
+    // setLoading(true);
     bottomSheetModalRef.current?.dismiss();
   };
 
@@ -457,7 +430,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
   };
 
   const renderFooter = () => {
-    if (!loadingMore || media.length === 0) return null;
+    if (!loading || media.length === 0) return null;
 
     return (
       <View style={styles.footerLoader}>

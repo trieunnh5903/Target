@@ -28,6 +28,8 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { fetchAlbum } from "@/redux/slices/mediaSlice";
 
 interface AlbumSheetProps {
   onAlbumSelected: (album: AlbumCover) => void;
@@ -36,60 +38,21 @@ interface AlbumSheetProps {
 type AlbumCover = Album & { coverPhotoUri: string; assetCount: number };
 const AlbumSheet = forwardRef<BottomSheetModal, AlbumSheetProps>(
   ({ onAlbumSelected }, ref) => {
-    const [albums, setAlbums] = useState<AlbumCover[] | null>(null);
+    const albums = useAppSelector((state) => state.media.albums);
+    const dispatch = useAppDispatch();
     const [permissionResponse, requestPermission] = usePermissions();
     const isBottomSheetOpen = useRef(false);
     const { dismissAll } = useBottomSheetModal();
     const insets = useSafeAreaInsets();
     useEffect(() => {
-      async function getAlbums() {
+      (async () => {
         if (permissionResponse?.status !== "granted") {
           await requestPermission();
+        } else {
+          dispatch(fetchAlbum());
         }
-        const fetchedAlbums = await getAlbumsAsync({
-          includeSmartAlbums: true,
-        });
-
-        const albumsWithCoverPhoto = await Promise.all(
-          fetchedAlbums.map(async (album) => {
-            const albumAssets = await getAssetsAsync({
-              album,
-              mediaType: "photo",
-              sortBy: "creationTime",
-              first: 1,
-            });
-            const coverPhotoUri = albumAssets.assets[0]?.uri;
-            if (coverPhotoUri) {
-              return {
-                ...album,
-                coverPhotoUri,
-                assetCount: albumAssets.totalCount,
-              };
-            }
-            return;
-          })
-        );
-
-        const lastestAsset = await getAssetsAsync({
-          sortBy: "creationTime",
-          mediaType: "photo",
-        });
-
-        const photoAlbum: AlbumCover = {
-          assetCount: lastestAsset.totalCount,
-          id: "all",
-          title: "Photos",
-          coverPhotoUri: lastestAsset.assets[0]?.uri ?? "",
-          startTime: 0,
-          endTime: 0,
-        };
-        const filteredAlbums = albumsWithCoverPhoto.filter(
-          (album) => album !== undefined
-        );
-        setAlbums([photoAlbum, ...filteredAlbums]);
-      }
-      getAlbums();
-    }, [permissionResponse?.status, requestPermission]);
+      })();
+    }, [dispatch, permissionResponse?.status, requestPermission]);
 
     useBackHandler(() => {
       if (isBottomSheetOpen.current) {
@@ -106,7 +69,11 @@ const AlbumSheet = forwardRef<BottomSheetModal, AlbumSheetProps>(
     }, []);
 
     return (
-      <BottomSheetModal topInset={insets.top} onChange={handleSheetChanges} ref={ref}>
+      <BottomSheetModal
+        topInset={insets.top}
+        onChange={handleSheetChanges}
+        ref={ref}
+      >
         <BottomSheetFlatList
           stickyHeaderIndices={[0]}
           ListHeaderComponent={
