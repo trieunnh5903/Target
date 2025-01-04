@@ -13,6 +13,10 @@ export type RootStackParamList = {
   SignUp: undefined;
   EditProfile: undefined;
   Notification: undefined;
+  ChatRoom: undefined;
+  Chat: {
+    userId: string;
+  };
   PostDetail: {
     postId?: Post["id"];
     posts?: Post[];

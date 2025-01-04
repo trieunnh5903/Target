@@ -11,6 +11,8 @@ import {
 import AppBottomTab from "./AppBottomTab";
 import {
   CameraScreen,
+  ChatRoomScreen,
+  ChatScreen,
   CreatePostScreen,
   EditImage,
   EditProfile,
@@ -89,6 +91,12 @@ const AppNavigationContainer = () => {
             </Stack.Group>
 
             <Stack.Screen name="Notification" component={NotificationScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen
+              name="ChatRoom"
+              component={ChatRoomScreen}
+              options={{ headerTitle: "Messages" }}
+            />
             <Stack.Screen name="UserDetail" component={UserDetailScreen} />
             <Stack.Screen
               name="PostDetail"

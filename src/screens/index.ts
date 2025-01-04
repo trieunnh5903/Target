@@ -11,3 +11,5 @@ export { default as NotificationScreen } from "./NotificationScreen";
 export { default as PostDetailScreen } from "./PostDetailScreen";
 export { default as SearchScreen } from "./SearchScreen";
 export { default as UserDetailScreen } from "./UserDetailScreen";
+export { default as ChatRoomScreen } from "./ChatRoomScreen";
+export { default as ChatScreen } from "./ChatScreen";
