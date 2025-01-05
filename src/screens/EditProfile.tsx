@@ -10,6 +10,7 @@ import { updateCurrentUser, updatePhotoURL } from "@/redux/slices/authSlice";
 import * as ImagePicker from "expo-image-picker";
 import CustomTextInput, { ValidationError } from "@/components/CustomTextInput";
 import { updateUserInPosts } from "@/redux/slices/postSlice";
+import { SPACING } from "@/constants";
 
 interface ProfileField {
   fieldName: string;
@@ -50,9 +51,14 @@ const EditProfile = () => {
         value: currentUser?.displayName ?? "",
         validation: validateDisplayName,
       },
+      {
+        fieldName: "bio",
+        label: "Bio",
+        value: currentUser?.bio ?? "",
+        validation: validateDisplayName,
+      },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentUser?.displayName]
+    [currentUser?.bio, currentUser?.displayName]
   );
 
   const showError = (
@@ -234,6 +240,7 @@ const styles = StyleSheet.create({
   },
   fieldsContainer: {
     paddingHorizontal: 16,
+    gap: SPACING.medium
   },
   avatarContainer: {
     marginVertical: 20,

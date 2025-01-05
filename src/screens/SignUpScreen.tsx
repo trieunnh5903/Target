@@ -19,6 +19,7 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const dispatch = useAppDispatch();
 
   const handleError = (error: string) => {
@@ -33,7 +34,9 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
       if (!email || !password) {
         throw new Error("Vui lòng nhập đầy đủ thông tin");
       }
-
+      if (password !== confirmPassword) {
+        throw new Error("Mật khẩu không khớp");
+      }
       const { error, userCredential } = await authAPI.signUp(email, password);
       if (error || !userCredential) throw new Error(error);
       const { error: createUserError } = await userAPI.createUserProfile(
@@ -94,8 +97,8 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
           <CustomTextInput
             label="Confirm Password"
             autoComplete="new-password"
-            value={password}
-            onChangeText={setPassword}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
             secureTextEntry
           />
 

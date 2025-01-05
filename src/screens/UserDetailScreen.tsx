@@ -16,7 +16,7 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
   navigation,
   route,
 }) => {
-  const { userId, displayName, avatarURL } = route.params;
+  const { userId, displayName, avatarURL, bio } = route.params;
   const [lastPost, setlastPost] =
     useState<
       FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>
@@ -60,12 +60,13 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
       >
         <CustomAvatar size={"large"} avatarUrl={avatarURL} />
         <Text style={styles.displayName}>{displayName}</Text>
-        <IconButton
+        <Text style={styles.bio}>{bio}</Text>
+        {/* <IconButton
           mode="contained-tonal"
           icon={"chat"}
           style={styles.editButton}
           // onPress={onEditPress}
-        ></IconButton>
+        ></IconButton> */}
       </CustomView>
 
       <Divider />
@@ -145,5 +146,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginTop: SPACING.small,
+  },
+  bio: {
+    fontSize: 16,
+    marginVertical: SPACING.small,
   },
 });

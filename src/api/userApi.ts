@@ -17,6 +17,7 @@ const searchUsersByKeyword = async (searchText: string) => {
       displayName: string;
       avatarURL: string;
       id: string;
+      bio: string;
     }[] = [];
     querySnapshot.docs.forEach((doc) => {
       const data = doc.data();
@@ -24,6 +25,7 @@ const searchUsersByKeyword = async (searchText: string) => {
         displayName: data.displayName,
         avatarURL: data.avatarURL,
         id: data.id,
+        bio: data.bio,
       });
     });
 
@@ -84,6 +86,7 @@ const createUserProfile = async (userData: FirebaseAuthTypes.User) => {
       avatarURL: photoURL,
       id: uid,
       keywords,
+      bio: "",
     };
     await usersCollection.doc(uid).set(user);
     return { error: null };

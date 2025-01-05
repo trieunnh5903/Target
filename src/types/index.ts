@@ -33,6 +33,7 @@ export type User = {
   lastSignInTime: string;
   phoneNumber: string | null;
   keywords: string[] | null;
+  bio: string;
 };
 
 export type Comment = Pick<User, "avatarURL" | "displayName"> & {

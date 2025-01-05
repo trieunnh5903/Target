@@ -12,6 +12,7 @@ type SeachData = {
   displayName: string;
   avatarURL: string;
   id: string;
+  bio: string;
 };
 
 const SearchScreen: React.FC<RootTabScreenProps<"Search">> = ({
@@ -28,6 +29,7 @@ const SearchScreen: React.FC<RootTabScreenProps<"Search">> = ({
       userId: item.id,
       displayName: item.displayName,
       avatarURL: item.avatarURL,
+      bio: item.bio,
     });
   };
 

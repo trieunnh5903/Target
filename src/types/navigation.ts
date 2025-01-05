@@ -26,6 +26,7 @@ export type RootStackParamList = {
     userId: string;
     displayName: string;
     avatarURL: string;
+    bio: string;
   };
   CreatePost: {
     assets: MediaLibrary.Asset[];

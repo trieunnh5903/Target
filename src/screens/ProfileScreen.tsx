@@ -56,6 +56,8 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
       >
         <CustomAvatar size={"large"} avatarUrl={currentUser?.avatarURL} />
         <Text style={styles.displayName}>{currentUser?.displayName}</Text>
+        {currentUser?.bio && <Text style={styles.bio}>{currentUser?.bio}</Text>}
+
         <Button
           mode="contained-tonal"
           buttonColor="#E4E7EC"
@@ -136,6 +138,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginTop: SPACING.small,
+  },
+  bio: {
+    fontSize: 16,
+    marginVertical: SPACING.small,
   },
   container: {
     flex: 1,

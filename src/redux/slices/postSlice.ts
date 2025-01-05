@@ -120,19 +120,25 @@ export const sendPost = createAsyncThunk<
   },
   { state: RootState; rejectValue: string }
 >("posts/sendPost", async ({ assets, translateAssets, caption }, thunkAPI) => {
-  const userId = thunkAPI.getState().auth.currentUser?.id;
-  if (!userId) return thunkAPI.rejectWithValue("user doesnt exisit");
-  const croppedImages = await cropImage(assets, translateAssets);
-  const sourceImages = await uploadPostImages(croppedImages);
-  const post = await postAPI.createPost({
-    caption: caption.trim(),
-    images: sourceImages,
-    userId: userId,
-  });
-  if (post) {
-    return post;
-  } else {
-    return thunkAPI.rejectWithValue("Server error");
+  console.log("sendPost");
+  try {
+    const userId = thunkAPI.getState().auth.currentUser?.id;
+    if (!userId) return thunkAPI.rejectWithValue("user doesnt exisit");
+    const croppedImages = await cropImage(assets, translateAssets);
+    const sourceImages = await uploadPostImages(croppedImages);
+    const post = await postAPI.createPost({
+      caption: caption.trim(),
+      images: sourceImages,
+      userId: userId,
+    });
+    if (post) {
+      return post;
+    } else {
+      return thunkAPI.rejectWithValue("Server error");
+    }
+  } catch (error) {
+    console.log(error);
+    return thunkAPI.rejectWithValue(error + "");
   }
 });
 
@@ -259,6 +265,7 @@ const postsSlice = createSlice({
       })
       .addCase(sendPost.rejected, (state, action) => {
         state.posting = "failed";
+        console.log("sendPost failed", action.payload);
       });
   },
 });
