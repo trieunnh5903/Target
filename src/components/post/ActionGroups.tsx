@@ -50,7 +50,7 @@ const ActionGroups: React.FC<ActionGroupsProps> = ({
             name={alreadyLiked ? "heart-fill" : "heart"}
             onPress={onLikePress}
             size={24}
-            color={alreadyLiked ? "red" : "black"}
+            color={alreadyLiked ? "#ce2127" : "black"}
           />
         </Animated.View>
 

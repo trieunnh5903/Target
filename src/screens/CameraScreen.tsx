@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   overlay: {
     flexDirection: "row",
     justifyContent: "space-between",
-    // backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.3)",
     height: (SCREEN_HEIGHT - CROP_SIZE) / 2,
     width: SCREEN_WIDTH,
   },

@@ -161,6 +161,7 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   }, []);
 
   const renderItem: ListRenderItem<Post> = ({ item }) => {
+    const liked = !!item.likes?.[currentUser?.id as string];
     return item.images.length === 1 ? (
       <PostSingleImage
         onPress={onImagePress}
@@ -168,9 +169,11 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
         data={item}
         onCommentPress={() => handleOpenComment(item)}
         onToggleLikePress={onToggleLikePress}
+        liked={liked}
       />
     ) : (
       <PostMultipleImage
+        liked={liked}
         onPress={onImagePress}
         currentUser={currentUser}
         data={item}
@@ -184,8 +187,9 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
       <StatusBar style="auto" />
       <FlashList
         ref={listRef}
+        keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <Divider />}
-        estimatedItemSize={366.5}
+        estimatedItemSize={373}
         estimatedListSize={{
           width: SCREEN_WIDTH,
           height: SCREEN_HEIGHT - 49 - 80,
@@ -193,7 +197,6 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
         getItemType={(item) => {
           return item.images.length;
         }}
-        overScrollMode="never"
         refreshControl={
           <RefreshControl
             refreshing={reloadStatus === "loading"}

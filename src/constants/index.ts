@@ -22,6 +22,7 @@ export const GLOBAL_STYLE = StyleSheet.create({
   fullSize: {
     height: "100%",
     width: "100%",
+    backgroundColor: "#f0f0f0",
   },
   fullWidth: {
     width: "100%",

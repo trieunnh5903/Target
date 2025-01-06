@@ -17,8 +17,6 @@ const fetchAllUserPost = async (
   lastPost?: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null
 ) => {
   try {
-    console.log("fetchAllUserPost");
-
     const postsSnapshot = await (lastPost
       ? postsCollection
           .where(Filter("userId", "==", userId))
@@ -118,7 +116,6 @@ const fetchAll = async ({
         postedBy: userData || null,
       };
     });
-
     return {
       posts: posts as unknown as Post[],
       lastPost: postsSnapshot.docs[postsSnapshot.docs.length - 1],

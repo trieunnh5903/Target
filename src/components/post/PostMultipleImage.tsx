@@ -1,20 +1,16 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, ListRenderItem } from "react-native";
 import React, { memo, useCallback } from "react";
 import { Post, PostImage, User } from "@/types";
 import { useSharedValue, withSpring } from "react-native-reanimated";
-import {
-  GLOBAL_STYLE,
-  POST_IMAGE_SIZE,
-  SCREEN_WIDTH,
-  SPACING,
-} from "@/constants";
+import { GLOBAL_STYLE, SPACING } from "@/constants";
 import { dayJs } from "@/utils/dayJs";
 import Header from "./Header";
 import ActionGroups from "./ActionGroups";
 import ImageArea from "./ImageArea";
-import { FlashList, ListRenderItem } from "@shopify/flash-list";
+import { FlatList } from "react-native-gesture-handler";
 
 interface PostMultipleImageProps {
+  liked: boolean;
   data: Post;
   onCommentPress: () => void;
   currentUser: User | null;
@@ -23,8 +19,7 @@ interface PostMultipleImageProps {
 }
 
 const PostMultipleImage: React.FC<PostMultipleImageProps> = memo(
-  ({ data, onCommentPress, onToggleLikePress, currentUser, onPress }) => {
-    const liked = !!data.likes?.[currentUser?.id as string];
+  ({ data, onCommentPress, onToggleLikePress, liked, onPress }) => {
     const animatedIsLiked = useSharedValue(liked);
     const heartProgress = useSharedValue(1);
     const isDoubleTap = useSharedValue(false);
@@ -48,23 +43,11 @@ const PostMultipleImage: React.FC<PostMultipleImageProps> = memo(
           <ImageArea
             onPress={onPress}
             key={item.baseUrl.source}
-            animatedIsLiked={animatedIsLiked}
-            heartProgress={heartProgress}
-            isDoubleTap={isDoubleTap}
-            aleadyLiked={liked}
-            onDoubleTapPress={handeToggleLike}
             source={item}
           />
         );
       },
-      [
-        animatedIsLiked,
-        handeToggleLike,
-        heartProgress,
-        isDoubleTap,
-        liked,
-        onPress,
-      ]
+      [onPress]
     );
     return (
       <View>
@@ -74,17 +57,14 @@ const PostMultipleImage: React.FC<PostMultipleImageProps> = memo(
         />
 
         <View>
-          <FlashList
-            estimatedListSize={{
-              height: POST_IMAGE_SIZE,
-              width: SCREEN_WIDTH,
-            }}
-            estimatedItemSize={POST_IMAGE_SIZE}
+          <FlatList
+            keyExtractor={(item) => item.baseUrl.source}
             data={data.images}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
               paddingHorizontal: SPACING.medium,
             }}
+            initialNumToRender={2}
             ItemSeparatorComponent={() => (
               <View style={{ width: SPACING.medium }} />
             )}
@@ -105,18 +85,14 @@ const PostMultipleImage: React.FC<PostMultipleImageProps> = memo(
         />
 
         <View style={styles.description}>
-          {data.caption?.length > 0 ? (
-            <>
-              <Text>
-                <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
-                {"  "}
-                {data.caption}
-              </Text>
-              <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
-            </>
-          ) : (
-            <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
+          {data.caption?.length > 0 && (
+            <Text>
+              <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
+              {"  "}
+              {data.caption}
+            </Text>
           )}
+          <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
         </View>
       </View>
     );

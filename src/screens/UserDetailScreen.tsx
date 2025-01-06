@@ -1,5 +1,10 @@
 import { ListRenderItem, StyleSheet, Text, View } from "react-native";
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { RootStackScreenProps } from "@/types/navigation";
 import { CustomAvatar, CustomView } from "@/components";
 import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
@@ -49,8 +54,24 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
     })();
   }, [lastPost, userId]);
 
+  const onImagePress = useCallback(
+    (index: number) => {
+      navigation.navigate("PostDetail", {
+        posts: post,
+        initialScrollIndex: index,
+      });
+    },
+    [navigation, post]
+  );
+
   const renderItem: ListRenderItem<Post> = ({ item, index }) => {
-    return <ImageEntry item={item} onImagePress={() => {}} index={index} />;
+    return (
+      <ImageEntry
+        item={item}
+        onImagePress={() => onImagePress(index)}
+        index={index}
+      />
+    );
   };
   return (
     <View style={[styles.container]}>

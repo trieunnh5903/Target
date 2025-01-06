@@ -1,7 +1,7 @@
 import { Keyboard, ListRenderItem, StyleSheet, View } from "react-native";
-import React, { useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
-import Animated, { FadeOut } from "react-native-reanimated";
+import Animated, { FadeOut, useAnimatedRef } from "react-native-reanimated";
 import { Asset } from "expo-media-library";
 import { CustomView } from "@/components";
 import { Image } from "expo-image";
@@ -19,7 +19,7 @@ import {
   Portal,
   Text,
 } from "react-native-paper";
-import { TextInput } from "react-native-gesture-handler";
+import { FlatList, TextInput } from "react-native-gesture-handler";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { sendPost } from "@/redux/slices/postSlice";
 import { addPostToOwnPost } from "@/redux/slices/authSlice";
@@ -91,6 +91,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   const [assets, setAssets] = useState(assetsParam);
   const [caption, setCaption] = useState("");
   const posting = useAppSelector((state) => state.posts.posting);
+  const listRef = useRef<FlatList<any>>(null);
 
   useLayoutEffect(() => {
     const onSendPress = async () => {
@@ -121,7 +122,11 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   }, [assets, caption, dispatch, navigation, translateAssets]);
 
   const handleDeleteAsset = (assetId: string) => {
+    const index = assets.findIndex((item) => item.id === assetId);
     setAssets((pre) => pre.filter((item) => item.id !== assetId));
+    if (index > 0) {
+      listRef.current?.scrollToIndex({ index: index - 1 });
+    }
   };
 
   const renderItem: ListRenderItem<Asset> = ({ index, item }) => {
@@ -138,7 +143,8 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
     <CustomView style={GLOBAL_STYLE.flex_1}>
       {assets.length > 0 && (
         <View>
-          <Animated.FlatList
+          <FlatList
+            ref={listRef}
             data={assets}
             horizontal
             contentContainerStyle={{

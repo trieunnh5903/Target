@@ -39,12 +39,12 @@ const processImage = async (
   const [thumbnailUri, baseUri] = await Promise.all([
     ImageManipulator.manipulate(item.uri)
       .crop(rect)
-      .resize({ width: Math.min(1080, item.width) })
+      .resize({ width: Math.min(700, item.width) })
       .renderAsync()
       .then((rendered) => rendered.saveAsync()),
 
     ImageManipulator.manipulate(item.uri)
-      .resize({ width: Math.min(1920, item.width) })
+      .resize({ width: Math.min(1080, item.width) })
       .renderAsync()
       .then((rendered) => rendered.saveAsync()),
   ]);
@@ -125,12 +125,15 @@ export const sendPost = createAsyncThunk<
     const userId = thunkAPI.getState().auth.currentUser?.id;
     if (!userId) return thunkAPI.rejectWithValue("user doesnt exisit");
     const croppedImages = await cropImage(assets, translateAssets);
+    console.log("cropImage", croppedImages.length);
     const sourceImages = await uploadPostImages(croppedImages);
+    console.log("uploadPostImages", sourceImages.length);
     const post = await postAPI.createPost({
       caption: caption.trim(),
       images: sourceImages,
       userId: userId,
     });
+    console.log("createPost", post?.id);
     if (post) {
       return post;
     } else {

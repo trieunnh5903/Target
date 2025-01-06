@@ -1,6 +1,6 @@
 import { Modal, StyleSheet } from "react-native";
-import React, { useEffect } from "react";
-import { IconButton } from "react-native-paper";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, IconButton } from "react-native-paper";
 import { Image } from "expo-image";
 import Animated, {
   Extrapolation,
@@ -40,7 +40,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
   const imageHeight = SCREEN_WIDTH / aspectRatio;
   const DRAG_DISMISS_THRESHOLD_Y = imageHeight * 0.3;
   const DRAG_DISMISS_VELOCITY = 800;
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (isOpen) {
       offset.value = { x: 0, y: 0 };
@@ -156,7 +156,10 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
         >
           <Animated.View style={[imageAimatedStyle]}>
             <Image
+              onLoadStart={() => setLoading(true)}
+              onLoad={() => setLoading(false)}
               source={source.source}
+              allowDownscaling
               style={[
                 {
                   width: SCREEN_WIDTH,
@@ -166,6 +169,9 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, source }) => {
             />
           </Animated.View>
         </GestureDetector>
+        {loading && (
+          <ActivityIndicator style={{ position: "absolute" }} color="white" />
+        )}
       </GestureHandlerRootView>
     </Modal>
   );

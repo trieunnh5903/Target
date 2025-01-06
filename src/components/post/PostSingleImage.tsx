@@ -10,6 +10,7 @@ import ActionGroups from "./ActionGroups";
 import ImageArea from "./ImageArea";
 
 interface PostSingleImageProps {
+  liked: boolean;
   data: Post;
   onCommentPress: () => void;
   currentUser: User | null;
@@ -18,8 +19,7 @@ interface PostSingleImageProps {
 }
 
 const PostSingleImage: React.FC<PostSingleImageProps> = memo(
-  ({ data, onCommentPress, onToggleLikePress, currentUser, onPress }) => {
-    const liked = !!data.likes?.[currentUser?.id as string];
+  ({ data, onCommentPress, onToggleLikePress, liked, onPress }) => {
     const animatedIsLiked = useSharedValue(liked);
     const heartProgress = useSharedValue(1);
     const isDoubleTap = useSharedValue(false);
@@ -71,18 +71,14 @@ const PostSingleImage: React.FC<PostSingleImageProps> = memo(
         />
 
         <View style={styles.description}>
-          {data.caption?.length > 0 ? (
-            <>
-              <Text>
-                <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
-                {"  "}
-                {data.caption}
-              </Text>
-              <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
-            </>
-          ) : (
-            <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
+          {data.caption?.length > 0 && (
+            <Text numberOfLines={1}>
+              <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
+              {"  "}
+              {data.caption}
+            </Text>
           )}
+          <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
         </View>
       </View>
     );

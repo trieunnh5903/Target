@@ -42,6 +42,7 @@ const AppNavigationContainer = () => {
   const dispatch = useAppDispatch();
   const [isAppReady, setIsAppReady] = useState(false);
   const { initialStatus } = useAppSelector((state) => state.posts);
+  const { currentUser } = useAppSelector((state) => state.auth);
   const { initializing, user } = useAuthState();
 
   useEffect(() => {
@@ -83,7 +84,7 @@ const AppNavigationContainer = () => {
       <Stack.Navigator
         initialRouteName={notificationPostId ? "PostDetail" : "Tabs"}
       >
-        {user ? (
+        {currentUser ? (
           <Stack.Group screenOptions={{ headerShadowVisible: false }}>
             <Stack.Group screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Tabs" component={AppBottomTab} />
