@@ -1,34 +1,19 @@
 import { StyleSheet, View, ListRenderItem } from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback } from "react";
 import { RootTabScreenProps } from "@/types/navigation";
 import { useAppSelector } from "@/hooks";
 import { Button, Text } from "react-native-paper";
 import { CustomAvatar, CustomView } from "@/components";
 import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
 import { Post } from "@/types";
-import { FlatList, Pressable } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FlatList, Pressable } from "react-native-gesture-handler";
 
 const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
   navigation,
 }) => {
   const { currentUser, ownPosts } = useAppSelector((state) => state.auth);
-
-  // const [lastPost, setLastPost] =
-  //   useState<FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null>(
-  //     null
-  //   );
-  // const [posts, setPosts] = useState<Post[]>([]);
-
-  // useEffect(() => {
-  //   if (!currentUser?.id) return;
-  //   (async () => {
-  //     const posts = await postAPI.fetchAllUserPost(currentUser?.id, lastPost);
-  //     setPosts(posts.posts);
-  //     setLastPost(posts.lastPost);
-  //   })();
-  // }, []);
 
   const onEditPress = () => {
     navigation.navigate("EditProfile");
@@ -45,7 +30,7 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
   );
 
   const renderItem: ListRenderItem<Post> = ({ item, index }) => {
-    return <ImageEntry item={item} onImagePress={onImagePress} index={index} />;
+    return <ImageEntry index={index} onImagePress={onImagePress} item={item} />;
   };
 
   return (
@@ -69,8 +54,8 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
       </CustomView>
 
       <FlatList
+        keyExtractor={(item) => item.id}
         columnWrapperStyle={{ gap: 1 }}
-        style={{ marginTop: SPACING.large }}
         ItemSeparatorComponent={() => <View style={{ height: 1 }} />}
         data={ownPosts}
         numColumns={3}
@@ -92,8 +77,8 @@ interface ImageEntryProps {
 }
 const ImageEntry: React.FC<ImageEntryProps> = ({
   item,
-  onImagePress,
   index,
+  onImagePress,
 }) => {
   return (
     <Pressable
@@ -101,7 +86,7 @@ const ImageEntry: React.FC<ImageEntryProps> = ({
       style={styles.imageContainer}
     >
       <Image
-        source={item.images[0].thumbnailUrl.source}
+        source={item?.images[0]?.thumbnailUrl?.source}
         style={GLOBAL_STYLE.fullSize}
       />
       {item.images.length > 1 && (

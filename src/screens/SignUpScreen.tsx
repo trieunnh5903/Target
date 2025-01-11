@@ -1,16 +1,17 @@
-import { Alert, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  View,
+} from "react-native";
 import React, { useState } from "react";
-import { Button, Text } from "react-native-paper";
+import { Button } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
 import { useAppDispatch } from "@/hooks";
 import { fetchCurrentUser } from "@/redux/slices/authSlice";
-import {
-  Container,
-  CustomKeyboardAvoidingView,
-  CustomView,
-} from "@/components";
-import { GLOBAL_STYLE } from "@/constants";
-import { Image } from "expo-image";
+import { CustomView } from "@/components";
+import { GLOBAL_STYLE, SPACING } from "@/constants";
 import CustomTextInput from "@/components/CustomTextInput";
 import { RootStackScreenProps } from "@/types/navigation";
 
@@ -64,21 +65,15 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
   // };
 
   return (
-    <CustomKeyboardAvoidingView>
-      <Container style={[GLOBAL_STYLE.justifyContentCenter]}>
-        <CustomView style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}>
-          <View style={styles.languageContainer}>
-            <Text variant="titleMedium">English</Text>
-          </View>
-          <CustomView paddingTop={24} style={[GLOBAL_STYLE.alignItemsCenter]}>
-            <Image
-              source={require("../../assets/icon.png")}
-              style={{ width: 60, height: 60 }}
-            />
-          </CustomView>
-        </CustomView>
-
-        <CustomView padding={16} style={styles.form}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={GLOBAL_STYLE.flex_1}
+    >
+      <CustomView
+        padding={SPACING.medium}
+        style={[GLOBAL_STYLE.justifyContentCenter, GLOBAL_STYLE.flex_1]}
+      >
+        <View style={styles.form}>
           <CustomTextInput
             label="Email"
             value={email}
@@ -101,19 +96,15 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
             onChangeText={setConfirmPassword}
             secureTextEntry
           />
+          <Button mode="contained">Register</Button>
+          <View style={{ flex: 1 }} />
 
-          <Button mode="contained" onPress={handleSignUp}>
-            Register
+          <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
+            Create new account
           </Button>
-        </CustomView>
-
-        <CustomView padding={16}>
-          <Button mode="outlined" onPress={() => navigation.navigate("SignIn")}>
-            Already have account
-          </Button>
-        </CustomView>
-      </Container>
-    </CustomKeyboardAvoidingView>
+        </View>
+      </CustomView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -121,7 +112,8 @@ const styles = StyleSheet.create({
   languageContainer: { position: "absolute", top: 0 },
   form: {
     gap: 16,
-    flex: 2,
+    justifyContent: "center",
+    flex: 1,
   },
   container: {
     flex: 1,

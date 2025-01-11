@@ -18,6 +18,7 @@ interface PostState {
   reloadStatus: RequestStatus;
   posting: RequestStatus;
   lastPost: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null;
+  error: string | undefined;
 }
 
 interface CroppedImage {
@@ -69,7 +70,7 @@ const cropImage = async (
       })
     );
   } catch (error) {
-    throw error;
+    throw new Error(`cropImage ${error} `);
   }
 };
 
@@ -77,32 +78,26 @@ const uploadPostImages = async (images: CroppedImage[]) => {
   try {
     return await Promise.all(
       images.map(async (image) => {
-        try {
-          const baseUrl = await postAPI.uploadImage(image.baseUri.uri);
-          const thumbnailUrl = await postAPI.uploadImage(
-            image.thumbnailUri.uri
-          );
+        const baseUrl = await postAPI.uploadImage(image.baseUri.uri);
+        const thumbnailUrl = await postAPI.uploadImage(image.thumbnailUri.uri);
 
-          return {
-            thumbnailUrl: {
-              source: thumbnailUrl,
-              width: image.thumbnailUri.width,
-              height: image.thumbnailUri.height,
-            },
-            baseUrl: {
-              width: image.baseUri.width,
-              height: image.baseUri.height,
-              source: baseUrl,
-            },
-          };
-        } catch (e) {
-          throw e;
-        }
+        return {
+          thumbnailUrl: {
+            source: thumbnailUrl,
+            width: image.thumbnailUri.width,
+            height: image.thumbnailUri.height,
+          },
+          baseUrl: {
+            width: image.baseUri.width,
+            height: image.baseUri.height,
+            source: baseUrl,
+          },
+        };
       })
     );
   } catch (error) {
     console.log("uploadPostImages", error);
-    throw error;
+    throw new Error(error + "");
   }
 };
 
@@ -125,7 +120,8 @@ export const sendPost = createAsyncThunk<
     const userId = thunkAPI.getState().auth.currentUser?.id;
     if (!userId) return thunkAPI.rejectWithValue("user doesnt exisit");
     const croppedImages = await cropImage(assets, translateAssets);
-    console.log("cropImage", croppedImages.length);
+    if (croppedImages.length === 0)
+      return thunkAPI.rejectWithValue("croppedImages.length === 0");
     const sourceImages = await uploadPostImages(croppedImages);
     console.log("uploadPostImages", sourceImages.length);
     const post = await postAPI.createPost({
@@ -187,6 +183,7 @@ const initialState = postsAdapter.getInitialState<PostState>({
   loadMoreStatus: "idle",
   reloadStatus: "idle",
   posting: "idle",
+  error: undefined,
 });
 
 const postsSlice = createSlice({
@@ -268,6 +265,7 @@ const postsSlice = createSlice({
       })
       .addCase(sendPost.rejected, (state, action) => {
         state.posting = "failed";
+        state.error = action.payload;
         console.log("sendPost failed", action.payload);
       });
   },

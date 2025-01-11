@@ -35,7 +35,10 @@ const SearchScreen: React.FC<RootTabScreenProps<"Search">> = ({
 
   const onChangeText = useCallback(async (text: string) => {
     setQuery(text);
-    if (text.trim() === "") return;
+    if (text.trim() === "") {
+      setSearchData([]);
+      return;
+    }
     setIsFetching(true);
     try {
       const users = await userAPI.searchUsersByKeyword(text);
@@ -61,29 +64,31 @@ const SearchScreen: React.FC<RootTabScreenProps<"Search">> = ({
 
   return (
     <CustomView style={GLOBAL_STYLE.flex_1}>
-      {searchData && (
-        <FlatList
-          contentContainerStyle={{ padding: SPACING.small }}
-          data={searchData}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => onUserPress(item)}
-              style={styles.userItem}
-            >
-              <CustomAvatar avatarUrl={item.avatarURL} size={"medium"} />
-              <CustomView style={{ marginLeft: SPACING.small }}>
-                <Text>{item.displayName}</Text>
+      <FlatList
+        ListFooterComponent={
+          <View>
+            {isFetching && (
+              <CustomView
+                padding={SPACING.small}
+                style={styles.indicatorContainer}
+              >
+                <ActivityIndicator size={"small"} color="black" />
               </CustomView>
-            </Pressable>
-          )}
-        />
-      )}
-      {isFetching && (
-        <CustomView padding={SPACING.small}>
-          <ActivityIndicator />
-        </CustomView>
-      )}
+            )}
+          </View>
+        }
+        contentContainerStyle={{ padding: SPACING.small }}
+        data={searchData}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <Pressable onPress={() => onUserPress(item)} style={styles.userItem}>
+            <CustomAvatar avatarUrl={item.avatarURL} size={"medium"} />
+            <CustomView style={{ marginLeft: SPACING.small }}>
+              <Text>{item.displayName}</Text>
+            </CustomView>
+          </Pressable>
+        )}
+      />
     </CustomView>
   );
 };
@@ -113,6 +118,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: SPACING.small,
     alignItems: "center",
+  },
+  indicatorContainer: {
+    // position: "absolute",
+    zIndex: 1,
+    borderRadius: 100,
+    borderColor: "#f0f0f0",
+    borderWidth: 1,
+    alignSelf: "center",
   },
   searchInput: {
     width: SCREEN_WIDTH - 40,

@@ -90,7 +90,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   const dispatch = useAppDispatch();
   const [assets, setAssets] = useState(assetsParam);
   const [caption, setCaption] = useState("");
-  const posting = useAppSelector((state) => state.posts.posting);
+  const { error, posting } = useAppSelector((state) => state.posts);
   const listRef = useRef<FlatList<any>>(null);
 
   useLayoutEffect(() => {
@@ -170,6 +170,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
         padding={SPACING.medium}
         paddingTop={0}
       >
+        <Text>{error}</Text>
         <TextInput
           style={GLOBAL_STYLE.flex_1}
           multiline

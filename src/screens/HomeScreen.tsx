@@ -78,7 +78,7 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
             containerColor="#f0f0f0"
             mode="contained-tonal"
             icon={"chat-outline"}
-            onPress={() => navigation.navigate("ChatRoom")}
+            onPress={() => navigation.navigate("ListChatRoom")}
           ></IconButton>
         </CustomView>
       ),

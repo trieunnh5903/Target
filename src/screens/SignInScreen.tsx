@@ -1,4 +1,11 @@
-import { Alert, Pressable, StyleSheet } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import React, { useState } from "react";
 import { Button, IconButton, Text } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
@@ -71,75 +78,76 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
   //     setError("Email đặt lại mật khẩu đã được gửi");
   //   }
   // };
-  
+
   return (
-    <Container style={[GLOBAL_STYLE.justifyContentCenter]}>
-      <CustomView style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}>
-        <CustomView style={styles.languageContainer}>
-          <Text variant="titleMedium">English</Text>
-        </CustomView>
-        <CustomView paddingTop={24} style={[GLOBAL_STYLE.alignItemsCenter]}>
-          <Image
-            source={require("../../assets/adaptive-icon.png")}
-            style={{ width: 100, height: 100 }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={GLOBAL_STYLE.flex_1}
+    >
+      <Container style={[GLOBAL_STYLE.justifyContentCenter]}>
+        <CustomView padding={16} style={styles.form}>
+          <CustomView style={GLOBAL_STYLE.center}>
+            <Text variant="titleMedium">English</Text>
+          </CustomView>
+          <CustomView paddingTop={24} style={[GLOBAL_STYLE.alignItemsCenter]}>
+            <Image
+              source={require("../../assets/adaptive-icon.png")}
+              style={{ width: 100, height: 100 }}
+            />
+          </CustomView>
+          <CustomTextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
           />
+          <CustomTextInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <Button mode="contained" loading={loading} onPress={handleSignIn}>
+            Login
+          </Button>
+          <View style={{ flex: 1 }} />
+          <Pressable
+            style={[GLOBAL_STYLE.rowCenter, styles.googleLogin]}
+            onPress={handleGoogleSignIn}
+          >
+            <Image
+              source={require("../../assets/icons8-google-48.png")}
+              style={{ width: 24, height: 24 }}
+            />
+            <Text>Sign in with Google</Text>
+          </Pressable>
+          <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
+            Create new account
+          </Button>
         </CustomView>
-      </CustomView>
 
-      <CustomView padding={16} style={styles.form}>
-        <CustomTextInput
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <CustomTextInput
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <Button mode="contained" loading={loading} onPress={handleSignIn}>
-          Login
-        </Button>
-      </CustomView>
-
-      <CustomView
-        padding={16}
-        style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.justifyContentEnd]}
-      >
-        <Pressable
-          style={[GLOBAL_STYLE.rowCenter, styles.googleLogin]}
-          onPress={handleGoogleSignIn}
+        {/* <CustomView
+          padding={16}
+          style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.justifyContentEnd]}
         >
-          <Image
-            source={require("../../assets/icons8-google-48.png")}
-            style={{ width: 24, height: 24 }}
-          />
-          <Text>Sign in with Google</Text>
-        </Pressable>
-        <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
-          Create new account
-        </Button>
-      </CustomView>
-    </Container>
+          
+        </CustomView> */}
+      </Container>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  languageContainer: { position: "absolute", top: 0 },
   googleLogin: {
     gap: 8,
     borderColor: "lightgray",
     borderWidth: 1,
     padding: 8,
     borderRadius: 20,
-    marginBottom: 16,
   },
   form: {
     gap: 16,
-    flex: 1,
+    flex: 2,
   },
   container: {
     flex: 1,

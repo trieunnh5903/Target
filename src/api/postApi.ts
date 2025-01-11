@@ -11,6 +11,7 @@ import {
   usersCollection,
 } from "./collections";
 import Utils from "@/utils";
+import Constants from "expo-constants";
 
 const fetchAllUserPost = async (
   userId: string,
@@ -99,6 +100,12 @@ const fetchAll = async ({
       : postsCollection.orderBy("createdAt", "desc").limit(limit).get());
 
     const userIds = postsSnapshot.docs.map((doc) => doc.data().userId);
+    if (userIds.length === 0) {
+      return {
+        posts: [],
+        lastPost: null,
+      };
+    }
     const userDocs = await usersCollection.where("id", "in", userIds).get();
 
     const usersMap = userDocs.docs.reduce((acc, doc) => {
@@ -127,23 +134,18 @@ const fetchAll = async ({
 };
 
 const uploadImage = async (uri: string) => {
-  console.log("uploadImage", uri);
-
   const formData = new FormData();
-  formData.append(
-    "upload_preset",
-    process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
-  );
+  formData.append("upload_preset", "default");
 
   formData.append("file", {
-    uri: uri,
+    uri,
     name: new Date().getTime().toString() + Math.random(),
     type: Utils.getMimeType(uri) ?? "image/jpeg",
   } as any);
 
   try {
     const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      "https://api.cloudinary.com/v1_1/dg9phlaar/image/upload",
       formData,
       {
         headers: {
@@ -154,7 +156,7 @@ const uploadImage = async (uri: string) => {
     return response.data.secure_url as string;
   } catch (error) {
     console.error("uploadImage:", error);
-    throw error;
+    throw new Error("uploadImage " + error + " " + uri);
   }
 };
 
@@ -244,6 +246,7 @@ const fetchComments = async (postId: string) => {
     })) as Omit<Comment, "avatarURL" | "displayName">[];
 
     const userIds = [...new Set(comments.map((comment) => comment.userId))];
+    if (userIds.length === 0) return [];
     const usersData = await userAPI.fetchUsersByIds(userIds);
 
     const enrichedComments = comments.map((comment) => {

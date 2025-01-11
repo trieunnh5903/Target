@@ -9,7 +9,7 @@ import { RootStackScreenProps } from "@/types/navigation";
 import { CustomAvatar, CustomView } from "@/components";
 import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
 import { FlatList, Pressable } from "react-native-gesture-handler";
-import { Button, Divider, IconButton } from "react-native-paper";
+import { Divider, IconButton } from "react-native-paper";
 import { Post } from "@/types";
 import { Image } from "expo-image";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -64,6 +64,8 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
     [navigation, post]
   );
 
+  const onChatPress = () =>
+    navigation.navigate("ChatRoom", { userId, displayName, avatarURL });
   const renderItem: ListRenderItem<Post> = ({ item, index }) => {
     return (
       <ImageEntry
@@ -81,13 +83,15 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
       >
         <CustomAvatar size={"large"} avatarUrl={avatarURL} />
         <Text style={styles.displayName}>{displayName}</Text>
-        <Text style={styles.bio}>{bio}</Text>
-        {/* <IconButton
+        {bio && <Text style={styles.bio}>{bio}</Text>}
+
+        <IconButton
           mode="contained-tonal"
-          icon={"chat"}
+          icon={"chat-outline"}
           style={styles.editButton}
-          // onPress={onEditPress}
-        ></IconButton> */}
+          containerColor="#f0f0f0"
+          onPress={onChatPress}
+        ></IconButton>
       </CustomView>
 
       <Divider />

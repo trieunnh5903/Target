@@ -58,6 +58,7 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
             secureTextEntry={secureTextEntry && !passwordVisible}
             onChangeText={handleOnChangeText}
             value={text}
+            autoCapitalize="none"
             underlineStyle={{ opacity: 0 }}
             style={[GLOBAL_STYLE.flex_1]}
             contentStyle={{ paddingRight: 0 }}

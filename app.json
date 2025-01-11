@@ -20,8 +20,17 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "softwareKeyboardLayoutMode": "pan",
-      "package": "com.trieu5903.Instagram"
+      "package": "com.trieu5903.Instagram",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -59,6 +68,12 @@
         "projectId": "d08dc06d-e623-4218-b5ca-7a1b9ebf7a02"
       }
     },
-    "owner": "trieu5903"
+    "owner": "trieu5903",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d08dc06d-e623-4218-b5ca-7a1b9ebf7a02"
+    }
   }
 }

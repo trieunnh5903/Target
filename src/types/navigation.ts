@@ -13,9 +13,11 @@ export type RootStackParamList = {
   SignUp: undefined;
   EditProfile: undefined;
   Notification: undefined;
-  ChatRoom: undefined;
-  Chat: {
+  ListChatRoom: undefined;
+  ChatRoom: {
     userId: string;
+    displayName: string;
+    avatarURL: string;
   };
   PostDetail: {
     postId?: Post["id"];

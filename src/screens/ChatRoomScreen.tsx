@@ -1,111 +1,108 @@
-import { StyleSheet, Text, View } from "react-native";
-import React from "react";
-import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
-import { CustomAvatar } from "@/components";
-import { SPACING } from "@/constants";
+import { StyleSheet } from "react-native";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
+import { CustomView, Message, MessageInput } from "@/components";
+import { GLOBAL_STYLE, SPACING } from "@/constants";
+import { FlatList } from "react-native-gesture-handler";
+import { useAppSelector } from "@/hooks";
+import chatAPI from "@/api/chatApi";
+import { IChatRoom, IMessage } from "@/types";
+import dayjs from "dayjs";
 
 const ChatRoomScreen: React.FC<RootStackScreenProps<"ChatRoom">> = ({
+  route,
   navigation,
 }) => {
-  const chatList = [
-    {
-      id: "1",
-      avatar: "https://picsum.photos/700",
-      name: "John Doe",
-      lastMessage: "Hello, how are you?",
-      time: "10:45 AM",
-    },
-    {
-      id: "2",
-      avatar: "https://picsum.photos/700",
-      name: "Jane Smith",
-      lastMessage: "See you tomorrow!",
-      time: "9:30 AM",
-    },
-    {
-      id: "3",
-      avatar: "https://picsum.photos/700",
-      name: "Michael Brown",
-      lastMessage: "Can you call me back?",
-      time: "8:15 AM",
-    },
-  ];
+  const { avatarURL, displayName, userId } = route.params;
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const [messages, setMessages] = useState<IMessage[]>([]);
+  const [message, setMessage] = useState("");
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: displayName,
+    });
+    return () => {};
+  }, [displayName, navigation]);
 
-  const onChatItemPress = (chatItem) => {
-    navigation.navigate("Chat", { userId: chatItem.id });
+  useEffect(() => {
+    (async () => {
+      if (!currentUser) return;
+      try {
+        const chatData = await chatAPI.fetchConverstation([
+          currentUser.id,
+          userId,
+        ]);
+        console.log("chatData", chatData);
+
+        setMessages(chatData);
+      } catch {}
+    })();
+
+    return () => {};
+  }, [avatarURL, currentUser, displayName, userId]);
+
+  const onSendPress = async () => {
+    const chatDocId = [currentUser?.id!, userId].sort().join("_");
+    const newMessage: IMessage = {
+      content: message,
+      createdAt: dayjs().unix(),
+      id: dayjs().unix().toString(),
+      senderId: currentUser?.id!,
+    };
+
+    const participants: IChatRoom["participants"] = [currentUser?.id!, userId];
+    const participantsDetails: IChatRoom["participantsDetails"] = {
+      [userId]: {
+        avatarURL: avatarURL,
+        displayName,
+      },
+      [currentUser?.id!]: {
+        avatarURL: currentUser?.avatarURL ?? null,
+        displayName: currentUser?.displayName ?? null,
+      },
+    };
+    try {
+      setMessages((pre) => [newMessage, ...pre]);
+      await chatAPI.sendMessage(
+        chatDocId,
+        message,
+        currentUser?.id!,
+        participants,
+        participantsDetails
+      );
+    } catch {
+      setMessages(messages.filter((item) => item.id !== newMessage.id));
+    } finally {
+      setMessage("");
+    }
+    console.log(newMessage);
   };
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.chatItem}
-      onPress={() => onChatItemPress(item)}
-    >
-      {/* Avatar */}
-      <CustomAvatar avatarUrl={item.avatar} size={"medium"} />
-
-      {/* Chat Info */}
-      <View style={styles.chatInfo}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.lastMessage}>{item.lastMessage}</Text>
-      </View>
-
-      {/* Time */}
-      <Text style={styles.time}>{item.time}</Text>
-    </TouchableOpacity>
-  );
   return (
-    <View style={styles.container}>
+    <CustomView style={GLOBAL_STYLE.flex_1}>
       <FlatList
-        data={chatList}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.chatList}
+        data={messages}
+        inverted
+        renderItem={({ item, index }) => {
+          return (
+            <Message
+              message={item}
+              isSender={item.senderId === currentUser?.id}
+              index={index}
+            />
+          );
+        }}
       />
-    </View>
+      <CustomView padding={SPACING.small}>
+        <MessageInput
+          onPress={onSendPress}
+          value={message}
+          onChangeText={setMessage}
+        />
+      </CustomView>
+    </CustomView>
   );
 };
 
 export default ChatRoomScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  chatList: {
-    padding: SPACING.medium,
-    paddingTop: 0,
-  },
-  chatItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    gap: SPACING.small,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
-  },
-  chatInfo: {
-    flex: 1, // Chiếm không gian còn lại
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  lastMessage: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 2,
-  },
-  time: {
-    fontSize: 12,
-    color: "#999",
-  },
-});
+const styles = StyleSheet.create({});

@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import React, { memo, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import {
   BottomSheetFooter,
   BottomSheetFooterProps,
@@ -97,7 +97,6 @@ const CommentBottomSheetFooter = memo(
                 style={styles.textInput}
                 value={commentText}
                 onChangeText={handleInputChange}
-                autoFocus
               />
               {commentText && (
                 <Animated.View

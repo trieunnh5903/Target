@@ -1,21 +1,10 @@
 import { StyleSheet } from "react-native";
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
 import { postAPI } from "@/api";
 import { Post, PostImage } from "@/types";
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
-import {
-  GLOBAL_STYLE,
-  SCREEN_HEIGHT,
-  SCREEN_WIDTH,
-  SPACING,
-} from "@/constants";
+import { GLOBAL_STYLE, SCREEN_HEIGHT, SCREEN_WIDTH } from "@/constants";
 import {
   CustomView,
   ImageModal,
@@ -26,21 +15,12 @@ import { useAppSelector } from "@/hooks";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { CommentBottomSheet } from "@/components/bottomSheet";
 import { Divider } from "react-native-paper";
-import { View } from "react-native";
-import { Pressable } from "react-native-gesture-handler";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
   route,
   navigation,
 }) => {
   const { postId, initialScrollIndex, posts: postParam } = route.params;
-  console.log(
-    "PostDetailScreen -> postId",
-    postParam?.length,
-    initialScrollIndex
-  );
-
   const [posts, setPosts] = useState<Post[]>([]);
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [imageModalSource, setImageModalSource] = useState<
@@ -72,6 +52,11 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
 
   useEffect(() => {
     if (posts.length > 0 && initialScrollIndex && listRef.current) {
+      // console.log(
+      //   "PostDetailScreen -> postId",
+      //   postParam?.length,
+      //   initialScrollIndex
+      // );
       listRef.current.scrollToIndex({
         index: initialScrollIndex,
         animated: false,
@@ -128,27 +113,26 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
   );
 
   const renderItem: ListRenderItem<Post> = ({ item }) => {
-    if (item.images.length === 1) {
-      return (
-        <PostSingleImage
-          onPress={onImagePress}
-          currentUser={currentUser}
-          data={item}
-          onCommentPress={() => handleOpenComment(item)}
-          onToggleLikePress={onToggleLikePress}
-        />
-      );
-    } else {
-      return (
-        <PostMultipleImage
-          onPress={onImagePress}
-          currentUser={currentUser}
-          data={item}
-          onCommentPress={() => handleOpenComment(item)}
-          onToggleLikePress={onToggleLikePress}
-        />
-      );
-    }
+    const liked = !!item.likes?.[currentUser?.id as string];
+    return item.images.length === 1 ? (
+      <PostSingleImage
+        onPress={onImagePress}
+        currentUser={currentUser}
+        data={item}
+        onCommentPress={() => handleOpenComment(item)}
+        onToggleLikePress={onToggleLikePress}
+        liked={liked}
+      />
+    ) : (
+      <PostMultipleImage
+        liked={liked}
+        onPress={onImagePress}
+        currentUser={currentUser}
+        data={item}
+        onCommentPress={() => handleOpenComment(item)}
+        onToggleLikePress={onToggleLikePress}
+      />
+    );
   };
 
   return (

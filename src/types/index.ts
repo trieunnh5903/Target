@@ -43,3 +43,23 @@ export type Comment = Pick<User, "avatarURL" | "displayName"> & {
   createdAt: number;
   postId: Post["id"];
 };
+
+export type IMessage = {
+  id: string;
+  senderId: string;
+  content: string;
+  createdAt: number;
+};
+
+export type IChatRoom = {
+  id: string;
+  participants: string[];
+  participantsDetails: {
+    [id: string]: {
+      displayName: User["displayName"];
+      avatarURL: User["avatarURL"];
+    };
+  };
+  createdAt: number;
+  lastMessage: Omit<IMessage, "id">;
+};
