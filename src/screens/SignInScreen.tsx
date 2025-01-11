@@ -65,20 +65,6 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
     }
   };
 
-  // const handleResetPassword = async () => {
-  //   if (!email) {
-  //     setError("Vui lòng nhập email");
-  //     return;
-  //   }
-
-  //   const { error: resetError } = await authAPI.resetPassword(email);
-  //   if (resetError) {
-  //     setError(resetError);
-  //   } else {
-  //     setError("Email đặt lại mật khẩu đã được gửi");
-  //   }
-  // };
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -126,12 +112,6 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
           </Button>
         </CustomView>
 
-        {/* <CustomView
-          padding={16}
-          style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.justifyContentEnd]}
-        >
-          
-        </CustomView> */}
       </Container>
     </KeyboardAvoidingView>
   );
