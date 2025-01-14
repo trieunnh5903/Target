@@ -174,12 +174,6 @@ const likePost = async (
 
       const postData = postDoc.data();
       const currentLikesCount = postData?.likesCount ?? 0;
-      const currentLikeStatus = postData?.likes?.[likeById];
-
-      if (currentLikeStatus === type) {
-        throw new Error(`You have already ${type}d this post`);
-      }
-
       const plusWith = type === "dislike" ? -1 : 1;
       const newLikesCount = Math.max(0, currentLikesCount + plusWith);
       transaction.update(postRef, {

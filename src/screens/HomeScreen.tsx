@@ -12,7 +12,6 @@ import {
   PostSingleImage,
 } from "@/components";
 import { Post, PostImage } from "@/types";
-import { postAPI } from "@/api/postApi";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import {
   GLOBAL_STYLE,
@@ -22,16 +21,13 @@ import {
 } from "@/constants";
 import { CommentBottomSheet } from "@/components/bottomSheet";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { notificationAPI } from "@/api";
 import {
   fetchMorePosts,
-  postUpdated,
+  likePostRequest,
   refetchInitialPosts,
   selectAllPosts,
-  selectPostById,
 } from "@/redux/slices/postSlice";
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
-import { store } from "@/redux/store";
 import { StatusBar } from "expo-status-bar";
 import { RootTabScreenProps } from "@/types/navigation";
 import { Divider, IconButton, Text } from "react-native-paper";
@@ -41,7 +37,7 @@ import { Pressable } from "react-native-gesture-handler";
 const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   const posts = useAppSelector(selectAllPosts);
   const dispatch = useAppDispatch();
-  const { lastPost, loadMoreStatus, reloadStatus } = useAppSelector(
+  const { lastPost, loadMoreStatus, reloadStatus, posting } = useAppSelector(
     (state) => state.posts
   );
   const currentUser = useAppSelector((state) => state.auth.currentUser);
@@ -52,6 +48,8 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
     PostImage["baseUrl"] | null
   >(null);
 
+  console.log('posting', posting);
+  
   useLayoutEffect(() => {
     const scrollToTop = () =>
       listRef.current?.scrollToOffset({ offset: 0, animated: true });
@@ -103,57 +101,9 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   const onToggleLikePress = useCallback(
     async (postId: string) => {
       if (!currentUser?.id) return;
-      const post = selectPostById(store.getState(), postId);
-      const isLiked = !!post?.likes?.[currentUser?.id ?? ""];
-      const likeCountChange = isLiked ? -1 : 1;
-      dispatch(
-        postUpdated({
-          id: postId,
-          changes: {
-            likes: {
-              ...post?.likes,
-              [currentUser?.id]: !isLiked,
-            },
-            likesCount: (post?.likesCount || 0) + likeCountChange,
-          },
-        })
-      );
-
-      const { isSuccess } = await postAPI.likePost(
-        postId,
-        currentUser?.id!,
-        isLiked ? "dislike" : "like"
-      );
-
-      try {
-        if (isSuccess) {
-          const isInteracted = post.likes?.hasOwnProperty(currentUser.id);
-          const shouldNotification =
-            !isInteracted && post.postedBy.id !== currentUser?.id;
-          if (shouldNotification) {
-            await notificationAPI.notificationPostLiked(
-              post.postedBy.id,
-              currentUser?.displayName ?? "Someone",
-              postId
-            );
-          }
-        } else {
-          dispatch(
-            postUpdated({
-              id: postId,
-              changes: {
-                likes: {
-                  ...post?.likes,
-                  [currentUser?.id]: isLiked,
-                },
-                likesCount: post?.likesCount || 0,
-              },
-            })
-          );
-        }
-      } catch {}
+      dispatch(likePostRequest({ postId }));
     },
-    [currentUser?.displayName, currentUser?.id, dispatch]
+    [currentUser?.id, dispatch]
   );
 
   const onImagePress = useCallback((source: PostImage["baseUrl"]) => {

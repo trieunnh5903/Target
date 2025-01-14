@@ -1,7 +1,7 @@
 import { Keyboard, ListRenderItem, StyleSheet, View } from "react-native";
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
-import Animated, { FadeOut, useAnimatedRef } from "react-native-reanimated";
+import Animated, { FadeOut } from "react-native-reanimated";
 import { Asset } from "expo-media-library";
 import { CustomView } from "@/components";
 import { Image } from "expo-image";
@@ -21,8 +21,7 @@ import {
 } from "react-native-paper";
 import { FlatList, TextInput } from "react-native-gesture-handler";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { sendPost } from "@/redux/slices/postSlice";
-import { addPost } from "@/redux/slices/authSlice";
+import { resetPosting, sendPostRequest } from "@/redux/slices/postSlice";
 
 interface ImageEntryProps {
   asset: Asset;
@@ -93,16 +92,17 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   const { error, posting } = useAppSelector((state) => state.posts);
   const listRef = useRef<FlatList<any>>(null);
 
+  useEffect(() => {
+    if (posting === "succeeded") {
+      navigation.navigate("Tabs", { screen: "Home" });
+      dispatch(resetPosting());
+    }
+  }, [dispatch, navigation, posting]);
+
   useLayoutEffect(() => {
     const onSendPress = async () => {
       Keyboard.dismiss();
-      const post = await dispatch(
-        sendPost({ assets, caption, translateAssets })
-      ).unwrap();
-      if (post) {
-        dispatch(addPost(post));
-        navigation.navigate("Tabs", { screen: "Home" });
-      }
+      dispatch(sendPostRequest({ assets, caption, translateAssets }));
     };
 
     navigation.setOptions({

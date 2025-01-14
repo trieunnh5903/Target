@@ -24,12 +24,12 @@ interface LoginPayload {
 }
 
 export function* watchAuthSaga() {
-  yield takeLatest(loginRequest.type, loginSaga);
-  yield takeLatest(logout.type, logoutSaga);
+  yield takeLatest(loginRequest.type, loginWorker);
+  yield takeLatest(logout.type, logoutWorker);
   yield fork(authStateListener);
 }
 
-function* logoutSaga() {
+function* logoutWorker() {
   try {
     if (auth().currentUser) {
       yield call([auth(), "signOut"]);
@@ -77,7 +77,7 @@ function* authStateListener() {
   }
 }
 
-function* loginSaga(action: PayloadAction<LoginPayload>) {
+function* loginWorker(action: PayloadAction<LoginPayload>) {
   try {
     const { email, password } = action.payload;
     if (!email || !password) {
