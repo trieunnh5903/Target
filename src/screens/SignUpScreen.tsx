@@ -1,15 +1,8 @@
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import React, { useState } from "react";
 import { Button } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
 import { useAppDispatch } from "@/hooks";
-import { fetchCurrentUser } from "@/redux/slices/authSlice";
 import { CustomView } from "@/components";
 import { GLOBAL_STYLE, SPACING } from "@/constants";
 import CustomTextInput from "@/components/CustomTextInput";
@@ -44,7 +37,7 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
         userCredential.user
       );
       if (createUserError) throw new Error(createUserError);
-      dispatch(fetchCurrentUser(userCredential.user.uid));
+      // dispatch(fetchCurrentUser(userCredential.user.uid));
     } catch (error) {
       handleError((error as Error).message);
     }
@@ -65,46 +58,41 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
   // };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={GLOBAL_STYLE.flex_1}
+    <CustomView
+      padding={SPACING.medium}
+      style={[GLOBAL_STYLE.justifyContentCenter, GLOBAL_STYLE.flex_1]}
     >
-      <CustomView
-        padding={SPACING.medium}
-        style={[GLOBAL_STYLE.justifyContentCenter, GLOBAL_STYLE.flex_1]}
-      >
-        <View style={styles.form}>
-          <CustomTextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <CustomTextInput
-            label="Password"
-            autoComplete="new-password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+      <View style={styles.form}>
+        <CustomTextInput
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <CustomTextInput
+          label="Password"
+          autoComplete="new-password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-          <CustomTextInput
-            label="Confirm Password"
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-          />
-          <Button mode="contained">Register</Button>
-          <View style={{ flex: 1 }} />
+        <CustomTextInput
+          label="Confirm Password"
+          autoComplete="new-password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+        />
+        <Button mode="contained">Register</Button>
+        <View style={{ flex: 1 }} />
 
-          <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
-            Create new account
-          </Button>
-        </View>
-      </CustomView>
-    </KeyboardAvoidingView>
+        <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
+          Create new account
+        </Button>
+      </View>
+    </CustomView>
   );
 };
 

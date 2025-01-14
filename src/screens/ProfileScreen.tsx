@@ -54,6 +54,7 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
       </CustomView>
 
       <FlatList
+        style={{ marginTop: SPACING.medium }}
         keyExtractor={(item) => item.id}
         columnWrapperStyle={{ gap: 1 }}
         ItemSeparatorComponent={() => <View style={{ height: 1 }} />}

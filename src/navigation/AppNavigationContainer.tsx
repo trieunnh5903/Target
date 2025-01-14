@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import {
   createNativeStackNavigator,
   NativeStackNavigationOptions,
@@ -22,16 +22,15 @@ import {
   SignUpScreen,
   UserDetailScreen,
 } from "@/screens";
-import { useAppDispatch, useAppSelector, useAuthState } from "@/hooks";
-import { fetchCurrentUser, fetchOwnPosts } from "@/redux/slices/authSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import * as SplashScreen from "expo-splash-screen";
-import { fetchInitialPosts } from "@/redux/slices/postSlice";
 import { useNotificationListener } from "@/hooks/useNotificationListener";
 import { StatusBar } from "expo-status-bar";
 import { Pressable } from "react-native-gesture-handler";
 import { SPACING } from "@/constants";
 import { CustomView } from "@/components";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { fetchPostsRequest } from "@/redux/slices/postSlice";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 SplashScreen.preventAutoHideAsync();
@@ -39,31 +38,18 @@ export const navigationRef = createNavigationContainerRef();
 
 const AppNavigationContainer = () => {
   const notificationPostId = useNotificationListener();
+  const { currentUser, isReady } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
-  const [isAppReady, setIsAppReady] = useState(false);
-  const { initialStatus } = useAppSelector((state) => state.posts);
-  const { currentUser } = useAppSelector((state) => state.auth);
-  const { initializing, user } = useAuthState();
-
   useEffect(() => {
-    if (user) {
-      dispatch(fetchCurrentUser(user.uid));
-      dispatch(fetchOwnPosts(user.uid));
-      dispatch(fetchInitialPosts());
-    }
-  }, [dispatch, user]);
-
-  useEffect(() => {
-    setIsAppReady(
-      user ? !initializing && initialStatus === "succeeded" : !initializing
-    );
-  }, [initialStatus, initializing, user]);
+    dispatch(fetchPostsRequest({ lastPost: null }));
+    return () => {};
+  }, [dispatch]);
 
   const onLayoutRootView = useCallback(async () => {
-    if (isAppReady) {
+    if (isReady) {
       await SplashScreen.hideAsync();
     }
-  }, [isAppReady]);
+  }, [isReady]);
 
   const authScreenOptions = useMemo<NativeStackNavigationOptions>(
     () => ({
@@ -74,7 +60,7 @@ const AppNavigationContainer = () => {
     []
   );
 
-  if (!isAppReady) {
+  if (!isReady) {
     return null;
   }
 

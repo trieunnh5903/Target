@@ -1,16 +1,9 @@
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
-import React, { useState } from "react";
-import { Button, IconButton, Text } from "react-native-paper";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Button, Text } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
-import { useAppDispatch } from "@/hooks";
-import { fetchCurrentUser } from "@/redux/slices/authSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { clearError, loginRequest } from "@/redux/slices/authSlice";
 import { Container, CustomView } from "@/components";
 import { GLOBAL_STYLE } from "@/constants";
 import { Image } from "expo-image";
@@ -22,98 +15,89 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
+  const { errorMessage } = useAppSelector((state) => state.auth);
+  const [loading, setLoading] = useState(false);
 
-  const handleError = (error: string | null) => {
-    if (error) {
-      setError(error);
-      Alert.alert("Lỗi", error, [{ text: "OK" }]);
-    } else {
-      setError("");
+  useEffect(() => {
+    return navigation.addListener("blur", () => {
+      setLoading(false);
+    });
+  }, [navigation]);
+
+  useEffect(() => {
+    if (errorMessage) {
+      setLoading(false);
+      Alert.alert("Error", errorMessage, [
+        {
+          text: "OK",
+          onPress() {
+            dispatch(clearError());
+          },
+        },
+      ]);
     }
-
-    console.log(error);
-  };
+    return () => {};
+  }, [dispatch, errorMessage]);
 
   const handleSignIn = async () => {
-    try {
-      setLoading(true);
-      if (!email || !password) {
-        throw new Error("Vui lòng nhập đầy đủ thông tin");
-      }
-      const { error, userCredential } = await authAPI.signIn(email, password);
-      if (error || !userCredential) throw new Error(error);
-      dispatch(fetchCurrentUser(userCredential.user.uid));
-    } catch (error) {
-      handleError((error as Error).message);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    dispatch(loginRequest({ email, password }));
   };
 
   const handleGoogleSignIn = async () => {
     try {
+      setLoading(true);
       const { user } = await authAPI.signInGoogle();
-      const { error } = await userAPI.createUserProfile(user);
-      if (!error) {
-        dispatch(fetchCurrentUser(user.uid));
-      }
+      await userAPI.createUserProfile(user);
     } catch (error) {
       console.log(error);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={GLOBAL_STYLE.flex_1}
-    >
-      <Container style={[GLOBAL_STYLE.justifyContentCenter]}>
-        <CustomView padding={16} style={styles.form}>
-          <CustomView style={GLOBAL_STYLE.center}>
-            <Text variant="titleMedium">English</Text>
-          </CustomView>
-          <CustomView paddingTop={24} style={[GLOBAL_STYLE.alignItemsCenter]}>
-            <Image
-              source={require("../../assets/adaptive-icon.png")}
-              style={{ width: 100, height: 100 }}
-            />
-          </CustomView>
-          <CustomTextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-          />
-          <CustomTextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          <Button mode="contained" loading={loading} onPress={handleSignIn}>
-            Login
-          </Button>
-          <View style={{ flex: 1 }} />
-          <Pressable
-            style={[GLOBAL_STYLE.rowCenter, styles.googleLogin]}
-            onPress={handleGoogleSignIn}
-          >
-            <Image
-              source={require("../../assets/icons8-google-48.png")}
-              style={{ width: 24, height: 24 }}
-            />
-            <Text>Sign in with Google</Text>
-          </Pressable>
-          <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
-            Create new account
-          </Button>
+    <Container style={[GLOBAL_STYLE.justifyContentCenter]}>
+      <CustomView padding={16} style={styles.form}>
+        <CustomView style={GLOBAL_STYLE.center}>
+          <Text variant="titleMedium">English</Text>
         </CustomView>
-
-      </Container>
-    </KeyboardAvoidingView>
+        <CustomView paddingTop={24} style={[GLOBAL_STYLE.alignItemsCenter]}>
+          <Image
+            source={require("../../assets/adaptive-icon.png")}
+            style={{ width: 100, height: 100 }}
+          />
+        </CustomView>
+        <CustomTextInput
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+        <CustomTextInput
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+        <Button mode="contained" loading={loading} onPress={handleSignIn}>
+          Login
+        </Button>
+        <View style={{ flex: 1 }} />
+        <Pressable
+          style={[GLOBAL_STYLE.rowCenter, styles.googleLogin]}
+          onPress={handleGoogleSignIn}
+        >
+          <Image
+            source={require("../../assets/icons8-google-48.png")}
+            style={{ width: 24, height: 24 }}
+          />
+          <Text>Sign in with Google</Text>
+        </Pressable>
+        <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
+          Create new account
+        </Button>
+      </CustomView>
+    </Container>
   );
 };
 

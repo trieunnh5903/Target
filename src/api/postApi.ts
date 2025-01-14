@@ -1,4 +1,4 @@
-import { Comment, Post, PostImage } from "@/types";
+import { Comment, FetchPostsResponse, Post, PostImage } from "@/types";
 import firestore, {
   Filter,
   FirebaseFirestoreTypes,
@@ -11,7 +11,6 @@ import {
   usersCollection,
 } from "./collections";
 import Utils from "@/utils";
-import Constants from "expo-constants";
 
 const fetchAllUserPost = async (
   userId: string,
@@ -53,7 +52,7 @@ const fetchAllUserPost = async (
     return {
       posts: posts as Post[],
       lastPost: postsSnapshot.docs[postsSnapshot.docs.length - 1],
-    };
+    } as FetchPostsResponse;
   } catch (error) {
     console.log("fetchAllUserPost", error);
     throw error;

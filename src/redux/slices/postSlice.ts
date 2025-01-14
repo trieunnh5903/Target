@@ -1,5 +1,5 @@
 import { postAPI } from "@/api";
-import { Post, RequestStatus, User } from "@/types";
+import { FetchPostsResponse, Post, RequestStatus, User } from "@/types";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import {
   createAsyncThunk,
@@ -141,15 +141,15 @@ export const sendPost = createAsyncThunk<
   }
 });
 
-export const fetchInitialPosts = createAsyncThunk(
-  "posts/fetchInitial",
-  async () => {
-    const response = await postAPI.fetchAll({
-      limit: 10,
-    });
-    return response;
-  }
-);
+// export const fetchInitialPosts = createAsyncThunk(
+//   "posts/fetchInitial",
+//   async () => {
+//     const response = await postAPI.fetchAll({
+//       limit: 10,
+//     });
+//     return response;
+//   }
+// );
 
 export const refetchInitialPosts = createAsyncThunk(
   "posts/refetchInitialPosts",
@@ -193,6 +193,20 @@ const postsSlice = createSlice({
     postAdded: postsAdapter.addOne,
     postUpdated: postsAdapter.updateOne,
     postRemoved: postsAdapter.removeOne,
+    fetchPostsRequest: (
+      state,
+      action: PayloadAction<{
+        lastPost: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null;
+      }>
+    ) => {
+      state.initialStatus = "loading";
+    },
+    fetchPostsSuccess: (state, action: PayloadAction<FetchPostsResponse>) => {
+      const { lastPost, posts } = action.payload;
+      state.lastPost = lastPost;
+      postsAdapter.upsertMany(state, posts);
+      state.initialStatus = "idle";
+    },
     updateUserInPosts: (
       state,
       action: PayloadAction<{
@@ -228,19 +242,6 @@ const postsSlice = createSlice({
       state.loadMoreStatus = "failed";
     });
 
-    builder.addCase(fetchInitialPosts.pending, (state) => {
-      state.initialStatus = "loading";
-    });
-    builder.addCase(fetchInitialPosts.fulfilled, (state, action) => {
-      state.initialStatus = "succeeded";
-      const { lastPost, posts } = action.payload;
-      state.lastPost = lastPost;
-      postsAdapter.upsertMany(state, posts);
-    });
-    builder.addCase(fetchInitialPosts.rejected, (state) => {
-      state.initialStatus = "failed";
-    });
-
     builder.addCase(refetchInitialPosts.pending, (state) => {
       state.reloadStatus = "loading";
     });
@@ -270,8 +271,14 @@ const postsSlice = createSlice({
       });
   },
 });
-export default postsSlice;
-export const { postAdded, postUpdated, postRemoved, updateUserInPosts } =
-  postsSlice.actions;
+export default postsSlice.reducer;
+export const {
+  fetchPostsRequest,
+  postAdded,
+  postUpdated,
+  postRemoved,
+  updateUserInPosts,
+  fetchPostsSuccess,
+} = postsSlice.actions;
 export const { selectAll: selectAllPosts, selectById: selectPostById } =
   postsAdapter.getSelectors((state: RootState) => state.posts);

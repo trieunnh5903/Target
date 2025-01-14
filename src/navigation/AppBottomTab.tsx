@@ -17,11 +17,11 @@ import {
   SearchScreen,
 } from "@/screens";
 import { IconButton } from "react-native-paper";
-import { authAPI } from "@/api";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { CustomAvatar } from "@/components";
 import { RouteProp } from "@react-navigation/native";
+import { authAPI } from "@/api";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -62,19 +62,20 @@ const AppBottomTab = () => {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const handleLogout = async () => {
-    try {
-      if (currentUser?.id) {
-        const { error } = await authAPI.signOut(currentUser.id);
-        if (!error) {
-          dispatch(logout());
-        }
-      }
-    } catch (error) {
-      console.log(error);
-      Alert.alert("Error", "Failed logout. Please try again.", [
-        { text: "OK" },
-      ]);
-    }
+    dispatch(logout());
+    // try {
+    //   if (currentUser?.id) {
+    //     const { error } = await authAPI.signOut(currentUser.id);
+    //     if (!error) {
+    //       dispatch(logout());
+    //     }
+    //   }
+    // } catch (error) {
+    //   console.log(error);
+    //   Alert.alert("Error", "Failed logout. Please try again.", [
+    //     { text: "OK" },
+    //   ]);
+    // }
   };
 
   const screenOptions: (props: {

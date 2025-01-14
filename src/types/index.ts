@@ -1,3 +1,5 @@
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+
 export type PostImage = {
   thumbnailUrl: {
     source: string;
@@ -12,6 +14,12 @@ export type PostImage = {
 };
 
 export type RequestStatus = "idle" | "loading" | "succeeded" | "failed";
+
+export interface FetchPostsResponse {
+  posts: Post[];
+  lastPost: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null;
+}
+
 export type Post = {
   id: string;
   postedBy: User;

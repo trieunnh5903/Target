@@ -37,42 +37,37 @@ const signUp = async (email: string, password: string) => {
 };
 
 const signIn = async (email: string, password: string) => {
-  try {
-    console.log("signIn");
-
-    const userCredential = await auth().signInWithEmailAndPassword(
-      email,
-      password
-    );
-
-    return {
-      error: null,
-      userCredential,
-    };
-  } catch (error: any) {
-    let errorMessage = "Đã xảy ra lỗi khi đăng nhập";
-    const errorCode = error.message.split(" ")[0];
-    console.log(errorCode);
-
-    switch (errorCode) {
-      case "[auth/invalid-email]":
-        errorMessage = "Email không hợp lệ";
-        break;
-      case "[auth/user-disabled]":
-        errorMessage = "Tài khoản đã bị vô hiệu hóa";
-        break;
-      case "[auth/user-not-found]":
-        errorMessage = "Không tìm thấy tài khoản";
-        break;
-      case "[auth/wrong-password]":
-        errorMessage = "Mật khẩu không đúng";
-        break;
-    }
-    return {
-      error: errorMessage,
-      userCredential: null,
-    };
-  }
+  // try {
+  console.log("signIn");
+  return await auth().signInWithEmailAndPassword(email, password);
+  // return {
+  //   errorMessage: null,
+  //   userCredential,
+  // };
+  // } catch (error: any) {
+  // let errorMessage = "Login failed";
+  // // const errorCode = error.message.split(" ")[0];
+  // const errorCode = error.code;
+  // console.log(errorCode);
+  // switch (errorCode) {
+  //   case "auth/invalid-email":
+  //     errorMessage = "Invalid email";
+  //     break;
+  //   case "auth/user-disabled":
+  //     errorMessage = "User disabled";
+  //     break;
+  //   case "auth/user-not-found":
+  //     errorMessage = "User not found";
+  //     break;
+  //   case "auth/wrong-password":
+  //     errorMessage = "Invalid password";
+  //     break;
+  // }
+  // return {
+  //   errorMessage: errorMessage,
+  //   userCredential: null,
+  // };
+  // }
 };
 
 const signOut = async (userId: string) => {
