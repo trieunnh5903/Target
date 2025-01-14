@@ -92,21 +92,15 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   const { error, posting } = useAppSelector((state) => state.posts);
   const listRef = useRef<FlatList<any>>(null);
 
-  useEffect(() => {
-    if (posting === "succeeded") {
-      navigation.navigate("Tabs", { screen: "Home" });
-      dispatch(resetPosting());
-    }
-  }, [dispatch, navigation, posting]);
-
   useLayoutEffect(() => {
     const onSendPress = async () => {
       Keyboard.dismiss();
       dispatch(sendPostRequest({ assets, caption, translateAssets }));
+      navigation.navigate("Tabs", { screen: "Home" });
     };
 
     navigation.setOptions({
-      headerRight(props) {
+      headerRight() {
         return (
           <Button
             mode="contained"

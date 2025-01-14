@@ -30,9 +30,10 @@ import {
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { StatusBar } from "expo-status-bar";
 import { RootTabScreenProps } from "@/types/navigation";
-import { Divider, IconButton, Text } from "react-native-paper";
+import { Banner, Divider, IconButton, Text } from "react-native-paper";
 import { Image } from "expo-image";
 import { Pressable } from "react-native-gesture-handler";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   const posts = useAppSelector(selectAllPosts);
@@ -48,8 +49,6 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
     PostImage["baseUrl"] | null
   >(null);
 
-  console.log('posting', posting);
-  
   useLayoutEffect(() => {
     const scrollToTop = () =>
       listRef.current?.scrollToOffset({ offset: 0, animated: true });
@@ -136,6 +135,16 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
     <CustomView style={styles.container}>
       <StatusBar style="auto" />
       <FlashList
+        ListHeaderComponent={
+          <Banner
+            visible={posting === "loading"}
+            icon={({ color }) => (
+              <MaterialCommunityIcons name="check" size={24} color={color} />
+            )}
+          >
+            Your post is creating
+          </Banner>
+        }
         ref={listRef}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <Divider />}
