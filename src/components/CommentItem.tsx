@@ -19,17 +19,15 @@ const CommentItem: React.FC<CommentItemProps> = ({
     <CustomView style={[GLOBAL_STYLE.rowHCenter, { gap: 8 }]}>
       <CustomAvatar size={"medium"} avatarUrl={comment.avatarURL} />
       <CustomView>
-        <CustomView style={GLOBAL_STYLE.row}>
-          <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-            {comment.displayName || "User"}
-          </Text>
+        <CustomView style={GLOBAL_STYLE.rowCenter}>
+          <Text variant="labelLarge">{comment.displayName || "User"}</Text>
           <CustomView paddingLeft={8}>
-            <Text style={{ fontSize: 12 }}>
+            <Text variant="labelMedium">
               {dayJs.getTimeFromNow(comment.createdAt)}
             </Text>
           </CustomView>
         </CustomView>
-        <Text>{comment.content}</Text>
+        <Text variant="bodyMedium">{comment.content}</Text>
         {comment.id === commentSendingId && (
           <Text style={{ fontSize: 12 }}>Sending...</Text>
         )}

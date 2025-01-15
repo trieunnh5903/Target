@@ -31,6 +31,8 @@ import { SPACING } from "@/constants";
 import { CustomView } from "@/components";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { fetchPostsRequest } from "@/redux/slices/postSlice";
+import { useColorScheme } from "react-native";
+import { NavigationDarkTheme, NavigationLightTheme } from "@/config/theme";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 SplashScreen.preventAutoHideAsync();
@@ -40,6 +42,9 @@ const AppNavigationContainer = () => {
   const notificationPostId = useNotificationListener();
   const { currentUser, isReady } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
+  const scheme = useColorScheme();
+  const theme = scheme === "dark" ? NavigationDarkTheme : NavigationLightTheme;
+
   useEffect(() => {
     dispatch(fetchPostsRequest({ lastPost: null }));
     return () => {};
@@ -65,7 +70,11 @@ const AppNavigationContainer = () => {
   }
 
   return (
-    <NavigationContainer onReady={onLayoutRootView} ref={navigationRef}>
+    <NavigationContainer
+      onReady={onLayoutRootView}
+      ref={navigationRef}
+      theme={theme}
+    >
       <StatusBar style="auto" />
       <Stack.Navigator
         initialRouteName={notificationPostId ? "PostDetail" : "Tabs"}

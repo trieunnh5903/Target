@@ -1,5 +1,6 @@
 import { StyleProp, View, ViewStyle } from "react-native";
 import React, { PropsWithChildren } from "react";
+import { useTheme } from "react-native-paper";
 
 interface CustomViewProps extends PropsWithChildren {
   padding?: number;
@@ -22,6 +23,8 @@ const CustomView: React.FC<CustomViewProps> = ({
   paddingVertical,
   style,
 }) => {
+  const theme = useTheme();
+
   return (
     <View
       style={[
@@ -33,7 +36,7 @@ const CustomView: React.FC<CustomViewProps> = ({
           paddingLeft,
           paddingRight,
           padding,
-          backgroundColor: 'white'
+          backgroundColor: theme.colors.background,
         },
         style,
       ]}

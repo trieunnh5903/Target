@@ -1,22 +1,11 @@
 import { Pressable, StyleSheet, View } from "react-native";
-import React, {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { forwardRef, useCallback, useEffect, useRef } from "react";
 import {
   BottomSheetFlatList,
   BottomSheetModal,
   useBottomSheetModal,
 } from "@gorhom/bottom-sheet";
-import {
-  Album,
-  getAlbumsAsync,
-  getAssetsAsync,
-  usePermissions,
-} from "expo-media-library";
+import { Album, usePermissions } from "expo-media-library";
 import CustomView from "@/components/CustomView";
 import { Image } from "expo-image";
 import { Text } from "react-native-paper";

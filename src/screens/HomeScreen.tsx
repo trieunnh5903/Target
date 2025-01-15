@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   RefreshControl,
   StyleSheet,
   View,
@@ -30,7 +29,14 @@ import {
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { StatusBar } from "expo-status-bar";
 import { RootTabScreenProps } from "@/types/navigation";
-import { Banner, Divider, IconButton, Text } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Banner,
+  Divider,
+  IconButton,
+  Text,
+  useTheme,
+} from "react-native-paper";
 import { Image } from "expo-image";
 import { Pressable } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -41,6 +47,7 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   const { lastPost, loadMoreStatus, reloadStatus, posting } = useAppSelector(
     (state) => state.posts
   );
+  const theme = useTheme();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const listRef = useRef<FlashList<Post>>(null);
   const [bottomSheetPost, setBottomSheetPost] = useState<Post | null>(null);
@@ -141,6 +148,7 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
             icon={({ color }) => (
               <MaterialCommunityIcons name="check" size={24} color={color} />
             )}
+            contentStyle={{ backgroundColor: theme.colors.background }}
           >
             Your post is creating
           </Banner>
