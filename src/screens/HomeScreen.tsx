@@ -1,8 +1,4 @@
-import {
-  RefreshControl,
-  StyleSheet,
-  View,
-} from "react-native";
+import { RefreshControl, StyleSheet } from "react-native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   CustomView,
@@ -142,6 +138,8 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
     <CustomView style={styles.container}>
       <StatusBar style="auto" />
       <FlashList
+        overScrollMode="never"
+        contentContainerStyle={{ backgroundColor: theme.colors.background }}
         ListHeaderComponent={
           <Banner
             visible={posting === "loading"}
@@ -177,9 +175,9 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={
-          <View style={styles.loadingContainer}>
+          <CustomView style={styles.loadingContainer}>
             {loadMoreStatus === "loading" && <ActivityIndicator size="small" />}
-          </View>
+          </CustomView>
         }
       />
 

@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React, { useRef, useState } from "react";
 import {
   BottomSheetFooter,
@@ -87,7 +87,7 @@ const CommentBottomSheetFooter = ({
       <Animated.View style={GLOBAL_STYLE.justifyContentEnd}>
         <Divider />
         <CustomView padding={10} style={{ width: SCREEN_WIDTH, height }}>
-          <View style={[GLOBAL_STYLE.row, { gap: 4 }]}>
+          <CustomView style={[GLOBAL_STYLE.row, { gap: 4 }]}>
             {emojis.slice(0, 10).map((emoji) => (
               <Text
                 onPress={() => onEmojiPress(emoji)}
@@ -97,7 +97,7 @@ const CommentBottomSheetFooter = ({
                 {emoji}
               </Text>
             ))}
-          </View>
+          </CustomView>
 
           <CustomView paddingTop={10} style={styles.footerInput}>
             <CustomAvatar avatarUrl={user?.avatarURL} size={"medium"} />

@@ -1,4 +1,4 @@
-import { Alert, Pressable } from "react-native";
+import { Alert, Appearance, Pressable, useColorScheme } from "react-native";
 import React from "react";
 import {
   BottomTabNavigationOptions,
@@ -19,9 +19,10 @@ import {
 import { IconButton } from "react-native-paper";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { logout } from "@/redux/slices/authSlice";
-import { CustomAvatar } from "@/components";
+import { CustomAvatar, CustomView } from "@/components";
 import { RouteProp } from "@react-navigation/native";
-import { authAPI } from "@/api";
+import { GLOBAL_STYLE } from "@/constants";
+import { useAppTheme } from "@/config/theme";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -61,6 +62,11 @@ const TAB_ICONS = {
 const AppBottomTab = () => {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const colorScheme = useColorScheme();
+  const theme = useAppTheme();
+  const toggleTheme = () => {
+    Appearance.setColorScheme(colorScheme === "dark" ? "light" : "dark");
+  };
   const handleLogout = async () => {
     dispatch(logout());
     // try {
@@ -84,9 +90,8 @@ const AppBottomTab = () => {
   }) => BottomTabNavigationOptions = ({ route }) => ({
     headerTitle: "",
     tabBarShowLabel: false,
+    tabBarInactiveTintColor: theme.colors.icon,
     tabBarHideOnKeyboard: true,
-    tabBarActiveTintColor: "black",
-    tabBarInactiveTintColor: "black",
     headerShadowVisible: false,
     tabBarIcon: ({ focused, color }) => {
       const size = 32;
@@ -110,15 +115,16 @@ const AppBottomTab = () => {
         options={({ navigation }) => ({
           headerTitle: "Image picker",
           tabBarStyle: { display: "none" },
-          headerLeft() {
+          headerLeft({ tintColor }) {
             return (
-              <Pressable
-                hitSlop={4}
-                onPress={() => navigation.goBack()}
-                style={{ paddingLeft: 16 }}
-              >
-                <MaterialIcons name="close" size={24} color="black" />
-              </Pressable>
+              // <Pressable
+              //   hitSlop={4}
+              //   onPress={() => navigation.goBack()}
+              //   style={{ paddingLeft: 16 }}
+              // >
+              //   <MaterialIcons name="close" size={24} color={tintColor} />
+              // </Pressable>
+              <IconButton icon={"close"} onPress={() => navigation.goBack()} />
             );
           },
         })}
@@ -128,7 +134,12 @@ const AppBottomTab = () => {
         component={ProfileScreen}
         options={{
           headerRight() {
-            return <IconButton onPress={handleLogout} icon={"logout"} />;
+            return (
+              <CustomView style={GLOBAL_STYLE.rowCenter}>
+                <IconButton onPress={toggleTheme} icon={"theme-light-dark"} />
+                <IconButton onPress={handleLogout} icon={"logout"} />
+              </CustomView>
+            );
           },
         }}
       />

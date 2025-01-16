@@ -1,11 +1,9 @@
 import {
-  ActivityIndicator,
   ListRenderItem,
   StyleSheet,
   Text,
   TouchableOpacity,
   useWindowDimensions,
-  View,
 } from "react-native";
 import React, {
   memo,
@@ -17,7 +15,12 @@ import React, {
 } from "react";
 import * as MediaLibrary from "expo-media-library";
 import { Image } from "expo-image";
-import { Button, IconButton } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Button,
+  IconButton,
+  useTheme,
+} from "react-native-paper";
 import { RootTabScreenProps } from "@/types/navigation";
 import Animated, {
   scrollTo,
@@ -63,21 +66,21 @@ const ImageEntry: React.FC<{
 }) {
   return (
     <TouchableOpacity onPress={onPress}>
-      <View style={{ opacity: isPreviewed ? 0.2 : 1 }}>
+      <CustomView style={{ opacity: isPreviewed ? 0.2 : 1 }}>
         <Image
           source={{ uri: uri }}
           style={[styles.image, { width: size, height: size }]}
         />
-      </View>
+      </CustomView>
 
       {multipleSelect && (
-        <View
+        <CustomView
           style={[styles.circle, selectedIndex >= 0 && styles.selectedCircle]}
         >
           {selectedIndex >= 0 && (
             <Text style={{ fontWeight: "bold" }}>{selectedIndex + 1}</Text>
           )}
-        </View>
+        </CustomView>
       )}
     </TouchableOpacity>
   );
@@ -89,6 +92,7 @@ const NUM_COLUMNS = 4;
 const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
   navigation,
 }) => {
+  const theme = useTheme();
   const dimension = useWindowDimensions();
   const ITEM_SIZE =
     (dimension.width - (NUM_COLUMNS - 1) * SPACING) / NUM_COLUMNS;
@@ -335,13 +339,9 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
   const handleSelectedAlbum = (album: MediaLibrary.Album) => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
     translateY.value = 0;
-    // setEndCursor(undefined);
-    // setSelectedAlbum(album);
     dispatch(setAlbum(album));
     dispatch(fetchMedia());
-    // setMedia([]);
     setPreviewAsset(undefined);
-    // setLoading(true);
     bottomSheetModalRef.current?.dismiss();
   };
 
@@ -433,20 +433,20 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
     if (!loading || media.length === 0) return null;
 
     return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#0000ff" />
+      <CustomView style={styles.footerLoader}>
+        <ActivityIndicator size="small" />
         <Text style={styles.loadingText}>Đang tải thêm...</Text>
-      </View>
+      </CustomView>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <CustomView style={styles.container}>
       <Animated.View
         style={[styles.transitionWrapper, imagePreviewAnimatedStyle]}
       >
-        <View style={[styles.imageWrapper]}>
-          {loading && <View style={styles.imagePreviewSkeleton} />}
+        <CustomView style={[styles.imageWrapper]}>
+          {loading && <CustomView style={styles.imagePreviewSkeleton} />}
           {previewAsset && (
             <ImageCropper
               animatedGrid
@@ -463,13 +463,13 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
               gridTranslateY={gridTranslateY}
             />
           )}
-        </View>
+        </CustomView>
         <CustomView style={styles.listHeader}>
           <Button icon={"chevron-down"} onPress={handlePresentModalPress}>
             {selectedAlbum?.title ?? "Photo"}
           </Button>
 
-          <View style={GLOBAL_STYLE.rowCenter}>
+          <CustomView style={GLOBAL_STYLE.rowCenter}>
             <IconButton
               icon={"checkbox-multiple-blank-outline"}
               mode="contained-tonal"
@@ -482,10 +482,11 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
               size={18}
               onPress={onCameraPress}
             />
-          </View>
+          </CustomView>
         </CustomView>
       </Animated.View>
       <Animated.FlatList
+        contentContainerStyle={{ backgroundColor: theme.colors.background }}
         initialNumToRender={20}
         maxToRenderPerBatch={NUM_COLUMNS * 3}
         windowSize={NUM_COLUMNS * 5}
@@ -504,16 +505,18 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
           offset: Math.floor(index / NUM_COLUMNS) * (ITEM_SIZE + SPACING),
           index,
         })}
-        ItemSeparatorComponent={() => <View style={{ height: SPACING }} />}
+        ItemSeparatorComponent={() => (
+          <CustomView style={{ height: SPACING }} />
+        )}
         ListHeaderComponent={
           <Animated.View style={{ height: CROP_SIZE + HEADER_LIST_HEIGHT }} />
         }
         ListEmptyComponent={
-          <View style={styles.loadingContainer}>
+          <CustomView style={styles.loadingContainer}>
             {Array.from({
               length: Math.ceil((SCREEN_HEIGHT - CROP_SIZE) / ITEM_SIZE) * 4,
             }).map((_, index) => (
-              <View
+              <CustomView
                 key={index}
                 style={[
                   styles.imageSkeleton,
@@ -521,7 +524,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
                 ]}
               />
             ))}
-          </View>
+          </CustomView>
         }
         numColumns={NUM_COLUMNS}
         onEndReached={handleLoadMore}
@@ -532,7 +535,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
         ref={bottomSheetModalRef}
         onAlbumSelected={handleSelectedAlbum}
       />
-    </View>
+    </CustomView>
   );
 };
 

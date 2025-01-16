@@ -1,11 +1,12 @@
-import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, ViewStyle } from "react-native";
 import React, { PropsWithChildren } from "react";
+import CustomView from "./CustomView";
 
 interface ContainerProps extends PropsWithChildren {
   style?: StyleProp<ViewStyle>;
 }
 const Container: React.FC<ContainerProps> = ({ children, style }) => {
-  return <View style={[styles.container, style]}>{children}</View>;
+  return <CustomView style={[styles.container, style]}>{children}</CustomView>;
 };
 
 export default Container;

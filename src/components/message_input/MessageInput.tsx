@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React from "react";
 import { TextInput } from "react-native-gesture-handler";
 import { IconButton } from "react-native-paper";
@@ -17,7 +17,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onChangeText,
 }) => {
   return (
-    <View style={styles.container}>
+    <CustomView style={styles.container}>
       <CustomView padding={SPACING.small} style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -27,10 +27,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
         />
       </CustomView>
 
-      <View style={styles.sendContainer}>
+      <CustomView style={styles.sendContainer}>
         <IconButton icon={"send"} onPress={onPress} />
-      </View>
-    </View>
+      </CustomView>
+    </CustomView>
   );
 };
 

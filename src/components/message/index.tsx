@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React, { useState } from "react";
 import { SPACING } from "@/constants";
 import { IMessage } from "@/types";
 import { dayJs } from "@/utils/dayJs";
 import CustomView from "../CustomView";
 import { Pressable } from "react-native-gesture-handler";
+import { Text } from "react-native-paper";
 
 interface MessageProps {
   message: IMessage;
@@ -14,15 +15,15 @@ interface MessageProps {
 const Message: React.FC<MessageProps> = ({ message, isSender, index }) => {
   const [showTime, setShowTime] = useState(false);
   return (
-    <View style={[styles.container, isSender && styles.containerSender]}>
+    <CustomView style={[styles.container, isSender && styles.containerSender]}>
       <Pressable onPress={() => setShowTime(!showTime)}>
-        <View
+        <CustomView
           style={[styles.messageContainer, isSender && styles.messageSender]}
         >
           <Text style={[styles.text, isSender && styles.textSender]}>
             {message.content}
           </Text>
-        </View>
+        </CustomView>
 
         {(index === 0 || showTime) && (
           <CustomView paddingHorizontal={SPACING.small}>
@@ -30,7 +31,7 @@ const Message: React.FC<MessageProps> = ({ message, isSender, index }) => {
           </CustomView>
         )}
       </Pressable>
-    </View>
+    </CustomView>
   );
 };
 

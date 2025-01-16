@@ -1,4 +1,4 @@
-import { StyleSheet, View, Image } from "react-native";
+import { StyleSheet, Image } from "react-native";
 import React, { memo, useMemo } from "react";
 import CustomView from "../CustomView";
 import { GLOBAL_STYLE, POST_IMAGE_SIZE, SCREEN_WIDTH } from "@/constants";
@@ -78,12 +78,12 @@ const ImageArea: React.FC<ImageAreaProps> = memo(({ source, onPress }) => {
     <CustomView style={GLOBAL_STYLE.center}>
       {/* <GestureDetector gesture={Gesture.Exclusive(singleTapGesture)}> */}
       <Pressable onPress={() => onPress(source.baseUrl)}>
-        <View style={styles.imageContainer}>
+        <CustomView style={styles.imageContainer}>
           <Image
             source={{ uri: source.thumbnailUrl.source }}
             style={GLOBAL_STYLE.fullSize}
           />
-        </View>
+        </CustomView>
       </Pressable>
       {/* </GestureDetector> */}
 

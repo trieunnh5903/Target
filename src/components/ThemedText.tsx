@@ -1,5 +1,6 @@
-import { StyleProp, StyleSheet, Text, TextStyle, View } from "react-native";
+import { StyleProp, StyleSheet, TextStyle } from "react-native";
 import React, { PropsWithChildren } from "react";
+import { Text } from "react-native-paper";
 
 interface ThemedTextProps extends PropsWithChildren {
   style?: StyleProp<TextStyle>;

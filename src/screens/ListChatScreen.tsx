@@ -1,13 +1,14 @@
-import { ListRenderItem, StyleSheet, Text, View } from "react-native";
+import { ListRenderItem, StyleSheet } from "react-native";
 import React, { useEffect, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
 import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
-import { CustomAvatar } from "@/components";
+import { CustomAvatar, CustomView } from "@/components";
 import { SPACING } from "@/constants";
 import chatAPI from "@/api/chatApi";
 import { useAppSelector } from "@/hooks";
 import { IChatRoom } from "@/types";
 import { dayJs } from "@/utils/dayJs";
+import { Text } from "react-native-paper";
 
 const ListChatScreen: React.FC<RootStackScreenProps<"ListChatRoom">> = ({
   navigation,
@@ -64,10 +65,10 @@ const ListChatScreen: React.FC<RootStackScreenProps<"ListChatRoom">> = ({
         <CustomAvatar avatarUrl={otherUser?.avatarURL} size={"medium"} />
 
         {/* Chat Info */}
-        <View style={styles.chatInfo}>
+        <CustomView style={styles.chatInfo}>
           <Text style={styles.name}>{otherUser?.displayName ?? "User"}</Text>
           <Text style={styles.lastMessage}>{lastMessageContent}</Text>
-        </View>
+        </CustomView>
 
         {/* Time */}
         <Text style={styles.time}>{dayJs.getTime(lastMessage.createdAt)}</Text>
@@ -75,14 +76,14 @@ const ListChatScreen: React.FC<RootStackScreenProps<"ListChatRoom">> = ({
     );
   };
   return (
-    <View style={styles.container}>
+    <CustomView style={styles.container}>
       <FlatList
         data={rooms}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.chatList}
       />
-    </View>
+    </CustomView>
   );
 };
 

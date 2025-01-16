@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React from "react";
 import Animated, {
   SharedValue,
@@ -12,6 +12,7 @@ import {
   GestureType,
 } from "react-native-gesture-handler";
 import { CROP_SIZE, GLOBAL_STYLE } from "@/constants";
+import CustomView from "./CustomView";
 interface ImageCropperProps {
   gridHeight: number;
   gridWidth: number;
@@ -65,9 +66,9 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   }));
 
   return (
-    <View style={styles.imageArea}>
+    <CustomView style={styles.imageArea}>
       {/*image */}
-      <View style={[{ borderRadius }, styles.imageContainer]}>
+      <CustomView style={[{ borderRadius }, styles.imageContainer]}>
         <GestureDetector gesture={gesture}>
           <Animated.Image
             onLoad={onLoad}
@@ -81,7 +82,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
             ]}
           />
         </GestureDetector>
-      </View>
+      </CustomView>
 
       <Animated.View
         style={[
@@ -91,29 +92,31 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         ]}
         pointerEvents="none"
       >
-        <View
+        <CustomView
           style={[styles.girdOverlay, { width: gridWidth, height: gridHeight }]}
         >
-          <View style={[styles.verticalLine, { left: spacingLineVertical }]} />
-          <View
+          <CustomView
+            style={[styles.verticalLine, { left: spacingLineVertical }]}
+          />
+          <CustomView
             style={[styles.verticalLine, { left: spacingLineVertical * 2 }]}
           />
 
-          <View
+          <CustomView
             style={[
               styles.horizontalLine,
               { width: gridWidth, top: spacingLineHorizontal },
             ]}
           />
-          <View
+          <CustomView
             style={[
               styles.horizontalLine,
               { width: gridWidth, top: spacingLineHorizontal * 2 },
             ]}
           />
-        </View>
+        </CustomView>
       </Animated.View>
-    </View>
+    </CustomView>
   );
 };
 

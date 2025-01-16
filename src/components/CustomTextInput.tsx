@@ -1,6 +1,6 @@
 import { GLOBAL_STYLE } from "@/constants";
-import React, { forwardRef, memo, useRef, useState } from "react";
-import { StyleSheet, View, TextInput as RNTextInput } from "react-native";
+import React, { forwardRef, memo, useState } from "react";
+import { StyleSheet } from "react-native";
 import {
   HelperText,
   TextInputProps,
@@ -41,7 +41,7 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
       setPasswordVisible(!passwordVisible);
     };
     return (
-      <View>
+      <CustomView>
         <CustomView
           style={[
             styles.input,
@@ -97,7 +97,7 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
             {helperText.message}
           </HelperText>
         )}
-      </View>
+      </CustomView>
     );
   }
 );

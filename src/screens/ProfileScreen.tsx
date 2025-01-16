@@ -1,8 +1,8 @@
-import { StyleSheet, View, ListRenderItem } from "react-native";
+import { StyleSheet, ListRenderItem } from "react-native";
 import React, { useCallback } from "react";
 import { RootTabScreenProps } from "@/types/navigation";
 import { useAppSelector } from "@/hooks";
-import { Button, Text } from "react-native-paper";
+import { Button, Text, useTheme } from "react-native-paper";
 import { CustomAvatar, CustomView } from "@/components";
 import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
 import { Post } from "@/types";
@@ -14,7 +14,7 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
   navigation,
 }) => {
   const { currentUser, ownPosts } = useAppSelector((state) => state.auth);
-
+  const theme = useTheme();
   const onEditPress = () => {
     navigation.navigate("EditProfile");
   };
@@ -34,9 +34,10 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
   };
 
   return (
-    <View style={[styles.container]}>
+    <CustomView style={[styles.container]}>
       <CustomView
         paddingHorizontal={SPACING.medium}
+        paddingBottom={SPACING.medium}
         style={GLOBAL_STYLE.center}
       >
         <CustomAvatar size={"large"} avatarUrl={currentUser?.avatarURL} />
@@ -45,29 +46,32 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
 
         <Button
           mode="contained-tonal"
-          buttonColor="#E4E7EC"
+          // buttonColor="#E4E7EC"
           style={styles.editButton}
           onPress={onEditPress}
+          // theme={{ colors: { onSecondaryContainer: "green" } }}
         >
           Edit profile
         </Button>
       </CustomView>
 
       <FlatList
-        style={{ marginTop: SPACING.medium }}
+        style={{
+          backgroundColor: theme.colors.background,
+        }}
         keyExtractor={(item) => item.id}
         columnWrapperStyle={{ gap: 1 }}
-        ItemSeparatorComponent={() => <View style={{ height: 1 }} />}
+        ItemSeparatorComponent={() => <CustomView style={{ height: 1 }} />}
         data={ownPosts}
         numColumns={3}
         renderItem={renderItem}
         ListEmptyComponent={
-          <View style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}>
+          <CustomView style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}>
             <Text style={{ fontSize: 16 }}>Create your first post now</Text>
-          </View>
+          </CustomView>
         }
       />
-    </View>
+    </CustomView>
   );
 };
 

@@ -4,6 +4,7 @@ import { Avatar } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import CustomView from "./CustomView";
 import { OpaqueColorValue, StyleSheet } from "react-native";
+import { useAppTheme } from "@/config/theme";
 
 interface CustomAvatarProps {
   avatarUrl?: User["avatarURL"] | null;
@@ -17,6 +18,7 @@ const CustomAvatar: React.FC<CustomAvatarProps> = ({
   size = "small",
   color,
 }) => {
+  const theme = useAppTheme();
   const sizeValue =
     size === "large"
       ? 90
@@ -50,7 +52,7 @@ const CustomAvatar: React.FC<CustomAvatarProps> = ({
           : "account-circle-outline"
       }
       size={sizeValue}
-      color={color}
+      color={theme.colors.icon}
     />
   );
 };

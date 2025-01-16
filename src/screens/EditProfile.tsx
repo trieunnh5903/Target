@@ -1,6 +1,6 @@
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Pressable, StyleSheet } from "react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Container, CustomAvatar } from "@/components";
+import { Container, CustomAvatar, CustomView } from "@/components";
 import { useAppDispatch, useAppSelector, useValidation } from "@/hooks";
 import { Button, IconButton, Text, TextInput } from "react-native-paper";
 import { userAPI } from "@/api";
@@ -152,7 +152,7 @@ const EditProfile = () => {
 
   return (
     <Container>
-      <View style={styles.avatarContainer}>
+      <CustomView style={styles.avatarContainer}>
         <CustomAvatar size={"large"} avatarUrl={currentUser?.avatarURL} />
         <Button
           textColor="black"
@@ -161,9 +161,9 @@ const EditProfile = () => {
         >
           Change photo
         </Button>
-      </View>
+      </CustomView>
 
-      <View style={styles.fieldsContainer}>
+      <CustomView style={styles.fieldsContainer}>
         {profileFields.map((field) => (
           <Pressable key={field.label} onPress={() => setSelectedField(field)}>
             <CustomTextInput
@@ -173,14 +173,14 @@ const EditProfile = () => {
             />
           </Pressable>
         ))}
-      </View>
+      </CustomView>
 
       <Modal
         animationType="slide"
         visible={!!selectedField}
         onRequestClose={handleCloseModal}
       >
-        <View style={styles.modalHeader}>
+        <CustomView style={styles.modalHeader}>
           <IconButton icon={"close"} onPress={() => setSelectedField(null)} />
           <Text variant="titleLarge" style={styles.modalTitle}>
             {selectedField?.label}
@@ -190,9 +190,9 @@ const EditProfile = () => {
             icon={"check"}
             onPress={handleUpdateField}
           />
-        </View>
+        </CustomView>
 
-        <View style={styles.modalContent}>
+        <CustomView style={styles.modalContent}>
           {selectedField && (
             <CustomTextInput
               ref={inputRef}
@@ -210,7 +210,7 @@ const EditProfile = () => {
               editable={!isLoading}
             />
           )}
-        </View>
+        </CustomView>
       </Modal>
     </Container>
   );
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   fieldsContainer: {
     paddingHorizontal: 16,
-    gap: SPACING.medium
+    gap: SPACING.medium,
   },
   avatarContainer: {
     marginVertical: 20,

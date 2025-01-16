@@ -1,12 +1,19 @@
-import { StyleSheet, Text, View } from "react-native";
-import React, { useCallback, useLayoutEffect, useState } from "react";
+import { StyleSheet } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { CustomAvatar, CustomView } from "@/components";
 import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
 import { RootTabScreenProps } from "@/types/navigation";
 import { FlatList, Pressable, TextInput } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator, Text } from "react-native-paper";
 import { userAPI } from "@/api";
+import { useNavigation } from "@react-navigation/native";
 
 type SeachData = {
   displayName: string;
@@ -21,10 +28,7 @@ const SearchScreen: React.FC<RootTabScreenProps<"Search">> = ({
   const [query, setQuery] = useState("");
   const [searchData, setSearchData] = useState<SeachData[]>();
   const [isFetching, setIsFetching] = useState(false);
-
   const onUserPress = (item: SeachData) => {
-    console.log(item);
-
     navigation.navigate("UserDetail", {
       userId: item.id,
       displayName: item.displayName,
@@ -66,16 +70,16 @@ const SearchScreen: React.FC<RootTabScreenProps<"Search">> = ({
     <CustomView style={GLOBAL_STYLE.flex_1}>
       <FlatList
         ListFooterComponent={
-          <View>
+          <CustomView>
             {isFetching && (
               <CustomView
                 padding={SPACING.small}
                 style={styles.indicatorContainer}
               >
-                <ActivityIndicator size={"small"} color="black" />
+                <ActivityIndicator size={"small"} />
               </CustomView>
             )}
-          </View>
+          </CustomView>
         }
         contentContainerStyle={{ padding: SPACING.small }}
         data={searchData}
@@ -98,16 +102,24 @@ interface SearchBarProps {
   value?: string;
 }
 const SearchBar: React.FC<SearchBarProps> = ({ onChangeText, value }) => {
+  const inputRef = useRef<TextInput>(null);
+  const navigation = useNavigation();
+  useEffect(() => {
+    return navigation.addListener("focus", () => {
+      inputRef.current?.focus();
+    });
+  }, [navigation]);
   return (
-    <View style={styles.searchInput}>
+    <CustomView style={styles.searchInput}>
       <MaterialCommunityIcons name="magnify" size={24} color="black" />
       <TextInput
+        ref={inputRef}
         style={{ flex: 1, marginLeft: 10 }}
         placeholder="Tìm kiếm..."
         value={value}
         onChangeText={onChangeText}
       />
-    </View>
+    </CustomView>
   );
 };
 

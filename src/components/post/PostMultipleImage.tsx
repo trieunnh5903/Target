@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ListRenderItem } from "react-native";
+import { StyleSheet, ListRenderItem } from "react-native";
 import React, { memo, useCallback } from "react";
 import { Post, PostImage, User } from "@/types";
 import { useSharedValue, withSpring } from "react-native-reanimated";
@@ -8,6 +8,8 @@ import Header from "./Header";
 import ActionGroups from "./ActionGroups";
 import ImageArea from "./ImageArea";
 import { FlatList } from "react-native-gesture-handler";
+import CustomView from "../CustomView";
+import { Text } from "react-native-paper";
 
 interface PostMultipleImageProps {
   liked: boolean;
@@ -50,13 +52,13 @@ const PostMultipleImage: React.FC<PostMultipleImageProps> = memo(
       [onPress]
     );
     return (
-      <View>
+      <CustomView>
         <Header
           displayName={data.postedBy.displayName}
           avatarURL={data.postedBy.avatarURL}
         />
 
-        <View>
+        <CustomView>
           <FlatList
             keyExtractor={(item) => item.baseUrl.source}
             data={data.images}
@@ -66,12 +68,12 @@ const PostMultipleImage: React.FC<PostMultipleImageProps> = memo(
             }}
             initialNumToRender={2}
             ItemSeparatorComponent={() => (
-              <View style={{ width: SPACING.medium }} />
+              <CustomView style={{ width: SPACING.medium }} />
             )}
             horizontal
             renderItem={renderItem}
           />
-        </View>
+        </CustomView>
 
         <ActionGroups
           alreadyLiked={liked}
@@ -84,7 +86,7 @@ const PostMultipleImage: React.FC<PostMultipleImageProps> = memo(
           onLikePress={onActionLikePress}
         />
 
-        <View style={styles.description}>
+        <CustomView style={styles.description}>
           {data.caption?.length > 0 && (
             <Text>
               <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
@@ -93,8 +95,8 @@ const PostMultipleImage: React.FC<PostMultipleImageProps> = memo(
             </Text>
           )}
           <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
-        </View>
-      </View>
+        </CustomView>
+      </CustomView>
     );
   }
 );

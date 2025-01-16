@@ -1,4 +1,4 @@
-import { ListRenderItem, StyleSheet, Text, View } from "react-native";
+import { ListRenderItem, StyleSheet } from "react-native";
 import React, {
   useCallback,
   useEffect,
@@ -9,7 +9,7 @@ import { RootStackScreenProps } from "@/types/navigation";
 import { CustomAvatar, CustomView } from "@/components";
 import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
 import { FlatList, Pressable } from "react-native-gesture-handler";
-import { Divider, IconButton } from "react-native-paper";
+import { Divider, IconButton, Text } from "react-native-paper";
 import { Post } from "@/types";
 import { Image } from "expo-image";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -23,9 +23,7 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
 }) => {
   const { userId, displayName, avatarURL, bio } = route.params;
   const [lastPost, setlastPost] =
-    useState<
-      FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>
-    >();
+    useState<FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null>();
   const [isFetching, setIsFetching] = useState(false);
   const [post, setPost] = useState<Post[]>();
 
@@ -76,7 +74,7 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
     );
   };
   return (
-    <View style={[styles.container]}>
+    <CustomView style={[styles.container]}>
       <CustomView
         paddingHorizontal={SPACING.medium}
         style={GLOBAL_STYLE.center}
@@ -101,18 +99,18 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
       ) : (
         <FlatList
           columnWrapperStyle={{ gap: 1 }}
-          ItemSeparatorComponent={() => <View style={{ height: 1 }} />}
+          ItemSeparatorComponent={() => <CustomView style={{ height: 1 }} />}
           data={post}
           numColumns={3}
           renderItem={renderItem}
           ListEmptyComponent={
-            <View style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}>
+            <CustomView style={[GLOBAL_STYLE.flex_1, GLOBAL_STYLE.center]}>
               <Text style={{ fontSize: 16 }}>User has no posts yet</Text>
-            </View>
+            </CustomView>
           }
         />
       )}
-    </View>
+    </CustomView>
   );
 };
 

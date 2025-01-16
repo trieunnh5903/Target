@@ -1,4 +1,4 @@
-import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, ViewStyle } from "react-native";
 import React from "react";
 import Animated, {
   AnimatedStyle,
@@ -6,6 +6,7 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { CROP_SIZE } from "@/constants";
+import CustomView from "./CustomView";
 
 interface GridCropProps {
   width?: number;
@@ -40,27 +41,29 @@ const GridCrop: React.FC<GridCropProps> = ({
       style={[styles.cropBox, { width, height }, style, gridAnimatedStyle]}
       pointerEvents="none"
     >
-      <View style={[styles.girdOverlay, { width, height }]}>
+      <CustomView style={[styles.girdOverlay, { width, height }]}>
         {/* vertial line */}
-        <View style={[styles.verticalLine, { left: spacingLineVertical }]} />
-        <View
+        <CustomView
+          style={[styles.verticalLine, { left: spacingLineVertical }]}
+        />
+        <CustomView
           style={[styles.verticalLine, { left: spacingLineVertical * 2 }]}
         />
 
         {/* horizontal line */}
-        <View
+        <CustomView
           style={[
             styles.horizontalLine,
             { width: width, top: spacingLineHorizontal },
           ]}
         />
-        <View
+        <CustomView
           style={[
             styles.horizontalLine,
             { width: width, top: spacingLineHorizontal * 2 },
           ]}
         />
-      </View>
+      </CustomView>
     </Animated.View>
   );
 };

@@ -1,4 +1,4 @@
-import { Keyboard, ListRenderItem, StyleSheet, View } from "react-native";
+import { Keyboard, ListRenderItem, StyleSheet } from "react-native";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
 import Animated, { FadeOut } from "react-native-reanimated";
@@ -136,7 +136,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   return (
     <CustomView style={GLOBAL_STYLE.flex_1}>
       {assets.length > 0 && (
-        <View>
+        <CustomView>
           <FlatList
             ref={listRef}
             data={assets}
@@ -157,7 +157,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
             snapToAlignment={"center"}
             decelerationRate={"fast"}
           />
-        </View>
+        </CustomView>
       )}
       <CustomView
         style={GLOBAL_STYLE.flex_1}

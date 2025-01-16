@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React, { memo, useCallback } from "react";
 import { Post, PostImage, User } from "@/types";
 import CustomView from "../CustomView";
@@ -8,6 +8,7 @@ import { dayJs } from "@/utils/dayJs";
 import Header from "./Header";
 import ActionGroups from "./ActionGroups";
 import ImageArea from "./ImageArea";
+import { Text } from "react-native-paper";
 
 interface PostSingleImageProps {
   liked: boolean;
@@ -38,7 +39,7 @@ const PostSingleImage: React.FC<PostSingleImageProps> = memo(
     }, [data.id, heartProgress, isDoubleTap, onToggleLikePress]);
 
     return (
-      <View>
+      <CustomView>
         <Header
           displayName={data.postedBy.displayName}
           avatarURL={data.postedBy.avatarURL}
@@ -48,15 +49,7 @@ const PostSingleImage: React.FC<PostSingleImageProps> = memo(
           paddingLeft={SPACING.medium}
           style={{ alignItems: "flex-start" }}
         >
-          <ImageArea
-            onPress={onPress}
-            animatedIsLiked={animatedIsLiked}
-            heartProgress={heartProgress}
-            isDoubleTap={isDoubleTap}
-            aleadyLiked={liked}
-            onDoubleTapPress={handeToggleLike}
-            source={data.images[0]}
-          />
+          <ImageArea onPress={onPress} source={data.images[0]} />
         </CustomView>
 
         <ActionGroups
@@ -70,7 +63,7 @@ const PostSingleImage: React.FC<PostSingleImageProps> = memo(
           onLikePress={onActionLikePress}
         />
 
-        <View style={styles.description}>
+        <CustomView style={styles.description}>
           {data.caption?.length > 0 && (
             <Text numberOfLines={1}>
               <Text style={styles.textBold}>{data.postedBy.displayName}</Text>
@@ -79,8 +72,8 @@ const PostSingleImage: React.FC<PostSingleImageProps> = memo(
             </Text>
           )}
           <Text>{dayJs.getTimeFromNow(data.createdAt)}</Text>
-        </View>
-      </View>
+        </CustomView>
+      </CustomView>
     );
   }
 );

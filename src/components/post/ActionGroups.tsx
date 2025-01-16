@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React from "react";
 import CustomView from "../CustomView";
 import Animated, {
@@ -8,6 +8,8 @@ import Animated, {
 import { Octicons } from "@expo/vector-icons";
 import ThemedText from "../ThemedText";
 import { GLOBAL_STYLE, SPACING } from "@/constants";
+import { Icon, IconButton, useTheme } from "react-native-paper";
+import { useAppTheme } from "@/config/theme";
 
 interface ActionGroupsProps {
   isDoubleTap: SharedValue<boolean>;
@@ -41,16 +43,16 @@ const ActionGroups: React.FC<ActionGroupsProps> = ({
       ],
     };
   });
-
+  const theme = useAppTheme();
   return (
-    <View style={styles.actionsWrapper}>
+    <CustomView style={styles.actionsWrapper}>
       <CustomView style={styles.action}>
         <Animated.View style={heartAnimatedStyle}>
           <Octicons
             name={alreadyLiked ? "heart-fill" : "heart"}
             onPress={onLikePress}
             size={24}
-            color={alreadyLiked ? "#ce2127" : "black"}
+            color={alreadyLiked ? "#ce2127" : theme.colors.icon}
           />
         </Animated.View>
 
@@ -64,13 +66,13 @@ const ActionGroups: React.FC<ActionGroupsProps> = ({
           name="comment-discussion"
           onPress={onCommentPress}
           size={24}
-          color="black"
+          color={theme.colors.icon}
         />
         <ThemedText style={styles.textBold}>
           {commentsCount && commentsCount > 0 ? commentsCount : ""}
         </ThemedText>
       </CustomView>
-    </View>
+    </CustomView>
   );
 };
 
@@ -91,7 +93,6 @@ const styles = StyleSheet.create({
   },
   action: {
     flexDirection: "row",
-    gap: SPACING.small,
     alignItems: "center",
   },
 });

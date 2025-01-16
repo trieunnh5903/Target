@@ -1,4 +1,4 @@
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Button, Text } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
@@ -82,7 +82,7 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
         <Button mode="contained" loading={loading} onPress={handleSignIn}>
           Login
         </Button>
-        <View style={{ flex: 1 }} />
+        <CustomView style={{ flex: 1 }} />
         <Pressable
           style={[GLOBAL_STYLE.rowCenter, styles.googleLogin]}
           onPress={handleGoogleSignIn}

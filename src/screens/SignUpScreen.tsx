@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 import React, { useState } from "react";
 import { Button } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
@@ -62,7 +62,7 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
       padding={SPACING.medium}
       style={[GLOBAL_STYLE.justifyContentCenter, GLOBAL_STYLE.flex_1]}
     >
-      <View style={styles.form}>
+      <CustomView style={styles.form}>
         <CustomTextInput
           label="Email"
           value={email}
@@ -86,12 +86,12 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
           secureTextEntry
         />
         <Button mode="contained">Register</Button>
-        <View style={{ flex: 1 }} />
+        <CustomView style={{ flex: 1 }} />
 
         <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
           Create new account
         </Button>
-      </View>
+      </CustomView>
     </CustomView>
   );
 };
