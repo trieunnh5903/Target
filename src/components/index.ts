@@ -5,7 +5,6 @@ export { default as CustomView } from "./CustomView";
 export { default as CustomAvatar } from "./CustomAvatar";
 export { default as ImageCropper } from "./ImageCropper";
 export { default as GridCrop } from "./GridCrop";
-export { default as CustomKeyboardAvoidingView } from "./CustomKeyboardAvoidingView";
 export { default as PostMultipleImage } from "./post/PostMultipleImage";
 export { default as PostSingleImage } from "./post/PostSingleImage";
 export { default as CommentItem } from "./CommentItem";

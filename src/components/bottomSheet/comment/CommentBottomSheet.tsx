@@ -292,6 +292,7 @@ const CommentBottomSheet = forwardRef<
       backdropComponent={renderBackdrop}
       footerComponent={renderFooter}
       bottomInset={bottomSafeArea}
+      android_keyboardInputMode="adjustResize"
     >
       <BottomSheetFlatList
         ref={listRef}
