@@ -1,5 +1,5 @@
 import { Keyboard, ListRenderItem, StyleSheet } from "react-native";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
 import Animated, { FadeOut } from "react-native-reanimated";
 import { Asset } from "expo-media-library";
@@ -21,7 +21,7 @@ import {
 } from "react-native-paper";
 import { FlatList, TextInput } from "react-native-gesture-handler";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { resetPosting, sendPostRequest } from "@/redux/slices/postSlice";
+import { sendPostRequest } from "@/redux/slices/postSlice";
 
 interface ImageEntryProps {
   asset: Asset;
@@ -89,7 +89,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   const dispatch = useAppDispatch();
   const [assets, setAssets] = useState(assetsParam);
   const [caption, setCaption] = useState("");
-  const { error, posting } = useAppSelector((state) => state.posts);
+  const { posting } = useAppSelector((state) => state.posts);
   const listRef = useRef<FlatList<any>>(null);
 
   useLayoutEffect(() => {
@@ -160,13 +160,12 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
         </CustomView>
       )}
       <CustomView
-        style={GLOBAL_STYLE.flex_1}
+        style={[GLOBAL_STYLE.flex_1]}
         padding={SPACING.medium}
         paddingTop={0}
       >
-        <Text>{error}</Text>
         <TextInput
-          style={GLOBAL_STYLE.flex_1}
+          style={[GLOBAL_STYLE.flex_1]}
           multiline
           textAlignVertical="top"
           placeholder="What are you thinking?"
