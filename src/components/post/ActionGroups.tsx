@@ -94,5 +94,6 @@ const styles = StyleSheet.create({
   action: {
     flexDirection: "row",
     alignItems: "center",
+    gap: SPACING.small
   },
 });

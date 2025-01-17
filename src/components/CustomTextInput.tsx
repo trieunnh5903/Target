@@ -60,6 +60,7 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
             value={text}
             autoCapitalize="none"
             underlineStyle={{ opacity: 0 }}
+            textColor="black"
             style={[GLOBAL_STYLE.flex_1]}
             contentStyle={{ paddingRight: 0 }}
             theme={{
@@ -112,6 +113,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     ...GLOBAL_STYLE.rowHCenter,
+    backgroundColor: "white",
   },
   errorText: {
     marginTop: 4,

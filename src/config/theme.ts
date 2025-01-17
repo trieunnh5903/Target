@@ -26,6 +26,7 @@ export const PaperDarkTheme = deepmerge(MD3DarkTheme, {
     icon: "gray",
     onSecondaryContainer: "rgba(206,33,39,255)",
     secondaryContainer: "rgba(206,33,39,0.2)",
+    onPrimary: "rgb(255, 255, 255)",
   },
 });
 

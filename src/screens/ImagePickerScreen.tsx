@@ -36,7 +36,6 @@ import {
   GLOBAL_STYLE,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
-  STATUS_BAR_HEIGHT,
 } from "@/constants";
 import { CustomView, ImageCropper } from "@/components";
 import { AlbumBottomSheet } from "@/components/bottomSheet";
@@ -49,43 +48,6 @@ import {
 } from "@/hooks";
 import { fetchMedia, setAlbum } from "@/redux/slices/mediaSlice";
 
-const ImageEntry: React.FC<{
-  uri: string;
-  size: number;
-  onPress: () => void;
-  isPreviewed: boolean;
-  selectedIndex: number;
-  multipleSelect: boolean;
-}> = memo(function ImageEntry({
-  uri,
-  size,
-  onPress,
-  isPreviewed,
-  selectedIndex,
-  multipleSelect,
-}) {
-  return (
-    <TouchableOpacity onPress={onPress}>
-      <CustomView style={{ opacity: isPreviewed ? 0.2 : 1 }}>
-        <Image
-          source={{ uri: uri }}
-          style={[styles.image, { width: size, height: size }]}
-        />
-      </CustomView>
-
-      {multipleSelect && (
-        <CustomView
-          style={[styles.circle, selectedIndex >= 0 && styles.selectedCircle]}
-        >
-          {selectedIndex >= 0 && (
-            <Text style={{ fontWeight: "bold" }}>{selectedIndex + 1}</Text>
-          )}
-        </CustomView>
-      )}
-    </TouchableOpacity>
-  );
-});
-
 const HEADER_LIST_HEIGHT = 50;
 const SPACING = 1;
 const NUM_COLUMNS = 4;
@@ -94,7 +56,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
 }) => {
   const theme = useTheme();
   const dimension = useWindowDimensions();
-  const ITEM_SIZE =
+  const IMAGE_SIZE =
     (dimension.width - (NUM_COLUMNS - 1) * SPACING) / NUM_COLUMNS;
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   const listRef = useAnimatedRef<Animated.FlatList<any>>();
@@ -118,6 +80,8 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
       y: number;
     };
   }>({});
+  const listMeasurementHeight = useSharedValue(0);
+  const imagePressed = useSharedValue(false);
 
   const {
     displayHeight,
@@ -244,48 +208,53 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
   }, []);
 
   const handleScrollToSelectedImage = (index: number) => {
-    const remainingOffset = contentHeight.value - scrollY.value;
     isBeginDrag.value = false;
-    // last page
-    if (remainingOffset <= SCREEN_HEIGHT + CROP_SIZE) {
+    const scrollIndex = Math.floor(index / 4);
+    const remainOffset =
+      contentHeight.value -
+      (scrollIndex * (IMAGE_SIZE + scrollIndex) +
+        CROP_SIZE +
+        HEADER_LIST_HEIGHT);
+    if (listMeasurementHeight.value === 0) {
+      //unscrolled list
       translateY.value = withTiming(0, {}, (finished) => {
         if (finished) {
-          scrollTo(
-            listRef,
-            0,
-            contentHeight.value -
-              (SCREEN_HEIGHT - (STATUS_BAR_HEIGHT + 60) + SCREEN_WIDTH) -
-              4,
-            true
-          );
+          scrollTo(listRef, 0, scrollIndex * IMAGE_SIZE + scrollIndex, true);
         }
       });
-      return;
+    } else if (remainOffset < listMeasurementHeight.value) {
+      //list scrolled to end page
+      listRef.current?.scrollToOffset({
+        offset: contentHeight.value - (listMeasurementHeight.value + CROP_SIZE),
+      });
+      translateY.value = withTiming(0);
+    } else {
+      translateY.value = withTiming(0, {}, (finished) => {
+        if (finished) {
+          scrollTo(listRef, 0, scrollIndex * IMAGE_SIZE + scrollIndex, true);
+        }
+      });
     }
-    translateY.value = withTiming(0, {}, (finished) => {
-      if (finished) {
-        scrollTo(
-          listRef,
-          0,
-          Math.floor(index / 4) * ITEM_SIZE + Math.floor(index / 4),
-          true
-        );
-      }
-    });
   };
 
   const saveAsset = (image: MediaLibrary.Asset) => {
     let updatedAsset = [...(selectedAsset ?? [])];
-    const assetIndex = updatedAsset?.findIndex(
-      (asset) => asset.id === image?.id
-    );
-    if (assetIndex >= 0) {
-      if (previewAsset?.id === image.id) {
-        updatedAsset = updatedAsset.filter((asset) => asset.id !== image?.id);
+
+    if (multipleSelect) {
+      const assetIndex = updatedAsset?.findIndex(
+        (asset) => asset.id === image?.id
+      );
+      if (assetIndex >= 0) {
+        if (previewAsset?.id === image.id) {
+          updatedAsset = updatedAsset.filter((asset) => asset.id !== image?.id);
+        }
+      } else {
+        updatedAsset.push(image);
       }
     } else {
-      updatedAsset.push(image);
+      updatedAsset = [image];
     }
+
     setSelectedAsset(updatedAsset);
   };
 
@@ -310,7 +279,9 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
       );
     }
   };
+
   const onImagePress = (image: MediaLibrary.Asset, index: number) => {
+    imagePressed.value = true;
     lastTranslateY.value = 0;
     handleScrollToSelectedImage(index);
     setPreviewAsset(image);
@@ -357,15 +328,20 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
         scrollY.value = y;
         return;
       }
+      console.log(isBeginDrag.value);
 
       if (isBeginDrag.value) {
         if (velocityY > 0) {
+          console.log("b");
+
           translateY.value = Math.max(
             translateY.value + (scrollY.value - y),
             -CROP_SIZE
           );
         } else {
-          if (y < CROP_SIZE) {
+          if (y < CROP_SIZE || imagePressed.value) {
+            console.log("a");
+
             translateY.value = Math.min(
               translateY.value + (scrollY.value - y),
               0
@@ -375,14 +351,19 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
       }
       scrollY.value = y;
     },
-    onMomentumEnd: ({ contentOffset: { y }, contentSize: { height } }) => {
+    onMomentumEnd: ({
+      contentOffset: { y },
+      contentSize: { height },
+      layoutMeasurement,
+    }) => {
+      listMeasurementHeight.value = layoutMeasurement.height;
       contentHeight.value = height;
       lastTranslateY.value = translateY.value;
-      if (y < CROP_SIZE / 2) {
-        scrollTo(listRef, 0, 0, true);
-      } else if (y < CROP_SIZE) {
-        scrollTo(listRef, 0, CROP_SIZE, true);
-      } else if (translateY.value !== 0 && translateY.value !== -CROP_SIZE) {
+      if (translateY.value === 0 || translateY.value === -CROP_SIZE) {
+        imagePressed.value = false;
+        return;
+      }
+      if (isBeginDrag.value) {
         if (Math.abs(translateY.value) >= SCREEN_WIDTH / 2) {
           scrollTo(
             listRef,
@@ -396,7 +377,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
       }
     },
   });
-
+  
   useAnimatedReaction(
     () => scrollY.value,
     (v) => {
@@ -423,7 +404,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
         isPreviewed={isPreviewed}
         selectedIndex={selectedAssetIndex}
         uri={item.uri}
-        size={ITEM_SIZE}
+        size={IMAGE_SIZE}
         onPress={() => onImagePress(item, index)}
       />
     );
@@ -501,8 +482,8 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
         keyExtractor={(item) => item.filename}
         columnWrapperStyle={{ gap: SPACING }}
         getItemLayout={(data, index) => ({
-          length: ITEM_SIZE + SPACING,
-          offset: Math.floor(index / NUM_COLUMNS) * (ITEM_SIZE + SPACING),
+          length: IMAGE_SIZE + SPACING,
+          offset: Math.floor(index / NUM_COLUMNS) * (IMAGE_SIZE + SPACING),
           index,
         })}
         ItemSeparatorComponent={() => (
@@ -514,13 +495,13 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
         ListEmptyComponent={
           <CustomView style={styles.loadingContainer}>
             {Array.from({
-              length: Math.ceil((SCREEN_HEIGHT - CROP_SIZE) / ITEM_SIZE) * 4,
+              length: Math.ceil((SCREEN_HEIGHT - CROP_SIZE) / IMAGE_SIZE) * 4,
             }).map((_, index) => (
               <CustomView
                 key={index}
                 style={[
                   styles.imageSkeleton,
-                  { width: ITEM_SIZE, height: ITEM_SIZE },
+                  { width: IMAGE_SIZE, height: IMAGE_SIZE },
                 ]}
               />
             ))}
@@ -538,6 +519,43 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
     </CustomView>
   );
 };
+
+const ImageEntry: React.FC<{
+  uri: string;
+  size: number;
+  onPress: () => void;
+  isPreviewed: boolean;
+  selectedIndex: number;
+  multipleSelect: boolean;
+}> = memo(function ImageEntry({
+  uri,
+  size,
+  onPress,
+  isPreviewed,
+  selectedIndex,
+  multipleSelect,
+}) {
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <CustomView style={{ opacity: isPreviewed ? 0.2 : 1 }}>
+        <Image
+          source={{ uri: uri }}
+          style={[styles.image, { width: size, height: size }]}
+        />
+      </CustomView>
+
+      {multipleSelect && (
+        <CustomView
+          style={[styles.circle, selectedIndex >= 0 && styles.selectedCircle]}
+        >
+          {selectedIndex >= 0 && (
+            <Text style={{ fontWeight: "bold" }}>{selectedIndex + 1}</Text>
+          )}
+        </CustomView>
+      )}
+    </TouchableOpacity>
+  );
+});
 
 export default ImagePickerScreen;
 
