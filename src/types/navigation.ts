@@ -39,14 +39,7 @@ export type RootStackParamList = {
       };
     };
   };
-  EditImage: {
-    assets: MediaLibrary.Asset[];
-    imageOption?: {
-      resizeFull: boolean;
-      translateX: number;
-      translateY: number;
-    };
-  };
+  EditImage: MediaLibrary.Asset;
   CameraScreen: {
     newestImage: MediaLibrary.Asset;
   };

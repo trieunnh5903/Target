@@ -80,7 +80,7 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
           secureTextEntry
         />
         <Button mode="contained" loading={loading} onPress={handleSignIn}>
-          Login
+          Login {""}
         </Button>
         <CustomView style={{ flex: 1 }} />
         <Pressable

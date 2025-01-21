@@ -8,5 +8,8 @@ export { default as GridCrop } from "./GridCrop";
 export { default as PostMultipleImage } from "./post/PostMultipleImage";
 export { default as PostSingleImage } from "./post/PostSingleImage";
 export { default as CommentItem } from "./CommentItem";
+export { default as IconButtonVertical } from "./IconButtonVertical";
+export { default as EmojiPicker } from "./EmojiPicker";
+export { default as EmojiList } from "./EmojiList";
 export { default as Message } from "./message";
 export { default as MessageInput } from "./message_input/MessageInput";

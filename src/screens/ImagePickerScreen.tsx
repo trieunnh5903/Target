@@ -328,20 +328,15 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
         scrollY.value = y;
         return;
       }
-      console.log(isBeginDrag.value);
 
       if (isBeginDrag.value) {
         if (velocityY > 0) {
-          console.log("b");
-
           translateY.value = Math.max(
             translateY.value + (scrollY.value - y),
             -CROP_SIZE
           );
         } else {
           if (y < CROP_SIZE || imagePressed.value) {
-            console.log("a");
-
             translateY.value = Math.min(
               translateY.value + (scrollY.value - y),
               0
@@ -377,7 +372,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
       }
     },
   });
-  
+
   useAnimatedReaction(
     () => scrollY.value,
     (v) => {

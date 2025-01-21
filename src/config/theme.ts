@@ -8,6 +8,22 @@ import {
 
 import { DarkTheme, DefaultTheme } from "@react-navigation/native";
 
+export const TagColors = [
+  "#000000",
+  "#FFFFFF",
+  "#FF0000",
+  "#008000",
+  "#0000FF",
+  "#FFA500",
+  "#FFFF00",
+  "#00FFFF",
+  "#FF00FF",
+  "#A52A2A",
+  "#4B0082",
+  "#EE82EE",
+  "#A9A9A9",
+];
+
 export const PaperLightTheme = deepmerge(MD3LightTheme, {
   colors: {
     primary: "rgba(206,33,39,255)",

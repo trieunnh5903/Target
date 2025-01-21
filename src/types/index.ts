@@ -52,6 +52,13 @@ export type Comment = Pick<User, "avatarURL" | "displayName"> & {
   postId: Post["id"];
 };
 
+export interface DraggableTagType {
+  offsetX: number;
+  offsetY: number;
+  value: string;
+  id: number;
+}
+
 export type IMessage = {
   id: string;
   senderId: string;

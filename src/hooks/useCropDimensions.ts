@@ -25,28 +25,6 @@ export const useCropDimensions = ({
 
   const originalRatio = (originalWidth ?? 0) / (originalHeight ?? 0);
 
-  // const gridWidth = useMemo(() => {
-  //   switch (imageOrientation) {
-  //     case "Portrait":
-  //       return resizeFull ? CROP_SIZE : CROP_SIZE * (4 / 5);
-  //     case "Landscape":
-  //       return CROP_SIZE;
-  //     default:
-  //       return CROP_SIZE;
-  //   }
-  // }, [imageOrientation, resizeFull]);
-
-  // const gridHeight = useMemo(() => {
-  //   switch (imageOrientation) {
-  //     case "Portrait":
-  //       return CROP_SIZE;
-  //     case "Landscape":
-  //       return resizeFull ? CROP_SIZE : CROP_SIZE / originalRatio;
-  //     default:
-  //       return CROP_SIZE;
-  //   }
-  // }, [imageOrientation, originalRatio, resizeFull]);
-
   const displayWidth = useMemo(() => {
     switch (imageOrientation) {
       case "Portrait":

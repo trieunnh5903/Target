@@ -32,12 +32,14 @@ interface ImageEntryProps {
       }
     | undefined;
   onDeletePress: (assetId: string) => void;
+  onEditImagePress: (asset: Asset) => void;
 }
 
 const ImageEntry: React.FC<ImageEntryProps> = ({
   asset,
   translateOption,
   onDeletePress,
+  onEditImagePress,
 }) => {
   const aspectRatio = asset.width / asset.height;
   const displayWidth =
@@ -67,6 +69,7 @@ const ImageEntry: React.FC<ImageEntryProps> = ({
         iconColor="white"
         style={{ position: "absolute", top: 0, left: 0 }}
         size={20}
+        onPress={() => onEditImagePress(asset)}
       />
 
       <IconButton
@@ -123,9 +126,14 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
     }
   };
 
+  const handleEditImage = (asset: Asset) => {
+    navigation.navigate("EditImage", asset);
+  };
+
   const renderItem: ListRenderItem<Asset> = ({ index, item }) => {
     return (
       <ImageEntry
+        onEditImagePress={handleEditImage}
         asset={item}
         translateOption={translateAssets[item.id]}
         onDeletePress={handleDeleteAsset}
