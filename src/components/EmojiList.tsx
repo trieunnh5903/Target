@@ -1,61 +1,48 @@
-import { useState } from "react";
-import { StyleSheet, FlatList, Platform, Pressable, Text } from "react-native";
-import { Image, type ImageSource } from "expo-image";
+import { useMemo } from "react";
+import { StyleSheet, Pressable } from "react-native";
+import { SvgProps } from "react-native-svg";
+import { FlashList, ListRenderItem } from "@shopify/flash-list";
+import { EMOJIS } from "@/constants";
 
 type Props = {
-  onSelect: (image: string) => void;
+  onSelect: (emoji: { id: string; component: React.FC<SvgProps> }) => void;
   onCloseModal: () => void;
 };
 
 export default function EmojiList({ onSelect, onCloseModal }: Props) {
-  const [emoji] = useState<string[]>([
-    "\u2764", // ❤
-    "\u{1F64C}", // 🙌
-    "\u{1F60E}", // 😎
-    "\u{1F600}", // 😀
-    "\u{1F601}", // 😁
-    "\u{1F602}", // 😂
-    "\u{1F923}", // 🤣
-    "\u{1F60A}", // 😊
-    "\u{1F60D}", // 😍
-    "\u{1F914}", // 🤔
-    "\u{1F44D}", // 👍
-    "\u{1F44C}", // 👌
-  ]);
+  const emojis = useMemo(() => EMOJIS, []);
+
+  const renderItem: ListRenderItem<{
+    id: string;
+    component: React.FC<SvgProps>;
+  }> = ({ item }) => {
+    const SvgComponent = item.component;
+    return (
+      <Pressable
+        onPress={() => {
+          onSelect(item);
+          onCloseModal();
+        }}
+      >
+        <SvgComponent width={90} height={90} />
+      </Pressable>
+    );
+  };
 
   return (
-    <FlatList
+    <FlashList
       horizontal
-      showsHorizontalScrollIndicator={Platform.OS === "web"}
-      data={emoji}
+      showsHorizontalScrollIndicator={false}
+      data={emojis}
       contentContainerStyle={styles.listContainer}
-      renderItem={({ item, index }) => (
-        <Pressable
-          onPress={() => {
-            onSelect(item);
-            onCloseModal();
-          }}
-        >
-          {/* <Text source={item} key={index} style={styles.image} /> */}
-          <Text>{item}</Text>
-        </Pressable>
-      )}
+      renderItem={renderItem}
+      estimatedItemSize={90}
     />
   );
 }
 
 const styles = StyleSheet.create({
   listContainer: {
-    borderTopRightRadius: 10,
-    borderTopLeftRadius: 10,
     paddingHorizontal: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  image: {
-    width: 100,
-    height: 100,
-    marginRight: 20,
   },
 });

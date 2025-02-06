@@ -55,7 +55,10 @@ const fetchAllUserPost = async (
     } as FetchPostsResponse;
   } catch (error) {
     console.log("fetchAllUserPost", error);
-    throw error;
+    return {
+      posts: [],
+      lastPost: null,
+    } as FetchPostsResponse;
   }
 };
 

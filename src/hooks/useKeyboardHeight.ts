@@ -1,31 +1,26 @@
-import { useEffect, useState } from "react";
-import { Keyboard, KeyboardEvent } from "react-native";
+import { useKeyboardHandler } from "react-native-keyboard-controller";
+import { useSharedValue } from "react-native-reanimated";
 
 export const useKeyboardHeight = () => {
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    function onKeyboardDidShow(e: KeyboardEvent) {
-      setKeyboardHeight(e.endCoordinates.height);
-    }
-
-    function onKeyboardDidHide() {
-      setKeyboardHeight(0);
-    }
-
-    const showSubscription = Keyboard.addListener(
-      "keyboardDidShow",
-      onKeyboardDidShow
-    );
-    const hideSubscription = Keyboard.addListener(
-      "keyboardDidHide",
-      onKeyboardDidHide
-    );
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
+  const keyboardHeight = useSharedValue(0);
+  useKeyboardHandler(
+    {
+      onStart: (e) => {
+        "worklet";
+      },
+      onMove: (e) => {
+        "worklet";
+        keyboardHeight.value = e.height;
+      },
+      onInteractive: (e) => {
+        "worklet";
+      },
+      onEnd: (e) => {
+        "worklet";
+      },
+    },
+    []
+  );
 
   return { keyboardHeight };
 };

@@ -99,18 +99,22 @@ const chatAPI = {
         .get();
 
       if (querySnapshot.size > 0) {
-        return querySnapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            ...data,
-            id: doc.id,
-            createdAt: data.createdAt.seconds,
-            lastMessage: {
-              ...data.lastMessage,
-              createdAt: data.lastMessage.createdAt.seconds,
-            },
-          } as IChatRoom;
-        });
+        return querySnapshot.docs
+          .map((doc) => {
+            const data = doc.data();
+            if (data.lastMessage) {
+              return {
+                ...data,
+                id: doc.id,
+                createdAt: data.createdAt.seconds,
+                lastMessage: {
+                  ...data.lastMessage,
+                  createdAt: data.lastMessage.createdAt.seconds,
+                },
+              } as IChatRoom;
+            }
+          })
+          .filter((chat): chat is IChatRoom => chat !== undefined);
       } else return [];
     } catch (error) {
       console.error("Error fetch User Chats", error);

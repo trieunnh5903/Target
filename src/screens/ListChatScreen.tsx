@@ -13,19 +13,19 @@ import { Text } from "react-native-paper";
 const ListChatScreen: React.FC<RootStackScreenProps<"ListChatRoom">> = ({
   navigation,
 }) => {
-  const currentId = useAppSelector((state) => state.auth.currentUser?.id);
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [rooms, setRooms] = useState<IChatRoom[]>([]);
   useEffect(() => {
     (async () => {
       try {
-        const listRooms = await chatAPI.fetcAllChats(currentId!);
+        const listRooms = await chatAPI.fetcAllChats(currentUser?.id!);
         console.log("listRooms", listRooms);
 
         setRooms(listRooms);
       } catch {}
     })();
     return () => {};
-  }, [currentId]);
+  }, [currentUser]);
 
   const onChatItemPress = (otherUser: {
     avatarURL: string | null | undefined;
@@ -41,13 +41,13 @@ const ListChatScreen: React.FC<RootStackScreenProps<"ListChatRoom">> = ({
   };
 
   const renderItem: ListRenderItem<IChatRoom> = ({ item }) => {
-    const otherUserId = item.participants.find((id) => id !== currentId);
+    const otherUserId = item.participants.find((id) => id !== currentUser?.id);
     const otherUser = otherUserId
       ? item.participantsDetails[otherUserId]
       : null;
     const lastMessage = item.lastMessage;
     const lastMessageContent =
-      lastMessage.senderId === currentId
+      lastMessage.senderId === currentUser?.id
         ? `You: ${lastMessage.content}`
         : lastMessage.content;
     return (
@@ -62,11 +62,14 @@ const ListChatScreen: React.FC<RootStackScreenProps<"ListChatRoom">> = ({
         }
       >
         {/* Avatar */}
-        <CustomAvatar avatarUrl={otherUser?.avatarURL} size={"medium"} />
+        <CustomAvatar
+          avatarUrl={otherUser?.avatarURL ?? currentUser?.avatarURL}
+          size={"medium"}
+        />
 
         {/* Chat Info */}
         <CustomView style={styles.chatInfo}>
-          <Text style={styles.name}>{otherUser?.displayName ?? "User"}</Text>
+          <Text style={styles.name}>{otherUser?.displayName ?? currentUser?.displayName}</Text>
           <Text style={styles.lastMessage}>{lastMessageContent}</Text>
         </CustomView>
 

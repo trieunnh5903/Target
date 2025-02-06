@@ -8,7 +8,6 @@ import Animated, {
 import { Octicons } from "@expo/vector-icons";
 import ThemedText from "../ThemedText";
 import { GLOBAL_STYLE, SPACING } from "@/constants";
-import { Icon, IconButton, useTheme } from "react-native-paper";
 import { useAppTheme } from "@/config/theme";
 
 interface ActionGroupsProps {

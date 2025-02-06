@@ -1,3 +1,19 @@
+import {
+  Emoji1,
+  Emoji10,
+  Emoji11,
+  Emoji12,
+  Emoji13,
+  Emoji14,
+  Emoji2,
+  Emoji3,
+  Emoji4,
+  Emoji5,
+  Emoji6,
+  Emoji7,
+  Emoji8,
+  Emoji9,
+} from "assets/emoji_svg";
 import { Dimensions, StatusBar, StyleSheet } from "react-native";
 
 export const SPACING = {
@@ -14,6 +30,23 @@ export const STATUS_BAR_HEIGHT = StatusBar.currentHeight ?? 0;
 
 export const CROP_SIZE = SCREEN_WIDTH;
 export const POST_IMAGE_SIZE = SCREEN_WIDTH * 0.6;
+export const EMOJIS = [
+  { id: "1", component: Emoji1 },
+  { id: "2", component: Emoji2 },
+  { id: "3", component: Emoji3 },
+  { id: "4", component: Emoji4 },
+  { id: "5", component: Emoji5 },
+  { id: "6", component: Emoji6 },
+  { id: "7", component: Emoji7 },
+  { id: "8", component: Emoji8 },
+  { id: "9", component: Emoji9 },
+  { id: "10", component: Emoji10 },
+  { id: "11", component: Emoji11 },
+  { id: "12", component: Emoji12 },
+  { id: "13", component: Emoji13 },
+  { id: "14", component: Emoji14 },
+];
+export const EMOJI_SIZE = SCREEN_WIDTH / 2;
 
 export const GLOBAL_STYLE = StyleSheet.create({
   flex_1: {

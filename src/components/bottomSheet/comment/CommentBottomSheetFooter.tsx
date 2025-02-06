@@ -15,7 +15,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TextInput } from "react-native-gesture-handler";
+import { Pressable, TextInput } from "react-native-gesture-handler";
 import { useAppSelector } from "@/hooks";
 import CustomAvatar from "@/components/CustomAvatar";
 import CustomView from "@/components/CustomView";
@@ -140,5 +140,6 @@ const styles = StyleSheet.create({
   textInput: { height: "100%", flex: 1, marginLeft: 10 },
   footerInput: {
     ...GLOBAL_STYLE.rowHCenter,
+    paddingRight: 56,
   },
 });

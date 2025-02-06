@@ -12,6 +12,7 @@ import {
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useColorScheme } from "react-native";
 import { PaperDarkTheme, PaperLightTheme } from "@/config/theme";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 setupNotificationHandler();
 
@@ -27,13 +28,15 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
-        <NotificationProvider>
-          <PaperProvider theme={theme}>
-            <BottomSheetModalProvider>
-              <AppNavigationContainer />
-            </BottomSheetModalProvider>
-          </PaperProvider>
-        </NotificationProvider>
+        <KeyboardProvider>
+          <NotificationProvider>
+            <PaperProvider theme={theme}>
+              <BottomSheetModalProvider>
+                <AppNavigationContainer />
+              </BottomSheetModalProvider>
+            </PaperProvider>
+          </NotificationProvider>
+        </KeyboardProvider>
       </Provider>
     </GestureHandlerRootView>
   );

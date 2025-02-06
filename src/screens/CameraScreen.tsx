@@ -31,6 +31,8 @@ import { useIsFocused } from "@react-navigation/native";
 // import * as NavigationBar from "expo-navigation-bar";
 import * as MediaLibrary from "expo-media-library";
 import { ActivityIndicator, Modal, Portal, Text } from "react-native-paper";
+import { useAppDispatch } from "@/hooks";
+import { createPostAssets } from "@/redux/slices/postSlice";
 
 const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
   navigation,
@@ -92,7 +94,7 @@ const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
         break;
     }
   };
-
+  const dispatch = useAppDispatch();
   const onCapture = async () => {
     if (cameraRef.current && isCameraReady) {
       setCapturing(true);
@@ -106,10 +108,13 @@ const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
 
         if (!photo) return;
         const asset = await MediaLibrary.createAssetAsync(photo.uri);
-        navigation.navigate("CreatePost", {
-          assets: [asset],
-          translateAssets: {},
-        });
+        dispatch(
+          createPostAssets({
+            assets: [asset],
+            translateAssetOptions: {},
+          })
+        );
+        navigation.navigate("CreatePost");
       } catch (error) {
         console.log("Error taking picture:", error);
       } finally {
@@ -188,7 +193,7 @@ const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
         <Modal dismissable={false} visible={capturing}>
           <CustomView style={styles.modalContent}>
             <ActivityIndicator />
-            <Text>Loading</Text>
+            <Text>Processing</Text>
           </CustomView>
         </Modal>
       </Portal>

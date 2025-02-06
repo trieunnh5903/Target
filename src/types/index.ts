@@ -1,4 +1,6 @@
+import { EMOJIS } from "@/constants";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import { TextInputProps } from "react-native";
 
 export type PostImage = {
   thumbnailUrl: {
@@ -51,12 +53,29 @@ export type Comment = Pick<User, "avatarURL" | "displayName"> & {
   createdAt: number;
   postId: Post["id"];
 };
-
+export type TranslateAssetOptions = {
+  [id: string]: {
+    x: number;
+    y: number;
+  };
+};
+export type EmojiType = (typeof EMOJIS)[0] & {
+  offsetX: number;
+  offsetY: number;
+};
 export interface DraggableTagType {
   offsetX: number;
   offsetY: number;
   value: string;
   id: number;
+  fontSize: number;
+  backgroundColor: string;
+  textAlign: TextInputProps["textAlign"];
+  textColor: string;
+  contentSize: {
+    width: number;
+    height: number;
+  };
 }
 
 export type IMessage = {

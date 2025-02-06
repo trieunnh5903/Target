@@ -1,20 +1,10 @@
 import { StyleSheet, View } from "react-native";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
 import { Image } from "expo-image";
-import {
-  GLOBAL_STYLE,
-  SCREEN_HEIGHT,
-  SCREEN_WIDTH,
-  SPACING,
-} from "@/constants";
-import { useCropDimensions, useCropsGesture, useKeyboardHeight } from "@/hooks";
-import {
-  GestureDetector,
-  ScrollView,
-  Pressable,
-  TextInput,
-} from "react-native-gesture-handler";
+import { EMOJI_SIZE, GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
+import { useAppDispatch, useCropDimensions, useCropsGesture } from "@/hooks";
+import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -25,26 +15,27 @@ import {
   CustomView,
   EmojiList,
   EmojiPicker,
+  EmojiSticker,
   IconButtonVertical,
 } from "@/components";
-import DraggableTag from "@/components/Tag/DraggableTag";
-import { DraggableTagType } from "@/types";
-import { Button, Modal, Portal, Text } from "react-native-paper";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { TagColors, useAppTheme } from "@/config/theme";
-import Slider from "@react-native-community/slider";
+import { DraggableTagType, EmojiType } from "@/types";
+import { Button } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import ViewShot, { captureRef } from "react-native-view-shot";
+import { updatePostAsset } from "@/redux/slices/postSlice";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { EditTagModal, LoadingModal } from "@/components/modal";
+import { TextInputProps } from "react-native";
+import DraggableTag from "@/components/tag/DraggableTag";
 
-const AnimatedIcon = Animated.createAnimatedComponent(MaterialCommunityIcons);
 const EditImage: React.FC<RootStackScreenProps<"EditImage">> = ({
   navigation,
   route,
 }) => {
-  const asset = route.params;
+  const { asset, translateOption } = route.params;
   const [tags, setTags] = useState<DraggableTagType[]>([]);
-  // const [tagModalVisible, setTagModalVisible] = useState(false);
-  // const [tagValue, setTagValue] = useState<string>("");
-  // const tagInputRef = useRef<TextInput>(null);
-  const theme = useAppTheme();
+  const [tagModalVisible, setTagModalVisible] = useState(false);
+  const translate = useSharedValue({ x: 0, y: 0 });
 
   const {
     displayHeight,
@@ -57,24 +48,14 @@ const EditImage: React.FC<RootStackScreenProps<"EditImage">> = ({
   });
 
   const { gesture, translationX, translationY } = useCropsGesture({
+    initialTranslateY: translateOption?.y ?? 0,
+    inititalTranslateX: translateOption?.x ?? 0,
     displayHeight,
     boundaryTranslateX,
     boundaryTranslateY,
-    // onTranslateFinished(x, y) {
-    //   if (!previewAsset) return;
-    //   if (!multipleSelect) {
-    //     translateSelectedAssets.value = { [previewAsset.id]: { x, y } };
-    //   } else {
-    //     const existed = selectedAsset?.some(
-    //       (item) => item.id === previewAsset?.id
-    //     );
-    //     if (existed) {
-    //       addTranslatedAsset(previewAsset.id, x, y);
-    //     } else if (selectedAsset?.length === 0) {
-    //       translateSelectedAssets.value = { [previewAsset.id]: { x, y } };
-    //     }
-    //   }
-    // },
+    onTranslateFinished(x, y) {
+      translate.value = { x, y };
+    },
   });
 
   const animatedImageStyle = useAnimatedStyle(() => ({
@@ -84,61 +65,150 @@ const EditImage: React.FC<RootStackScreenProps<"EditImage">> = ({
     ],
   }));
 
-  // useEffect(() => {
-  //   const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
-  //     if (tagValue.length > 0) {
-  //       const offsetX = displayWidth / 2 - translationX.value;
-  //       const offsetY = displayHeight / 2 - translationY.value;
-  //       setTags((pre) => [
-  //         ...pre,
-  //         {
-  //           offsetX,
-  //           offsetY,
-  //           value: tagValue,
-  //           id: Date.now(),
-  //         },
-  //       ]);
-  //       clearTagValue();
-  //     }
-  //     // hideModalTag();
-  //   });
-  //   return () => {
-  //     hideSubscription.remove();
-  //   };
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [displayHeight, displayWidth, tagValue]);
+  const caculateInitialEmojiOffset = () => {
+    return {
+      offsetX: displayWidth / 2 - translationX.value - EMOJI_SIZE / 2,
+      offsetY: displayHeight / 2 - translationY.value - EMOJI_SIZE / 2,
+    };
+  };
 
-  // const clearTagValue = () => setTagValue("");
-  // const showModalTag = () => setTagModalVisible(true);
-  // const hideModalTag = () => setTagModalVisible(false);
-  const trashIconOffset = useRef({ x: 0, y: 0 });
+  const showModalTag = () => setTagModalVisible(true);
+  const trashIconOffset = useRef({ x: 0, y: 0, width: 0, height: 0 });
   const trashIconRef = useRef<View>(null);
   const trashProgress = useSharedValue(0);
-  const isDrag = useSharedValue(-1);
-  const getTrashIconOffset = (x: number, y: number) => {
+  const isDrag = useSharedValue(false);
+  const headerHeight = useHeaderHeight();
+  const getTrashIconOffset = (
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
     trashIconOffset.current = {
       x,
       y,
+      width,
+      height,
     };
+  };
+
+  const onCloseEditTagModal = ({
+    backgroundColor,
+    tagValue,
+    textAlign,
+    textColor,
+    fontSize,
+    contentSize,
+  }: {
+    tagValue: string;
+    backgroundColor: string;
+    textAlign: TextInputProps["textAlign"];
+    textColor: string;
+    fontSize: number;
+    contentSize: {
+      width: number;
+      height: number;
+    };
+  }) => {
+    if (tagValue.length > 0) {
+      const offsetX = displayWidth / 2 - translationX.value;
+      const offsetY = displayHeight / 2 - translationY.value;
+      setTags((pre) => [
+        ...pre,
+        {
+          offsetX,
+          offsetY,
+          value: tagValue,
+          id: Date.now(),
+          backgroundColor,
+          textAlign,
+          textColor,
+          fontSize,
+          contentSize,
+        },
+      ]);
+    }
+    hideModal();
+  };
+
+  const hideModal = () => setTagModalVisible(false);
+
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [pickedEmoji, setPickedEmoji] = useState<EmojiType[]>([]);
+  const [capturing, setCapturing] = useState(false);
+  const dispatch = useAppDispatch();
+  const viewShotRef = useRef<ViewShot>(null);
+
+  const onAddStickerPres = () => {
+    setIsModalVisible(true);
+  };
+
+  const onSelectEmoji = (emoji: Omit<EmojiType, "offsetX" | "offsetY">) => {
+    const centerOffset = caculateInitialEmojiOffset();
+    setPickedEmoji((pre) => [
+      ...pre,
+      { ...emoji, ...centerOffset, id: Date.now().toString() },
+    ]);
+  };
+
+  const onEmojiModalClose = () => {
+    setIsModalVisible(false);
+  };
+
+  const deleteEmoji = (emoji: EmojiType) => {
+    setPickedEmoji((pre) => pre.filter((item) => item.id !== emoji.id));
+  };
+
+  const handleDeleteTag = (tag: DraggableTagType) => {
+    setTags((pre) => pre.filter((item) => item.id !== tag.id));
+  };
+
+  const captureImage = async () => {
+    try {
+      const localUri = await captureRef(viewShotRef, {
+        height: asset.height,
+        width: asset.width,
+        format: "jpg",
+      });
+      return localUri;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  };
+
+  const onNextPress = async () => {
+    setCapturing(true);
+    try {
+      let newAsset = { ...asset };
+      if (pickedEmoji.length > 0) {
+        const uri = await captureImage();
+        newAsset.uri = uri;
+      }
+      dispatch(
+        updatePostAsset({
+          assets: newAsset,
+          translateOption: translate.value,
+        })
+      );
+      navigation.goBack();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setCapturing(false);
+    }
   };
 
   const trashAnimatedStyle = useAnimatedStyle(() => {
     return {
-      opacity: interpolate(isDrag.value, [-1, 0], [0, 1], Extrapolation.CLAMP),
-      borderColor:
-        trashProgress.value === 0
-          ? theme.colors.outline
-          : theme.colors.surfaceVariant,
-      backgroundColor:
-        trashProgress.value === 0
-          ? theme.colors.background
-          : theme.colors.surfaceVariant,
+      opacity: isDrag.value ? 1 : 0,
+      backgroundColor: trashProgress.value === 0 ? "rgba(0,0,0,0.5)" : "red",
       transform: [
         {
           scale: interpolate(
             trashProgress.value,
             [0, 1],
-            [1, 1.2],
+            [1, 1.1],
             Extrapolation.CLAMP
           ),
         },
@@ -146,91 +216,79 @@ const EditImage: React.FC<RootStackScreenProps<"EditImage">> = ({
     };
   });
 
-  const trashIconAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      color:
-        trashProgress.value === 0
-          ? theme.colors.onSurfaceVariant
-          : theme.colors.primary,
-    };
-  });
-
-  const footerAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: interpolate(isDrag.value, [-1, 0], [1, 0], Extrapolation.CLAMP),
-    };
-  });
-
-  const imageAreaAnimatedStyle = useAnimatedStyle(() => {
-    return { overflow: isDrag.value === 0 ? "visible" : "hidden" };
-  });
-
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-  const onAddSticker = () => {
-    console.log("sadsad");
-
-    setIsModalVisible(true);
-  };
-
-  const onModalClose = () => {
-    setIsModalVisible(false);
-  };
   return (
     <CustomView style={[GLOBAL_STYLE.flex_1]}>
-      <CustomView style={[{ flex: 0.1 }, GLOBAL_STYLE.fullWidth]}></CustomView>
-      <Animated.View style={imageAreaAnimatedStyle}>
-        <CustomView style={styles.imageArea}>
+      <Animated.View>
+        <Animated.View style={[styles.imageArea]}>
           <GestureDetector gesture={gesture}>
             <Animated.View
               style={[
-                { width: displayWidth, height: displayHeight },
+                {
+                  width: displayWidth,
+                  height: displayHeight,
+                },
                 animatedImageStyle,
               ]}
             >
-              <CustomView style={GLOBAL_STYLE.fullSize}>
-                <Image
-                  source={{ uri: asset?.uri }}
-                  style={GLOBAL_STYLE.fullSize}
-                />
-              </CustomView>
+              <ViewShot ref={viewShotRef}>
+                <CustomView style={[GLOBAL_STYLE.fullSize]}>
+                  <Image
+                    source={{ uri: asset?.uri }}
+                    style={{ width: displayWidth, height: displayHeight }}
+                  />
+                  {pickedEmoji.map((emoji) => (
+                    <EmojiSticker
+                      key={emoji.id}
+                      emoji={emoji}
+                      trashProgress={trashProgress}
+                      trashOffset={trashIconOffset.current}
+                      isDrag={isDrag}
+                      onDelete={deleteEmoji}
+                      headerHeight={headerHeight}
+                    />
+                  ))}
+                  {tags.map((tag) => (
+                    <DraggableTag
+                      key={tag.id}
+                      tag={tag}
+                      trashProgress={trashProgress}
+                      trashOffset={trashIconOffset.current}
+                      isDrag={isDrag}
+                      headerHeight={headerHeight}
+                      onDelete={handleDeleteTag}
+                    />
+                  ))}
+                </CustomView>
+              </ViewShot>
             </Animated.View>
           </GestureDetector>
-        </CustomView>
 
-        {/* {tags.map((tag) => (
-          <DraggableTag
-            key={tag.value}
-            tag={tag}
-            trashProgress={trashProgress}
-            trashOffset={trashIconOffset.current}
-            onDeleteTag={(tag) => {
-              console.log(tag.id);
-            }}
-            isDrag={isDrag}
-          />
-        ))} */}
-        <Animated.View
-          ref={trashIconRef}
-          style={[styles.trash, trashAnimatedStyle]}
-          onLayout={(event) =>
-            getTrashIconOffset(
-              event.nativeEvent.layout.x,
-              event.nativeEvent.layout.y
-            )
-          }
-        >
-          <AnimatedIcon
-            name="delete"
-            size={32}
-            style={trashIconAnimatedStyle}
-          />
+          <Animated.View
+            ref={trashIconRef}
+            style={[styles.trash, trashAnimatedStyle]}
+            onLayout={({ nativeEvent: { layout } }) =>
+              getTrashIconOffset(
+                layout.x,
+                layout.y,
+                layout.width,
+                layout.height
+              )
+            }
+          >
+            <MaterialCommunityIcons name="delete" size={32} color={"white"} />
+          </Animated.View>
         </Animated.View>
       </Animated.View>
-
-      <Animated.View style={[styles.footer, footerAnimatedStyle]}>
+      <Animated.View style={[styles.footer]}>
         <View style={styles.editOptionsContainer}>
           <IconButtonVertical
-            onPress={onAddSticker}
+            onPress={showModalTag}
+            icon="format-text"
+            iconSize={24}
+            label="Text"
+          />
+          <IconButtonVertical
+            onPress={onAddStickerPres}
             icon="sticker-emoji"
             iconSize={24}
             label="Sticker"
@@ -238,150 +296,28 @@ const EditImage: React.FC<RootStackScreenProps<"EditImage">> = ({
         </View>
         <Button
           mode="contained"
-          icon={"arrow-right"}
-          contentStyle={{ flexDirection: "row-reverse" }}
           style={styles.nextButton}
+          onPress={onNextPress}
         >
-          Next
+          Finished
         </Button>
       </Animated.View>
-      <EmojiPicker isVisible={isModalVisible} onClose={onModalClose}>
-        {/* A list of emoji component will go here */}
-        <EmojiList onCloseModal={onModalClose} />
+
+      <EmojiPicker isVisible={isModalVisible} onClose={onEmojiModalClose}>
+        <EmojiList onCloseModal={onEmojiModalClose} onSelect={onSelectEmoji} />
       </EmojiPicker>
-      {/* <TagModal
-        tagModalVisible={tagModalVisible}
-        tagValue={tagValue}
-        setTagValue={setTagValue}
-        tagInputRef={tagInputRef}
-      /> */}
+
+      <EditTagModal
+        visible={tagModalVisible}
+        // onChangeTagInputText={onChangeTagInputText}
+        // tagValue={tagValue}
+        onClose={onCloseEditTagModal}
+      />
+
+      <LoadingModal visible={capturing} loadingContent="Saving" />
     </CustomView>
   );
 };
-
-// const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-// interface TagModalProps {
-//   tagModalVisible: boolean;
-//   tagValue: string;
-//   setTagValue: (value: string) => void;
-//   tagInputRef: React.RefObject<TextInput>;
-// }
-// const TagModal: React.FC<TagModalProps> = ({
-//   setTagValue,
-//   tagInputRef,
-//   tagModalVisible,
-//   tagValue,
-// }) => {
-//   const tagColors = useMemo(() => TagColors, []);
-//   const { keyboardHeight } = useKeyboardHeight();
-//   const [backgroundColor, setBackgroundColor] = useState(tagColors[0]);
-//   const textColor = useMemo(() => {
-//     const r = parseInt(backgroundColor.slice(1, 3), 16);
-//     const g = parseInt(backgroundColor.slice(3, 5), 16);
-//     const b = parseInt(backgroundColor.slice(5, 7), 16);
-//     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-//     return brightness > 128 ? "#000000" : "#FFFFFF";
-//   }, [backgroundColor]);
-
-//   const fontSizeSharedValue = useSharedValue(16);
-//   const fontSizeAnimatedStyle = useAnimatedStyle(() => ({
-//     fontSize: fontSizeSharedValue.value,
-//   }));
-//   return (
-//     <Portal>
-//       <Modal
-//         dismissable={false}
-//         theme={{ colors: { backdrop: "rgba(0,0,0,0.9)" } }}
-//         visible={tagModalVisible}
-//         style={{ flex: 1 }}
-//       >
-//         <Slider
-//           style={{
-//             width: (SCREEN_HEIGHT - keyboardHeight) / 2,
-//             height: 40,
-//             position: "absolute",
-//             transform: [{ rotate: "-90deg" }],
-//             transformOrigin: "40px 40px",
-//           }}
-//           onValueChange={(value) => {
-//             console.log(value);
-//             fontSizeSharedValue.value = value;
-//           }}
-//           minimumValue={12}
-//           maximumValue={46}
-//           thumbTintColor={"#FFFFFF"}
-//           minimumTrackTintColor="#FFFFFF"
-//           maximumTrackTintColor="#f0f0f0"
-//         />
-//         <View
-//           style={[styles.tagModal, { height: SCREEN_HEIGHT - keyboardHeight }]}
-//         >
-//           <Animated.View style={[styles.tagContainer, { backgroundColor }]}>
-//             <AnimatedTextInput
-//               ref={tagInputRef}
-//               autoFocus
-//               onChangeText={setTagValue}
-//               value={tagValue}
-//               style={[
-//                 styles.tagInput,
-//                 { color: textColor },
-//                 fontSizeAnimatedStyle,
-//               ]}
-//             />
-//             {/* <Animated.Text
-//               style={[
-//                 styles.tagInput,
-//                 { color: textColor },
-//                 fontSizeAnimatedStyle,
-//               ]}
-//             >
-//               dsadasd
-//             </Animated.Text> */}
-//           </Animated.View>
-
-//           <View
-//             style={{
-//               position: "absolute",
-//               bottom: SPACING.large,
-//               left: 0,
-//               right: 0,
-//             }}
-//           >
-//             <ScrollView
-//               horizontal
-//               showsHorizontalScrollIndicator={false}
-//               contentContainerStyle={{
-//                 padding: SPACING.small,
-//                 gap: SPACING.large,
-//               }}
-//             >
-//               {tagColors.map((color) => (
-//                 <Pressable
-//                   key={color}
-//                   onPress={() => setBackgroundColor(color)}
-//                 >
-//                   <View
-//                     style={{
-//                       backgroundColor: color,
-//                       width: 20,
-//                       height: 20,
-//                       borderRadius: 20,
-//                       borderWidth: 1,
-//                       borderColor: "white",
-//                       transform: [
-//                         { scale: backgroundColor === color ? 1.3 : 1 },
-//                       ],
-//                     }}
-//                   />
-//                 </Pressable>
-//               ))}
-//             </ScrollView>
-//           </View>
-//         </View>
-//       </Modal>
-//     </Portal>
-//   );
-// };
 
 export default EditImage;
 
@@ -391,25 +327,26 @@ const styles = StyleSheet.create({
   },
   trash: {
     alignSelf: "center",
-    marginTop: SPACING.medium,
     padding: SPACING.small,
     borderRadius: 100,
-    borderWidth: 1,
     position: "absolute",
-    top: SCREEN_WIDTH,
+    bottom: SPACING.medium,
+    backgroundColor: "black",
+    width: 51,
+    height: 51,
   },
   tagInput: {
     color: "black",
     fontWeight: "bold",
-    // textAlign: "center",
   },
   tagContainer: {
-    alignSelf: "center",
     padding: SPACING.small,
+    position: "absolute",
     borderRadius: 12,
   },
   tagModal: {
     width: SCREEN_WIDTH,
+    flex: 1,
     ...GLOBAL_STYLE.center,
   },
   nextButton: { alignSelf: "flex-end", margin: SPACING.medium },
@@ -419,7 +356,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: SPACING.medium,
     flexDirection: "row",
-    gap: SPACING.medium,
+    gap: SPACING.large,
   },
   imageArea: {
     width: SCREEN_WIDTH,

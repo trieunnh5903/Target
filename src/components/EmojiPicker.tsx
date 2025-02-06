@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   titleContainer: {
-    height: "20%",
+    // height: "20%",
     // backgroundColor: "#464C55",
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,

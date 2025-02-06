@@ -28,7 +28,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
       </CustomView>
 
       <CustomView style={styles.sendContainer}>
-        <IconButton icon={"send"} onPress={onPress} />
+        <IconButton
+          disabled={value.trim().length === 0}
+          icon={"send"}
+          onPress={onPress}
+        />
       </CustomView>
     </CustomView>
   );

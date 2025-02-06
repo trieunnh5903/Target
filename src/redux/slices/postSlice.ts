@@ -1,5 +1,11 @@
 import { postAPI } from "@/api";
-import { FetchPostsResponse, Post, RequestStatus, User } from "@/types";
+import {
+  FetchPostsResponse,
+  Post,
+  RequestStatus,
+  TranslateAssetOptions,
+  User,
+} from "@/types";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import {
   createAction,
@@ -15,6 +21,9 @@ interface PostState {
   loadMoreStatus: RequestStatus;
   reloadStatus: RequestStatus;
   posting: RequestStatus;
+  caption: string | undefined;
+  assets: Asset[] | undefined;
+  translateAssetOptions: TranslateAssetOptions;
   lastPost: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null;
   error: string | undefined;
 }
@@ -63,6 +72,9 @@ const initialState = postsAdapter.getInitialState<PostState>({
   reloadStatus: "idle",
   posting: "idle",
   error: undefined,
+  caption: undefined,
+  assets: undefined,
+  translateAssetOptions: {},
 });
 
 const postsSlice = createSlice({
@@ -96,7 +108,39 @@ const postsSlice = createSlice({
 
     sendPostFailure: (state, action: PayloadAction<string>) => {
       state.posting = "failed";
+      console.log(action.payload);
       state.error = action.payload;
+    },
+
+    createPostAssets: (
+      state,
+      action: PayloadAction<{
+        assets: Asset[];
+        translateAssetOptions: TranslateAssetOptions;
+      }>
+    ) => {
+      state.assets = action.payload.assets;
+      state.translateAssetOptions = action.payload.translateAssetOptions;
+    },
+
+    updatePostAsset: (
+      state,
+      action: PayloadAction<{
+        assets: Asset;
+        translateOption: { x: number; y: number };
+      }>
+    ) => {
+      const { assets, translateOption } = action.payload;
+      state.translateAssetOptions[assets.id] = translateOption;
+      state.assets = state.assets?.map((asset) =>
+        asset.id === assets.id ? assets : asset
+      );
+    },
+
+    deleteAsset: (state, action: PayloadAction<{ assetId: string }>) => {
+      const assetId = action.payload.assetId;
+      state.assets = state.assets?.filter((asset) => asset.id !== assetId);
+      delete state.translateAssetOptions[assetId];
     },
 
     optimisticlikePost: (
@@ -105,7 +149,6 @@ const postsSlice = createSlice({
     ) => {
       const postId = action.payload.postId;
       const userId = action.payload.userId;
-
       const post = state.entities[postId];
       const isLiked = !!post?.likes?.[userId];
       const likeCountChange = isLiked ? -1 : 1;
@@ -130,6 +173,7 @@ const postsSlice = createSlice({
     resetPosting: (state) => {
       state.posting = "idle";
     },
+
     updateUserInPosts: (
       state,
       action: PayloadAction<{
@@ -151,6 +195,7 @@ const postsSlice = createSlice({
       );
     },
   },
+
   extraReducers(builder) {
     builder.addCase(fetchMorePosts.pending, (state) => {
       state.loadMoreStatus = "loading";
@@ -191,6 +236,9 @@ export const {
   optimisticlikePost,
   updateUserInPosts,
   fetchPostsSuccess,
+  createPostAssets,
+  deleteAsset,
+  updatePostAsset,
 } = postsSlice.actions;
 export const { selectAll: selectAllPosts, selectById: selectPostById } =
   postsAdapter.getSelectors((state: RootState) => state.posts);

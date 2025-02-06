@@ -1,7 +1,7 @@
 import { Keyboard, ListRenderItem, StyleSheet } from "react-native";
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
-import Animated, { FadeOut } from "react-native-reanimated";
+import Animated, { FadeOut, LinearTransition } from "react-native-reanimated";
 import { Asset } from "expo-media-library";
 import { CustomView } from "@/components";
 import { Image } from "expo-image";
@@ -21,7 +21,8 @@ import {
 } from "react-native-paper";
 import { FlatList, TextInput } from "react-native-gesture-handler";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { sendPostRequest } from "@/redux/slices/postSlice";
+import { deleteAsset, sendPostRequest } from "@/redux/slices/postSlice";
+import { useBackHandler } from "@react-native-community/hooks";
 
 interface ImageEntryProps {
   asset: Asset;
@@ -86,18 +87,20 @@ const ImageEntry: React.FC<ImageEntryProps> = ({
 
 const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   navigation,
-  route,
 }) => {
-  const { assets: assetsParam, translateAssets } = route.params;
   const dispatch = useAppDispatch();
-  const [assets, setAssets] = useState(assetsParam);
   const [caption, setCaption] = useState("");
-  const { posting } = useAppSelector((state) => state.posts);
+  const {
+    posting,
+    assets,
+    translateAssetOptions: translateAssets,
+  } = useAppSelector((state) => state.posts);
   const listRef = useRef<FlatList<any>>(null);
 
   useLayoutEffect(() => {
     const onSendPress = async () => {
       Keyboard.dismiss();
+      if (!assets) return;
       dispatch(sendPostRequest({ assets, caption, translateAssets }));
       navigation.navigate("Tabs", { screen: "Home" });
     };
@@ -107,7 +110,7 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
         return (
           <Button
             mode="contained"
-            disabled={!caption && assets.length === 0}
+            disabled={!caption && assets?.length === 0}
             onPress={onSendPress}
           >
             Post
@@ -119,15 +122,29 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
   }, [assets, caption, dispatch, navigation, translateAssets]);
 
   const handleDeleteAsset = (assetId: string) => {
-    const index = assets.findIndex((item) => item.id === assetId);
-    setAssets((pre) => pre.filter((item) => item.id !== assetId));
-    if (index > 0) {
-      listRef.current?.scrollToIndex({ index: index - 1 });
+    if (assets?.length === 1) {
+      navigation.goBack();
     }
+    const index = assets?.findIndex((item) => item.id === assetId);
+    if (index && assets?.length && assets.length - index === 1) {
+      listRef.current?.scrollToEnd();
+    }
+    dispatch(deleteAsset({ assetId }));
   };
 
+  useBackHandler(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return true;
+    }
+    return false;
+  });
+
   const handleEditImage = (asset: Asset) => {
-    navigation.navigate("EditImage", asset);
+    navigation.navigate("EditImage", {
+      asset,
+      translateOption: translateAssets[asset.id],
+    });
   };
 
   const renderItem: ListRenderItem<Asset> = ({ index, item }) => {
@@ -141,11 +158,12 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
     );
   };
 
+  if (!assets) return null;
   return (
     <CustomView style={GLOBAL_STYLE.flex_1}>
       {assets.length > 0 && (
         <CustomView>
-          <FlatList
+          <Animated.FlatList
             ref={listRef}
             data={assets}
             horizontal

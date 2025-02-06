@@ -30,16 +30,23 @@ export type RootStackParamList = {
     avatarURL: string;
     bio: string;
   };
-  CreatePost: {
-    assets: MediaLibrary.Asset[];
-    translateAssets: {
-      [id: string]: {
-        x: number;
-        y: number;
-      };
+  CreatePost: undefined;
+  // CreatePost: {
+  //   assets: MediaLibrary.Asset[];
+  //   translateAssets: {
+  //     [id: string]: {
+  //       x: number;
+  //       y: number;
+  //     };
+  //   };
+  // };
+  EditImage: {
+    asset: MediaLibrary.Asset;
+    translateOption?: {
+      x: number;
+      y: number;
     };
   };
-  EditImage: MediaLibrary.Asset;
   CameraScreen: {
     newestImage: MediaLibrary.Asset;
   };

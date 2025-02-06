@@ -12,6 +12,8 @@ interface CropGestureConfig {
   boundaryTranslateY: number;
   displayHeight: number;
   onTranslateFinished?: (x: number, y: number) => void;
+  inititalTranslateX?: number;
+  initialTranslateY?: number;
 }
 
 export const useCropsGesture = ({
@@ -19,9 +21,11 @@ export const useCropsGesture = ({
   boundaryTranslateX,
   boundaryTranslateY,
   onTranslateFinished,
+  initialTranslateY,
+  inititalTranslateX,
 }: CropGestureConfig) => {
-  const translationX = useSharedValue(0);
-  const translationY = useSharedValue(0);
+  const translationX = useSharedValue(inititalTranslateX ?? 0);
+  const translationY = useSharedValue(initialTranslateY ?? 0);
   const prevTranslationY = useSharedValue(0);
   const prevTranslationX = useSharedValue(0);
   const gridOpacity = useSharedValue(1);
@@ -29,6 +33,7 @@ export const useCropsGesture = ({
   const gridTranslateY = useSharedValue(0);
 
   const pan = Gesture.Pan()
+    .maxPointers(1)
     .onTouchesDown(() => {
       gridOpacity.value = 1;
     })

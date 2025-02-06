@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { postAPI } from "@/api";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { ListSkeleton } from "@/components/skeleton";
+import { useBackHandler } from "@react-native-community/hooks";
 
 const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
   navigation,
@@ -26,6 +27,14 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
     useState<FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData> | null>();
   const [isFetching, setIsFetching] = useState(false);
   const [post, setPost] = useState<Post[]>();
+
+  useBackHandler(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return true;
+    }
+    return false;
+  });
 
   useLayoutEffect(() => {
     navigation.setOptions({

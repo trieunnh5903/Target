@@ -15,6 +15,7 @@ import { useAppSelector } from "@/hooks";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { CommentBottomSheet } from "@/components/bottomSheet";
 import { Divider } from "react-native-paper";
+import { useBackHandler } from "@react-native-community/hooks";
 
 const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
   route,
@@ -29,6 +30,14 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
   const [bottomSheetPost, setBottomSheetPost] = useState<Post | null>(null);
   const commentBottomSheetRef = useRef<BottomSheetModal>(null);
   const listRef = useRef<FlashList<Post>>(null);
+
+  useBackHandler(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return true;
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (!postId) {

@@ -4,10 +4,11 @@ import { RootStackScreenProps } from "@/types/navigation";
 import { CustomView, Message, MessageInput } from "@/components";
 import { GLOBAL_STYLE, SPACING } from "@/constants";
 import { FlatList } from "react-native-gesture-handler";
-import { useAppSelector } from "@/hooks";
+import { useAppSelector, useKeyboardHeight } from "@/hooks";
 import chatAPI from "@/api/chatApi";
 import { IChatRoom, IMessage } from "@/types";
 import dayjs from "dayjs";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 const ChatRoomScreen: React.FC<RootStackScreenProps<"ChatRoom">> = ({
   route,
@@ -17,6 +18,8 @@ const ChatRoomScreen: React.FC<RootStackScreenProps<"ChatRoom">> = ({
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [message, setMessage] = useState("");
+  const { keyboardHeight } = useKeyboardHeight();
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: displayName,
@@ -77,6 +80,12 @@ const ChatRoomScreen: React.FC<RootStackScreenProps<"ChatRoom">> = ({
     }
     console.log(newMessage);
   };
+
+  const fakeViewAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      height: Math.abs(keyboardHeight.value),
+    };
+  });
   return (
     <CustomView style={GLOBAL_STYLE.flex_1}>
       <FlatList
@@ -99,6 +108,7 @@ const ChatRoomScreen: React.FC<RootStackScreenProps<"ChatRoom">> = ({
           onChangeText={setMessage}
         />
       </CustomView>
+      <Animated.Image style={fakeViewAnimatedStyle}/>
     </CustomView>
   );
 };

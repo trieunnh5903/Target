@@ -1,0 +1,14 @@
+export { default as Emoji1 } from "./face-mask-face-emoji.svg";
+export { default as Emoji2 } from "./kissing-face-with-closed-eyes-emoji.svg";
+export { default as Emoji3 } from "./stuck-out-tongue-facemoji.svg";
+export { default as Emoji4 } from "./anxious-face-with-sweat.svg";
+export { default as Emoji5 } from "./beaming-face-withsmiling-eyes.svg";
+export { default as Emoji6 } from "./fearful-face.svg";
+export { default as Emoji7 } from "./laughing-face.svg";
+export { default as Emoji8 } from "./neutral-face.svg";
+export { default as Emoji9 } from "./relieved-face.svg";
+export { default as Emoji10 } from "./surprised-face.svg";
+export { default as Emoji11 } from "./tongue-out-with-squinting-eyes.svg";
+export { default as Emoji12 } from "./unamused-face.svg";
+export { default as Emoji13 } from "./grinning-face-with-smiling-eyes.svg";
+export { default as Emoji14 } from "./frowning-face.svg";

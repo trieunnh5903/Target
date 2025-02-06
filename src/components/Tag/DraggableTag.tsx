@@ -1,5 +1,6 @@
+import { SCREEN_WIDTH, SPACING } from "@/constants";
 import { DraggableTagType } from "@/types";
-import { useState } from "react";
+import { StyleSheet } from "react-native";
 import {
   Gesture,
   GestureDetector,
@@ -7,6 +8,7 @@ import {
 } from "react-native-gesture-handler";
 import { Text } from "react-native-paper";
 import Animated, {
+  runOnJS,
   SharedValue,
   useAnimatedStyle,
   useSharedValue,
@@ -15,85 +17,89 @@ import Animated, {
 
 interface DraggableTagProps {
   tag: DraggableTagType;
-  trashOffset: { x: number; y: number };
-  onDeleteTag: (tag: DraggableTagType) => void;
   trashProgress: SharedValue<number>;
-  isDrag: SharedValue<number>;
+  isDrag: SharedValue<boolean>;
+  headerHeight: number;
+  trashOffset: { x: number; y: number; width: number; height: number };
+  onDelete: (tag: DraggableTagType) => void;
 }
 const DraggableTag: React.FC<DraggableTagProps> = ({
   tag,
   trashProgress,
-  trashOffset: { y: trashY },
+  trashOffset,
   isDrag,
-  onDeleteTag,
+  headerHeight,
+  onDelete,
 }) => {
   const opacity = useSharedValue(1);
-  const translateX = useSharedValue(tag.offsetX);
-  const translateY = useSharedValue(tag.offsetY);
-  const [dimension, setDimension] = useState<{
-    width: number;
-    height: number;
-  }>({ width: 0, height: 0 });
+  const translateX = useSharedValue(tag.offsetX - tag.contentSize.width / 2);
+  const translateY = useSharedValue(tag.offsetY - tag.contentSize.height / 2);
+  const absoluteX = useSharedValue(0);
+  const absoluteY = useSharedValue(0);
+  const deletable = useSharedValue(false);
+
   const textDrag = Gesture.Pan()
     .onStart(() => {
-      isDrag.value = withTiming(0);
+      isDrag.value = true;
     })
     .onChange((event) => {
       translateX.value += event.changeX;
       translateY.value += event.changeY;
-      if (translateY.value > trashY) {
-        opacity.value = 0;
-        // runOnJS(onDeleteTag)(tag);
+      absoluteX.value = event.absoluteX;
+      absoluteY.value = event.absoluteY;
+
+      if (
+        absoluteY.value >=
+          SCREEN_WIDTH + headerHeight - trashOffset.height - SPACING.medium &&
+        absoluteY.value <= SCREEN_WIDTH + headerHeight - SPACING.medium &&
+        absoluteX.value >= trashOffset.x &&
+        absoluteX.value <= trashOffset.x + trashOffset.width
+      ) {
         trashProgress.value = withTiming(1);
+        opacity.value = 0;
+        deletable.value = true;
       } else {
-        opacity.value = 1;
         trashProgress.value = withTiming(0);
+        opacity.value = 1;
+        deletable.value = false;
       }
     })
     .onEnd(() => {
-      console.log("onEnd");
-      isDrag.value = withTiming(-1);
+      if (deletable.value) {
+        opacity.value = 0;
+        runOnJS(onDelete)(tag);
+      }
+      isDrag.value = false;
     })
     .onFinalize(() => {
-      console.log("onFinalize");
+      trashProgress.value = withTiming(0);
     });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
       opacity: opacity.value,
       transform: [
-        { translateX: translateX.value - dimension.width * 0.5 },
-        { translateY: translateY.value - dimension.height * 0.5 },
+        { translateX: translateX.value },
+        { translateY: translateY.value },
       ],
     };
   });
   return (
     <GestureDetector gesture={textDrag}>
-      <Animated.View
-        onLayout={(event) => {
-          const { width, height } = event.nativeEvent.layout;
-          setDimension({ height, width });
-        }}
-        style={[
-          animatedStyle,
-          {
-            position: "absolute",
-          },
-        ]}
-      >
+      <Animated.View style={[animatedStyle, { position: "absolute" }]}>
         <Pressable
-          style={{
-            padding: 12,
-            borderRadius: 12,
-            backgroundColor: "white",
-            borderWidth: 1,
-          }}
+          style={[
+            { backgroundColor: tag.backgroundColor },
+            styles.tagContainer,
+          ]}
         >
           <Text
             style={[
               {
-                color: "red",
+                color: tag.textColor,
+                textAlign: tag.textAlign,
               },
+              styles.text,
             ]}
           >
             {tag.value}
@@ -105,3 +111,14 @@ const DraggableTag: React.FC<DraggableTagProps> = ({
 };
 
 export default DraggableTag;
+const styles = StyleSheet.create({
+  tagContainer: {
+    padding: SPACING.small,
+    borderRadius: 8,
+    minHeight: 44,
+  },
+  text: {
+    textAlignVertical: "center",
+    height: "100%",
+  },
+});

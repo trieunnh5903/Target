@@ -22,9 +22,11 @@ const CommentItem: React.FC<CommentItemProps> = ({
         <CustomView style={GLOBAL_STYLE.rowCenter}>
           <Text variant="labelLarge">{comment.displayName || "User"}</Text>
           <CustomView paddingLeft={8}>
-            <Text variant="labelMedium">
-              {dayJs.getTimeFromNow(comment.createdAt)}
-            </Text>
+            {comment.id !== commentSendingId && (
+              <Text variant="labelMedium">
+                {dayJs.getTimeFromNow(comment.createdAt)}
+              </Text>
+            )}
           </CustomView>
         </CustomView>
         <Text variant="bodyMedium">{comment.content}</Text>

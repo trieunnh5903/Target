@@ -11,5 +11,7 @@ export { default as CommentItem } from "./CommentItem";
 export { default as IconButtonVertical } from "./IconButtonVertical";
 export { default as EmojiPicker } from "./EmojiPicker";
 export { default as EmojiList } from "./EmojiList";
+export { default as EmojiSticker } from "./EmojiSticker";
+export { default as ColorPicker } from "./ColorPicker";
 export { default as Message } from "./message";
 export { default as MessageInput } from "./message_input/MessageInput";

@@ -47,6 +47,9 @@ import {
   useCropsGesture,
 } from "@/hooks";
 import { fetchMedia, setAlbum } from "@/redux/slices/mediaSlice";
+import { createPostAssets } from "@/redux/slices/postSlice";
+import { TranslateAssetOptions } from "@/types";
+import { useBackHandler } from "@react-native-community/hooks";
 
 const HEADER_LIST_HEIGHT = 50;
 const SPACING = 1;
@@ -74,12 +77,7 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
   const lastOffsetY = useSharedValue(0);
   const isBeginDrag = useSharedValue(false);
   const lastTranslateY = useSharedValue(0);
-  const translateSelectedAssets = useSharedValue<{
-    [id: string]: {
-      x: number;
-      y: number;
-    };
-  }>({});
+  const translateSelectedAssets = useSharedValue<TranslateAssetOptions>({});
   const listMeasurementHeight = useSharedValue(0);
   const imagePressed = useSharedValue(false);
 
@@ -160,10 +158,13 @@ const ImagePickerScreen: React.FC<RootTabScreenProps<"ImagePicker">> = ({
 
       if (assets.length > 0) {
         const translateValue = translateSelectedAssets.value;
-        navigation.navigate("CreatePost", {
-          assets,
-          translateAssets: translateValue,
-        });
+        dispatch(
+          createPostAssets({
+            assets,
+            translateAssetOptions: translateValue,
+          })
+        );
+        navigation.navigate("CreatePost");
       }
     };
 
