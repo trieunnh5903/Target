@@ -7,11 +7,11 @@ import {
   StyleSheet,
   View,
   Image,
+  TouchableOpacity,
 } from "react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { RootStackScreenProps } from "@/types/navigation";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { CustomView, GridCrop } from "@/components";
 import {
@@ -96,6 +96,8 @@ const CameraScreen: React.FC<RootStackScreenProps<"CameraScreen">> = ({
   };
   const dispatch = useAppDispatch();
   const onCapture = async () => {
+    console.log('fhfhgf');
+    
     if (cameraRef.current && isCameraReady) {
       setCapturing(true);
       try {
@@ -260,6 +262,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderWidth: 5,
     borderColor: "rgba(255,255,255,0.5)",
+    zIndex: 1
   },
   buttonText: {
     color: "white",

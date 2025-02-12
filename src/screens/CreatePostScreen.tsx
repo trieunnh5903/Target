@@ -179,9 +179,6 @@ const CreatePostScreen: React.FC<RootStackScreenProps<"CreatePost">> = ({
               offset: (POST_IMAGE_SIZE + SPACING.medium) * index,
               index,
             })}
-            snapToInterval={POST_IMAGE_SIZE + SPACING.medium}
-            snapToAlignment={"center"}
-            decelerationRate={"fast"}
           />
         </CustomView>
       )}

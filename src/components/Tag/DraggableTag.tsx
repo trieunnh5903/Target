@@ -86,7 +86,9 @@ const DraggableTag: React.FC<DraggableTagProps> = ({
   });
   return (
     <GestureDetector gesture={textDrag}>
-      <Animated.View style={[animatedStyle, { position: "absolute" }]}>
+      <Animated.View
+        style={[animatedStyle, { position: "absolute", zIndex: 11 }]}
+      >
         <Pressable
           style={[
             { backgroundColor: tag.backgroundColor },
@@ -98,6 +100,7 @@ const DraggableTag: React.FC<DraggableTagProps> = ({
               {
                 color: tag.textColor,
                 textAlign: tag.textAlign,
+                fontSize: tag.fontSize,
               },
               styles.text,
             ]}

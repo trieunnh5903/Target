@@ -59,7 +59,7 @@ const UserDetailScreen: React.FC<RootStackScreenProps<"UserDetail">> = ({
         setIsFetching(false);
       }
     })();
-  }, [lastPost, userId]);
+  }, [userId]);
 
   const onImagePress = useCallback(
     (index: number) => {

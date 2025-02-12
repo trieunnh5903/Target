@@ -18,7 +18,7 @@ import { TagSlider } from "@/slider";
 import ColorPicker from "../ColorPicker";
 import { TextInput } from "react-native-gesture-handler";
 import { useKeyboard } from "@react-native-community/hooks";
-import TagInput from "../tag/TagInput";
+import { TagInput } from "../tag";
 
 interface EditTagModalProps {
   visible: boolean;
@@ -63,7 +63,7 @@ const EditTagModal: React.FC<EditTagModalProps> = ({ visible, onClose }) => {
     };
   });
 
-  const onFinishedPress = useCallback(() => {
+  const handleFinishedEdit = useCallback(() => {
     onClose({
       backgroundColor,
       tagValue,
@@ -79,13 +79,17 @@ const EditTagModal: React.FC<EditTagModalProps> = ({ visible, onClose }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backgroundColor, onClose, tagValue, textAlign, textColor]);
 
+  const onDonePress = () => {
+    tagInputRef.current?.blur();
+  };
+
   const clearTagValue = () => {
     setTagValue("");
   };
 
   useEffect(() => {
     if (!keyboard.keyboardShown) {
-      onFinishedPress();
+      handleFinishedEdit();
     }
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,7 +148,7 @@ const EditTagModal: React.FC<EditTagModalProps> = ({ visible, onClose }) => {
             onPress={onTextAlignPress}
             style={{ zIndex: 10 }}
           />
-          <Button onPress={onFinishedPress} mode="contained-tonal">
+          <Button onPress={onDonePress} mode="contained-tonal">
             Done
           </Button>
         </View>

@@ -88,9 +88,9 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
         <Button mode="contained">Register</Button>
         <CustomView style={{ flex: 1 }} />
 
-        <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
+        {/* <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
           Create new account
-        </Button>
+        </Button> */}
       </CustomView>
     </CustomView>
   );

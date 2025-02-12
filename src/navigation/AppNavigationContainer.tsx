@@ -40,6 +40,8 @@ export const navigationRef = createNavigationContainerRef();
 
 const AppNavigationContainer = () => {
   const notificationPostId = useNotificationListener();
+  console.log("notificationPostId", notificationPostId);
+
   const { currentUser, isReady } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const scheme = useColorScheme();

@@ -16,6 +16,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { CommentBottomSheet } from "@/components/bottomSheet";
 import { Divider } from "react-native-paper";
 import { useBackHandler } from "@react-native-community/hooks";
+import { useHeaderHeight } from "@react-navigation/elements";
 
 const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
   route,
@@ -66,9 +67,11 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
       //   postParam?.length,
       //   initialScrollIndex
       // );
-      listRef.current.scrollToIndex({
-        index: initialScrollIndex,
-        animated: false,
+      setTimeout(() => {
+        listRef.current?.scrollToIndex({
+          index: initialScrollIndex,
+          animated: false,
+        });
       });
     }
     return () => {};
@@ -120,7 +123,7 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
     },
     [currentUser?.id, posts]
   );
-
+  const headerHeight = useHeaderHeight();
   const renderItem: ListRenderItem<Post> = ({ item }) => {
     const liked = !!item.likes?.[currentUser?.id as string];
     return item.images.length === 1 ? (
@@ -148,11 +151,10 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
     <CustomView style={GLOBAL_STYLE.flex_1}>
       <FlashList
         ref={listRef}
-        estimatedItemSize={366.5}
-        estimatedFirstItemOffset={initialScrollIndex ?? 0 * 366.5}
+        estimatedItemSize={375}
         estimatedListSize={{
           width: SCREEN_WIDTH,
-          height: SCREEN_HEIGHT - 80,
+          height: SCREEN_HEIGHT - headerHeight,
         }}
         getItemType={(item) => {
           return item.images.length;

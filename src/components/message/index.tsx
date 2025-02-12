@@ -42,9 +42,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f0f0",
     borderRadius: 12,
     padding: SPACING.small,
+    alignSelf: "flex-start",
+
   },
   messageSender: {
     backgroundColor: "blue",
+    alignSelf: "flex-end",
   },
   time: {
     fontSize: 12,

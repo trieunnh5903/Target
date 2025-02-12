@@ -19,7 +19,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     <CustomView style={[GLOBAL_STYLE.rowHCenter, { gap: 8 }]}>
       <CustomAvatar size={"medium"} avatarUrl={comment.avatarURL} />
       <CustomView>
-        <CustomView style={GLOBAL_STYLE.rowCenter}>
+        <CustomView style={GLOBAL_STYLE.rowHCenter}>
           <Text variant="labelLarge">{comment.displayName || "User"}</Text>
           <CustomView paddingLeft={8}>
             {comment.id !== commentSendingId && (

@@ -26,7 +26,7 @@ import { updatePostAsset } from "@/redux/slices/postSlice";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { EditTagModal, LoadingModal } from "@/components/modal";
 import { TextInputProps } from "react-native";
-import DraggableTag from "@/components/tag/DraggableTag";
+import { DraggableTag } from "@/components/tag";
 
 const EditImage: React.FC<RootStackScreenProps<"EditImage">> = ({
   navigation,
@@ -181,7 +181,7 @@ const EditImage: React.FC<RootStackScreenProps<"EditImage">> = ({
     setCapturing(true);
     try {
       let newAsset = { ...asset };
-      if (pickedEmoji.length > 0) {
+      if (pickedEmoji.length > 0 || tags.length > 0) {
         const uri = await captureImage();
         newAsset.uri = uri;
       }
