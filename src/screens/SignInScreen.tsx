@@ -88,7 +88,7 @@ const SignInScreen: React.FC<RootStackScreenProps<"SignIn">> = ({
           onPress={handleGoogleSignIn}
         >
           <Image
-            source={require("../../assets/icons8-google-48.png")}
+            source={require("../../assets/icon/icons8-google-48.png")}
             style={{ width: 24, height: 24 }}
           />
           <Text>Sign in with Google</Text>

@@ -63,7 +63,7 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
           <Pressable style={GLOBAL_STYLE.rowCenter} onPress={scrollToTop}>
             <CustomView paddingRight={SPACING.small}>
               <Image
-                source={require("../../assets/icon.png")}
+                source={require("../../assets/splash.png")}
                 style={{ height: 40, aspectRatio: 1 }}
               />
             </CustomView>

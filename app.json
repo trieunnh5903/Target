@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Instagram",
-    "slug": "Instagram",
+    "slug": "instagram",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,12 +12,17 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": {
+        "dark": "./assets/icon/ios-icon-dark.png",
+        "light": "./assets/icon/ios-icon-light.png",
+        "tinted": "./assets/icon/ios-icon-tinted.png"
+      }
     },
     "android": {
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.trieu5903.Instagram",
@@ -41,9 +46,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash.png",
+          "image": "./assets/icon/splash-icon-light.png",
           "dark": {
-            "image": "./assets/splash.png",
+            "image": "./assets/icon/splash-icon-dark.png",
             "backgroundColor": "#000000"
           }
         }
