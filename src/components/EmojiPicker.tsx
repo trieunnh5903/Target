@@ -1,8 +1,7 @@
-import { Modal, View, StyleSheet } from "react-native";
+import { Modal, StyleSheet } from "react-native";
 import { PropsWithChildren } from "react";
 import { Divider, IconButton, Text } from "react-native-paper";
 import CustomView from "./CustomView";
-import { useAppTheme } from "@/config/theme";
 
 type Props = PropsWithChildren<{
   isVisible: boolean;

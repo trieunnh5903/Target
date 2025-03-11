@@ -1,4 +1,3 @@
-import { StyleSheet } from "react-native";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
 import { CustomView, Message, MessageInput } from "@/components";
@@ -115,4 +114,3 @@ const ChatRoomScreen: React.FC<RootStackScreenProps<"ChatRoom">> = ({
 
 export default ChatRoomScreen;
 
-const styles = StyleSheet.create({});

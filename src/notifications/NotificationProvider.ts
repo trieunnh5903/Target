@@ -1,73 +1,77 @@
-import { PropsWithChildren, useEffect, useRef, useState } from "react";
+import { PropsWithChildren, useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
-import { Linking, Platform } from "react-native";
+import { Platform } from "react-native";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
   setError,
   setExpoPushToken,
-  setNotification,
+  setNewNotification,
 } from "@/redux/slices/notificationSlice";
 import { userAPI } from "@/api";
+import { saveNotificationToStorage } from "./notificationUtils";
+import { NotificationPayload } from "@/types";
+import { navigationRef } from "@/navigation/AppNavigationContainer";
 
 const NotificationProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const dispatch = useAppDispatch();
-  // const notificationListener = useRef<Notifications.EventSubscription>();
-  // const responseListener = useRef<Notifications.EventSubscription>();
+  const notificationListener = useRef<Notifications.EventSubscription>();
+  const responseListener = useRef<Notifications.EventSubscription>();
   const userId = useAppSelector((state) => state.auth.currentUser?.id);
-  const pushToken = useRef<string>();
+  useEffect(() => {
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        const payload = notification.request.content.data;
+        saveNotificationToStorage({
+          data: payload as NotificationPayload["data"],
+          date: notification.date,
+          isRead: false,
+        });
+        dispatch(setNewNotification(notification));
+      });
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const payload = response.notification.request.content.data;
+        saveNotificationToStorage({
+          data: payload as NotificationPayload["data"],
+          date: response.notification.date,
+          isRead: false,
+        });
+        navigationRef.current?.navigate("Notification");
+      });
+    return () => {
+      notificationListener.current &&
+        Notifications.removeNotificationSubscription(
+          notificationListener.current
+        );
+      responseListener.current &&
+        Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, [dispatch]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        if (userId && pushToken.current && pushToken.current.length > 0) {
-          await userAPI.updatePushToken(pushToken.current, userId);
-        }
-      } catch (e) {}
-    })();
-    return () => {};
-  }, [userId]);
-
-  useEffect(() => {
-    (async () => {
+    const getUserPushToken = async () => {
       try {
         const token = await registerForPushNotificationsAsync();
         dispatch(setExpoPushToken(token));
-        pushToken.current = token;
+        return token;
       } catch (error) {
         dispatch(setExpoPushToken(undefined));
         dispatch(setError(`${error}`));
       }
-    })();
+    };
 
-    // notificationListener.current =
-    //   Notifications.addNotificationReceivedListener((notification) => {
-    //     console.log(
-    //       "addNotificationReceivedListener",
-    //       JSON.stringify(notification)
-    //     );
-    //     dispatch(setNotification(notification));
-    //   });
-
-    // responseListener.current =
-    //   Notifications.addNotificationResponseReceivedListener((response) => {
-    //     console.log(
-    //       "addNotificationResponseReceivedListener",
-    //       JSON.stringify(response)
-    //     );
-    //     dispatch(setNotification(response.notification));
-    //   });
-
-    // return () => {
-    //   notificationListener.current &&
-    //     Notifications.removeNotificationSubscription(
-    //       notificationListener.current
-    //     );
-    //   responseListener.current &&
-    //     Notifications.removeNotificationSubscription(responseListener.current);
-    // };
-  }, [dispatch]);
+    const updateUserPushToken = async () => {
+      try {
+        const pushToken = await getUserPushToken();
+        if (userId && pushToken && pushToken?.length > 0) {
+          await userAPI.updatePushToken(pushToken, userId);
+        }
+      } catch {}
+    };
+    updateUserPushToken();
+  }, [dispatch, userId]);
 
   return children;
 };

@@ -58,6 +58,7 @@ const EditProfile = () => {
         validation: validateDisplayName,
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentUser?.bio, currentUser?.displayName]
   );
 

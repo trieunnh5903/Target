@@ -1,4 +1,4 @@
-import { StyleProp, StyleSheet, TextStyle } from "react-native";
+import { StyleProp, TextStyle } from "react-native";
 import React, { PropsWithChildren } from "react";
 import { Text } from "react-native-paper";
 
@@ -10,5 +10,3 @@ const ThemedText: React.FC<ThemedTextProps> = ({ children, style }) => {
 };
 
 export default ThemedText;
-
-const styles = StyleSheet.create({});

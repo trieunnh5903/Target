@@ -1,4 +1,3 @@
-import { StyleSheet, View } from "react-native";
 import React from "react";
 import { ActivityIndicator, Modal, Portal, Text } from "react-native-paper";
 import CustomView from "../CustomView";
@@ -36,4 +35,3 @@ const LoadingModal: React.FC<LoadingModalProps> = ({
 
 export default LoadingModal;
 
-const styles = StyleSheet.create({});

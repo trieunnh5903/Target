@@ -97,3 +97,25 @@ export type IChatRoom = {
   createdAt: number;
   lastMessage: Omit<IMessage, "id">;
 };
+
+export type NotificationPayload = {
+  data: Record<string, any> & {
+    type: "like" | "comment";
+  };
+  date: number;
+  isRead: boolean;
+  id: string
+};
+
+export interface NotificationLikedData {
+  postBy: {
+    id: string;
+    displayName: string;
+  };
+  likedBy: {
+    id: string;
+    displayName: string;
+  };
+  postId: string;
+  type: "like";
+}

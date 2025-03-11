@@ -1,15 +1,11 @@
-import { Alert, Appearance, Pressable, useColorScheme } from "react-native";
+import { Appearance, useColorScheme } from "react-native";
 import React from "react";
 import {
   BottomTabNavigationOptions,
   createBottomTabNavigator,
 } from "@react-navigation/bottom-tabs";
 import { RootTabParamList } from "@/types/navigation";
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   HomeScreen,
   ImagePickerScreen,
@@ -69,19 +65,6 @@ const AppBottomTab = () => {
   };
   const handleLogout = async () => {
     dispatch(logout());
-    // try {
-    //   if (currentUser?.id) {
-    //     const { error } = await authAPI.signOut(currentUser.id);
-    //     if (!error) {
-    //       dispatch(logout());
-    //     }
-    //   }
-    // } catch (error) {
-    //   console.log(error);
-    //   Alert.alert("Error", "Failed logout. Please try again.", [
-    //     { text: "OK" },
-    //   ]);
-    // }
   };
 
   const screenOptions: (props: {
@@ -117,13 +100,6 @@ const AppBottomTab = () => {
           tabBarStyle: { display: "none" },
           headerLeft({ tintColor }) {
             return (
-              // <Pressable
-              //   hitSlop={4}
-              //   onPress={() => navigation.goBack()}
-              //   style={{ paddingLeft: 16 }}
-              // >
-              //   <MaterialIcons name="close" size={24} color={tintColor} />
-              // </Pressable>
               <IconButton icon={"close"} onPress={() => navigation.goBack()} />
             );
           },

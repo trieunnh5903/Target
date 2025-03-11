@@ -15,7 +15,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable, TextInput } from "react-native-gesture-handler";
+import { TextInput } from "react-native-gesture-handler";
 import { useAppSelector } from "@/hooks";
 import CustomAvatar from "@/components/CustomAvatar";
 import CustomView from "@/components/CustomView";

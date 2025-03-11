@@ -1,4 +1,4 @@
-import { RefreshControl, StyleSheet } from "react-native";
+import { RefreshControl, StyleSheet, View } from "react-native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   CustomView,
@@ -27,6 +27,7 @@ import { StatusBar } from "expo-status-bar";
 import { RootTabScreenProps } from "@/types/navigation";
 import {
   ActivityIndicator,
+  Badge,
   Banner,
   Divider,
   IconButton,
@@ -36,6 +37,7 @@ import {
 import { Image } from "expo-image";
 import { Pressable } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { clearNewNotification } from "@/redux/slices/notificationSlice";
 
 const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   const posts = useAppSelector(selectAllPosts);
@@ -51,6 +53,14 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
   const [imageModalSource, setImageModalSource] = useState<
     PostImage["baseUrl"] | null
   >(null);
+  const newNotification = useAppSelector(
+    (state) => state.notification.notification
+  );
+
+  const onNotificationPress = useCallback(() => {
+    navigation.navigate("Notification");
+    dispatch(clearNewNotification());
+  }, [dispatch, navigation]);
 
   useLayoutEffect(() => {
     const scrollToTop = () =>
@@ -73,18 +83,31 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
         </CustomView>
       ),
       headerRight: () => (
-        <CustomView>
+        <CustomView style={GLOBAL_STYLE.rowCenter}>
           <IconButton
             containerColor="#f0f0f0"
             mode="contained-tonal"
             icon={"chat-outline"}
             onPress={() => navigation.navigate("ListChatRoom")}
           ></IconButton>
+          <View>
+            <IconButton
+              containerColor="#f0f0f0"
+              mode="contained-tonal"
+              icon={"bell"}
+              onPress={onNotificationPress}
+            ></IconButton>
+            <Badge
+              visible={!!newNotification}
+              style={styles.badge}
+              size={10}
+            ></Badge>
+          </View>
         </CustomView>
       ),
     });
     return () => {};
-  }, [navigation]);
+  }, [navigation, newNotification, onNotificationPress]);
 
   const onRefresh = React.useCallback(async () => {
     dispatch(refetchInitialPosts());
@@ -208,4 +231,5 @@ const styles = StyleSheet.create({
   loadingContainer: {
     padding: 16,
   },
+  badge: { position: "absolute", top: "16%", right: "16%" },
 });

@@ -212,12 +212,18 @@ function* likePostWorker(action: ReturnType<typeof likePostRequest>) {
             currentUser?.displayName !== "User"
               ? currentUser?.displayName ?? "Someone"
               : "Someone";
-          yield call(
-            notificationAPI.notificationPostLiked,
-            post.postedBy.id,
-            likeBy,
-            postId
-          );
+          yield call(notificationAPI.notificationPostLiked, {
+            postId,
+            likedBy: {
+              displayName: likeBy,
+              id: currentUser.id,
+            },
+            postBy: {
+              displayName: post.postedBy.displayName || "",
+              id: post.postedBy.id,
+            },
+            type: "like",
+          });
         } else {
           throw new Error("Already send notification");
         }

@@ -1,4 +1,3 @@
-import { StyleSheet } from "react-native";
 import React from "react";
 import { Comment } from "@/types";
 import CustomView from "./CustomView";
@@ -40,4 +39,3 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
 export default CommentItem;
 
-const styles = StyleSheet.create({});

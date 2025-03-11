@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import React, { ComponentProps } from "react";
 import { Pressable } from "react-native-gesture-handler";
 import { GLOBAL_STYLE } from "@/constants";
@@ -28,5 +28,3 @@ const IconButtonVertical: React.FC<IconButtonVerticalProps> = ({
 };
 
 export default IconButtonVertical;
-
-const styles = StyleSheet.create({});

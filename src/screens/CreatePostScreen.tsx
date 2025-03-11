@@ -1,7 +1,7 @@
 import { Keyboard, ListRenderItem, StyleSheet } from "react-native";
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { RootStackScreenProps } from "@/types/navigation";
-import Animated, { FadeOut, LinearTransition } from "react-native-reanimated";
+import Animated, { FadeOut } from "react-native-reanimated";
 import { Asset } from "expo-media-library";
 import { CustomView } from "@/components";
 import { Image } from "expo-image";

@@ -5,7 +5,7 @@ interface NotificationState {
   expoPushToken: string | undefined;
   notification: Notification | undefined;
   error: string | undefined;
-//   notificaiton type
+  //   notificaiton type
 }
 
 const initialState: NotificationState = {
@@ -21,11 +21,14 @@ const notificationSlice = createSlice({
     setExpoPushToken: (state, action: PayloadAction<string | undefined>) => {
       state.expoPushToken = action.payload;
     },
-    setNotification: (
+    setNewNotification: (
       state,
       action: PayloadAction<Notification | undefined>
     ) => {
       state.notification = action.payload;
+    },
+    clearNewNotification: (state) => {
+      state.notification = undefined;
     },
     setError: (state, action: PayloadAction<string | undefined>) => {
       state.error = action.payload;
@@ -34,5 +37,10 @@ const notificationSlice = createSlice({
 });
 
 const { actions, reducer: notificationReducer } = notificationSlice;
-export const { setError, setExpoPushToken, setNotification } = actions;
+export const {
+  setError,
+  setExpoPushToken,
+  setNewNotification,
+  clearNewNotification,
+} = actions;
 export default notificationReducer;

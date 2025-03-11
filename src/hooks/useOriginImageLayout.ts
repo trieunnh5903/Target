@@ -1,5 +1,5 @@
-import { View, Text } from "react-native";
-import React, { RefObject, useState } from "react";
+import { View } from "react-native";
+import { RefObject, useState } from "react";
 
 interface Params {
   imageRef: RefObject<View | null>;

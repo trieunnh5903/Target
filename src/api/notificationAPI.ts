@@ -1,3 +1,4 @@
+import { NotificationLikedData } from "@/types";
 import { usersCollection } from "./collections";
 import axios from "axios";
 
@@ -10,23 +11,16 @@ const expoPushInstance = axios.create({
   },
 });
 
-const notificationPostLiked = async (
-  postAuthorId: string,
-  likedBy: string,
-  postId: string
-) => {
+const notificationPostLiked = async (params: NotificationLikedData) => {
   try {
-    console.log("notificationLiked");
-    const pushToken = (await usersCollection.doc(postAuthorId).get()).data()
+    const pushToken = (await usersCollection.doc(params.postBy.id).get()).data()
       ?.pushToken;
     if (!pushToken) return;
     const message = {
       to: pushToken,
       sound: "default",
-      body: `${likedBy} liked your post.`,
-      data: {
-        postId: postId,
-      },
+      body: `${params.likedBy.displayName} liked your post.`,
+      data: params,
     };
 
     await expoPushInstance.post("/--/api/v2/push/send", message);

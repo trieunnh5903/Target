@@ -78,9 +78,7 @@ const AppNavigationContainer = () => {
       theme={theme}
     >
       <StatusBar style="auto" />
-      <Stack.Navigator
-        initialRouteName={notificationPostId ? "PostDetail" : "Tabs"}
-      >
+      <Stack.Navigator initialRouteName={"Tabs"}>
         {currentUser ? (
           <Stack.Group screenOptions={{ headerShadowVisible: false }}>
             <Stack.Group screenOptions={{ headerShown: false }}>
