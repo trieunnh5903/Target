@@ -4,10 +4,7 @@ import {
   NativeStackNavigationOptions,
 } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/types/navigation";
-import {
-  createNavigationContainerRef,
-  NavigationContainer,
-} from "@react-navigation/native";
+import { LinkingOptions, NavigationContainer } from "@react-navigation/native";
 import AppBottomTab from "./AppBottomTab";
 import {
   CameraScreen,
@@ -18,6 +15,8 @@ import {
   ListChatScreen,
   NotificationScreen,
   PostDetailScreen,
+  PremiumScreen,
+  PremiumSuccessScreen,
   SignInScreen,
   SignUpScreen,
   UserDetailScreen,
@@ -33,19 +32,28 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { fetchPostsRequest } from "@/redux/slices/postSlice";
 import { useColorScheme } from "react-native";
 import { NavigationDarkTheme, NavigationLightTheme } from "@/config/theme";
+import * as Linking from "expo-linking";
+import { navigationRef } from "./NavigationService";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 SplashScreen.preventAutoHideAsync();
-export const navigationRef = createNavigationContainerRef();
+const prefix = Linking.createURL("/");
 
 const AppNavigationContainer = () => {
   const notificationPostId = useNotificationListener();
-  console.log("notificationPostId", notificationPostId);
-
   const { currentUser, isReady } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const scheme = useColorScheme();
   const theme = scheme === "dark" ? NavigationDarkTheme : NavigationLightTheme;
+
+  const linking: LinkingOptions<ReactNavigation.RootParamList> = {
+    prefixes: [prefix],
+    config: {
+      screens: {
+        Premium: "payment",
+      },
+    },
+  };
 
   useEffect(() => {
     dispatch(fetchPostsRequest({ lastPost: null }));
@@ -76,6 +84,7 @@ const AppNavigationContainer = () => {
       onReady={onLayoutRootView}
       ref={navigationRef}
       theme={theme}
+      linking={linking}
     >
       <StatusBar style="auto" />
       <Stack.Navigator initialRouteName={"Tabs"}>
@@ -134,6 +143,18 @@ const AppNavigationContainer = () => {
               name="EditImage"
               options={{ headerTitle: "" }}
               component={EditImage}
+            />
+
+            <Stack.Screen
+              name="Premium"
+              options={{ headerTitle: "" }}
+              component={PremiumScreen}
+            />
+
+            <Stack.Screen
+              name="PremiumSuccess"
+              options={{ headerShown: false }}
+              component={PremiumSuccessScreen}
             />
           </Stack.Group>
         ) : (

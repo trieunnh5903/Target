@@ -5,7 +5,7 @@ import {
 } from "@react-navigation/native";
 import { StackScreenProps } from "@react-navigation/stack";
 import * as MediaLibrary from "expo-media-library";
-import { Post } from ".";
+import { PlanType, Post } from ".";
 
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<RootTabParamList>;
@@ -31,15 +31,10 @@ export type RootStackParamList = {
     bio: string;
   };
   CreatePost: undefined;
-  // CreatePost: {
-  //   assets: MediaLibrary.Asset[];
-  //   translateAssets: {
-  //     [id: string]: {
-  //       x: number;
-  //       y: number;
-  //     };
-  //   };
-  // };
+  Premium: undefined;
+  PremiumSuccess: {
+    planType: PlanType
+  };
   EditImage: {
     asset: MediaLibrary.Asset;
     translateOption?: {

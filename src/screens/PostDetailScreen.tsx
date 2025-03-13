@@ -62,11 +62,6 @@ const PostDetailScreen: React.FC<RootStackScreenProps<"PostDetail">> = ({
 
   useEffect(() => {
     if (posts.length > 0 && initialScrollIndex && listRef.current) {
-      // console.log(
-      //   "PostDetailScreen -> postId",
-      //   postParam?.length,
-      //   initialScrollIndex
-      // );
       setTimeout(() => {
         listRef.current?.scrollToIndex({
           index: initialScrollIndex,

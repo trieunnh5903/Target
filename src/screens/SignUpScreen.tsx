@@ -2,19 +2,15 @@ import { Alert, StyleSheet } from "react-native";
 import React, { useState } from "react";
 import { Button } from "react-native-paper";
 import { authAPI, userAPI } from "@/api";
-import { useAppDispatch } from "@/hooks";
 import { CustomView } from "@/components";
 import { GLOBAL_STYLE, SPACING } from "@/constants";
 import CustomTextInput from "@/components/CustomTextInput";
 import { RootStackScreenProps } from "@/types/navigation";
 
-const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
-  navigation,
-}) => {
+const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const dispatch = useAppDispatch();
 
   const handleError = (error: string) => {
     if (error) {
@@ -37,25 +33,10 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
         userCredential.user
       );
       if (createUserError) throw new Error(createUserError);
-      // dispatch(fetchCurrentUser(userCredential.user.uid));
     } catch (error) {
       handleError((error as Error).message);
     }
   };
-
-  // const handleResetPassword = async () => {
-  //   if (!email) {
-  //     setError("Vui lòng nhập email");
-  //     return;
-  //   }
-
-  //   const { error: resetError } = await authAPI.resetPassword(email);
-  //   if (resetError) {
-  //     setError(resetError);
-  //   } else {
-  //     setError("Email đặt lại mật khẩu đã được gửi");
-  //   }
-  // };
 
   return (
     <CustomView
@@ -87,10 +68,6 @@ const SignUpScreen: React.FC<RootStackScreenProps<"SignUp">> = ({
         />
         <Button mode="contained">Register</Button>
         <CustomView style={{ flex: 1 }} />
-
-        {/* <Button mode="outlined" onPress={() => navigation.navigate("SignUp")}>
-          Create new account
-        </Button> */}
       </CustomView>
     </CustomView>
   );

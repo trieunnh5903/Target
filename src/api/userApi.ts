@@ -153,6 +153,16 @@ const updatePushToken = async (token: string, userId: string) => {
   }
 };
 
+const verifiedAccount = async (userId: string) => {
+  try {
+    await usersCollection.doc(userId).update({
+      verified: true,
+    });
+  } catch (error) {
+    console.log("verifiedAccount", error);
+  }
+};
+
 const deletePushToken = async (userId: string) => {
   try {
     console.log("deletePushToken");
@@ -200,4 +210,5 @@ export const userAPI = {
   deletePushToken,
   fetchUsersByIds,
   searchUsersByKeyword,
+  verifiedAccount,
 };

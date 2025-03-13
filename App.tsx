@@ -28,15 +28,17 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
-        <KeyboardProvider>
-          <NotificationProvider>
-            <PaperProvider theme={theme}>
-              <BottomSheetModalProvider>
-                <AppNavigationContainer />
-              </BottomSheetModalProvider>
-            </PaperProvider>
-          </NotificationProvider>
-        </KeyboardProvider>
+        <BottomSheetModalProvider>
+          <KeyboardProvider>
+            <NotificationProvider>
+              <PaperProvider theme={theme}>
+                <BottomSheetModalProvider>
+                  <AppNavigationContainer />
+                </BottomSheetModalProvider>
+              </PaperProvider>
+            </NotificationProvider>
+          </KeyboardProvider>
+        </BottomSheetModalProvider>
       </Provider>
     </GestureHandlerRootView>
   );

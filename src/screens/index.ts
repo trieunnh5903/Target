@@ -13,3 +13,5 @@ export { default as SearchScreen } from "./SearchScreen";
 export { default as UserDetailScreen } from "./UserDetailScreen";
 export { default as ChatRoomScreen } from "./ChatRoomScreen";
 export { default as ListChatScreen } from "./ListChatScreen";
+export { default as PremiumScreen } from "./PaymentPremiumScreen";
+export { default as PremiumSuccessScreen } from "./PremiumSuccessScreen"

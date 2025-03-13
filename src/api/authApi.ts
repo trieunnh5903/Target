@@ -109,4 +109,6 @@ const signInGoogle = async () => {
   }
 };
 
+
+
 export const authAPI = { signIn, signUp, signOut, resetPassword, signInGoogle };

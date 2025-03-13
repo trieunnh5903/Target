@@ -1,0 +1,15 @@
+{
+  "platforms": ["apple", "android", "web"],
+  "apple": {
+    "modules": ["ZaloPayModule"]
+  },
+  "android": {
+    "gradleAarProjects": [
+      {
+        "name": "zpdk-release-aar",
+        "aarFilePath": "android/libs/zpdk-release.aar"
+      }
+    ],
+    "modules": ["expo.modules.zalopay.ZaloPayModule"]
+  }
+}

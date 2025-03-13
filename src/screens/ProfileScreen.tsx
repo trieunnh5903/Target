@@ -7,7 +7,7 @@ import { CustomAvatar, CustomView } from "@/components";
 import { GLOBAL_STYLE, SCREEN_WIDTH, SPACING } from "@/constants";
 import { Post } from "@/types";
 import { Image } from "expo-image";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { FlatList, Pressable } from "react-native-gesture-handler";
 
 const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
@@ -41,15 +41,23 @@ const ProfileScreen: React.FC<RootTabScreenProps<"Profile">> = ({
         style={GLOBAL_STYLE.center}
       >
         <CustomAvatar size={"large"} avatarUrl={currentUser?.avatarURL} />
-        <Text style={styles.displayName}>{currentUser?.displayName}</Text>
+        <CustomView>
+          <Text style={styles.displayName}>{currentUser?.displayName}</Text>
+          {currentUser?.verified && (
+            <MaterialIcons
+              name="verified"
+              size={24}
+              color="rgb(0,149,246)"
+              style={styles.verified}
+            />
+          )}
+        </CustomView>
         {currentUser?.bio && <Text style={styles.bio}>{currentUser?.bio}</Text>}
 
         <Button
           mode="contained-tonal"
-          // buttonColor="#E4E7EC"
           style={styles.editButton}
           onPress={onEditPress}
-          // theme={{ colors: { onSecondaryContainer: "green" } }}
         >
           Edit profile
         </Button>
@@ -108,6 +116,7 @@ const ImageEntry: React.FC<ImageEntryProps> = ({
 export default ProfileScreen;
 
 const styles = StyleSheet.create({
+  verified: { position: "absolute", top: 10, right: -26 },
   imageContainer: {
     flex: 1,
     width: "100%",

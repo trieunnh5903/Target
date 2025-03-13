@@ -18,7 +18,8 @@ _.p8
 _.p12
 _.key
 \*.mobileprovision
-android/
+/ios
+/android
 
 # Metro
 

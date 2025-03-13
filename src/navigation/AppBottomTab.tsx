@@ -19,6 +19,7 @@ import { CustomAvatar, CustomView } from "@/components";
 import { RouteProp } from "@react-navigation/native";
 import { GLOBAL_STYLE } from "@/constants";
 import { useAppTheme } from "@/config/theme";
+import NavigationBar from "expo-navigation-bar";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -60,8 +61,9 @@ const AppBottomTab = () => {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
   const colorScheme = useColorScheme();
   const theme = useAppTheme();
-  const toggleTheme = () => {
+  const toggleTheme = async () => {
     Appearance.setColorScheme(colorScheme === "dark" ? "light" : "dark");
+    await NavigationBar.setBackgroundColorAsync("red");
   };
   const handleLogout = async () => {
     dispatch(logout());
@@ -108,16 +110,23 @@ const AppBottomTab = () => {
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{
+        options={({ navigation }) => ({
           headerRight() {
             return (
               <CustomView style={GLOBAL_STYLE.rowCenter}>
+                {!currentUser?.verified && (
+                  <IconButton
+                    onPress={() => navigation.navigate("Premium")}
+                    icon={"crown-outline"}
+                    iconColor="#efb73e"
+                  />
+                )}
                 <IconButton onPress={toggleTheme} icon={"theme-light-dark"} />
                 <IconButton onPress={handleLogout} icon={"logout"} />
               </CustomView>
             );
           },
-        }}
+        })}
       />
     </Tab.Navigator>
   );

@@ -94,7 +94,7 @@ const HomeScreen: React.FC<RootTabScreenProps<"Home">> = ({ navigation }) => {
             <IconButton
               containerColor="#f0f0f0"
               mode="contained-tonal"
-              icon={"bell"}
+              icon={"bell-outline"}
               onPress={onNotificationPress}
             ></IconButton>
             <Badge

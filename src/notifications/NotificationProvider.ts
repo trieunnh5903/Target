@@ -12,7 +12,7 @@ import {
 import { userAPI } from "@/api";
 import { saveNotificationToStorage } from "./notificationUtils";
 import { NotificationPayload } from "@/types";
-import { navigationRef } from "@/navigation/AppNavigationContainer";
+import { navigationRef } from "@/navigation/NavigationService";
 
 const NotificationProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const dispatch = useAppDispatch();
@@ -37,8 +37,9 @@ const NotificationProvider: React.FC<PropsWithChildren> = ({ children }) => {
           data: payload as NotificationPayload["data"],
           date: response.notification.date,
           isRead: false,
+        }).then(() => {
+          navigationRef.current?.navigate("Notification");
         });
-        navigationRef.current?.navigate("Notification");
       });
     return () => {
       notificationListener.current &&

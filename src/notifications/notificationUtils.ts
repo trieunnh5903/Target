@@ -19,25 +19,22 @@ export const saveNotificationToStorage = async (
   notification: Omit<NotificationPayload, "id">
 ) => {
   try {
+    if (notification.date === 0) return;
     const notificationWithId = {
       id: randomUUID(),
       ...notification,
     };
 
-    // Lấy thông báo hiện có
     const existingNotificationsJson = await AsyncStorage.getItem(
       NOTIFICATIONS_STORAGE_KEY
     );
     const existingNotifications: NotificationPayload[] =
       existingNotificationsJson ? JSON.parse(existingNotificationsJson) : [];
 
-    // Thêm thông báo mới vào đầu danh sách
     const updatedNotifications = [notificationWithId, ...existingNotifications];
 
-    // Giới hạn số lượng thông báo lưu trữ (tùy chọn)
-    const limitedNotifications = updatedNotifications.slice(0, 100); // Giữ 100 thông báo gần nhất
+    const limitedNotifications = updatedNotifications.slice(0, 100);
 
-    // Lưu lại danh sách thông báo đã cập nhật
     await AsyncStorage.setItem(
       NOTIFICATIONS_STORAGE_KEY,
       JSON.stringify(limitedNotifications)
@@ -64,21 +61,26 @@ export const getNotificationsFromStorage = async () => {
   }
 };
 
-export const markNotificationAsRead = async (notificationId: NotificationPayload['id']) => {
+export const markNotificationAsRead = async (
+  notificationId: NotificationPayload["id"]
+) => {
   try {
     const notifications = await getNotificationsFromStorage();
-    
-    const updatedNotifications = notifications.map(notification => {
+
+    const updatedNotifications = notifications.map((notification) => {
       if (notification.id === notificationId) {
         return { ...notification, isRead: true };
       }
       return notification;
     });
-    
-    await AsyncStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updatedNotifications));
+
+    await AsyncStorage.setItem(
+      NOTIFICATIONS_STORAGE_KEY,
+      JSON.stringify(updatedNotifications)
+    );
     return updatedNotifications;
   } catch (error) {
-    console.error('Lỗi khi đánh dấu thông báo đã đọc:', error);
+    console.error("Lỗi khi đánh dấu thông báo đã đọc:", error);
     throw error;
   }
 };
@@ -102,7 +104,9 @@ export const markAllNotificationsAsRead = async () => {
   }
 };
 
-export const deleteNotification = async (notificationId: NotificationPayload['id']) => {
+export const deleteNotification = async (
+  notificationId: NotificationPayload["id"]
+) => {
   try {
     const notifications = await getNotificationsFromStorage();
 

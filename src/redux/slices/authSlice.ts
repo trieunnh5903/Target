@@ -28,6 +28,12 @@ const authSlice = createSlice({
       state.isReady = true;
     },
 
+    verifiedAccountLocal: (state) => {
+      if (state.currentUser) {
+        state.currentUser.verified = true;
+      }
+    },
+
     loginSuccess: (state) => {
       state.loading = "idle";
     },
@@ -79,6 +85,7 @@ const authSlice = createSlice({
 });
 
 export const {
+  verifiedAccountLocal,
   logout,
   loginRequest,
   updateCurrentUser,

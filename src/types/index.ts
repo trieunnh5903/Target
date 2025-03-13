@@ -44,6 +44,7 @@ export type User = {
   phoneNumber: string | null;
   keywords: string[] | null;
   bio: string;
+  verified?: boolean;
 };
 
 export type Comment = Pick<User, "avatarURL" | "displayName"> & {
@@ -104,7 +105,7 @@ export type NotificationPayload = {
   };
   date: number;
   isRead: boolean;
-  id: string
+  id: string;
 };
 
 export interface NotificationLikedData {
@@ -119,3 +120,28 @@ export interface NotificationLikedData {
   postId: string;
   type: "like";
 }
+
+export type ZaloPayOrder = {
+  app_id: number;
+  app_user: string;
+  app_time: number;
+  amount: number;
+  app_trans_id: string;
+  embed_data: string;
+  item: string;
+  description: string;
+  mac: string;
+};
+
+export type ZaloPayOrderResponse = {
+  return_code: 1 | 2;
+  return_message: string;
+  sub_return_code: number;
+  sub_return_message: string;
+  order_url: string;
+  zp_trans_token: string;
+  order_token: string;
+  qr_code: string;
+};
+
+export type PlanType = "monthly" | "yearly";
